@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36511.14 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FutZoneFrontend", "FutZoneFrontend\FutZoneFrontend.csproj", "{CAE28B8A-388D-4CF1-991D-15E5352F7F9B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CAE28B8A-388D-4CF1-991D-15E5352F7F9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CAE28B8A-388D-4CF1-991D-15E5352F7F9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CAE28B8A-388D-4CF1-991D-15E5352F7F9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CAE28B8A-388D-4CF1-991D-15E5352F7F9B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {37C76D29-AC72-41F0-A269-90486609524E}
+	EndGlobalSection
+EndGlobal
