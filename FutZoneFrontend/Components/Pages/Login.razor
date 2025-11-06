@@ -1,0 +1,31 @@
+@page "/login"
+
+<PageTitle>Iniciar Sesión - FutZone</PageTitle>
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow-lg">
+            <div class="card-header bg-primary text-white">
+                <h1 class="text-center mb-0">⚽ Iniciar Sesión en FutZone ⚽</h1>
+            </div>
+            <div class="card-body">
+                <form>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Correo Electrónico</label>
+                        <input type="email" class="form-control" id="email" placeholder="tu.correo@ejemplo.com">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Contraseña</label>
+                        <input type="password" class="form-control" id="password" placeholder="Contraseña">
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">Entrar al Campo</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center">
+                <p class="mb-0">¿No tienes cuenta? <a href="/register">Regístrate y únete al equipo</a></p>
+            </div>
+        </div>
+    </div>
+</div>

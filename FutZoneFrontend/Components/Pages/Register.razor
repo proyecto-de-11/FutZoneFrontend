@@ -1,0 +1,56 @@
+@page "/register"
+
+<PageTitle>Registro - FutZone</PageTitle>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-lg">
+            <div class="card-header bg-success text-white">
+                <h1 class="text-center mb-0">👟 ¡Regístrate y Salta al Campo en FutZone! 👟</h1>
+            </div>
+            <div class="card-body">
+                <form>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="firstName" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="firstName" placeholder="Tu Nombre">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="lastName" class="form-label">Apellidos</label>
+                            <input type="text" class="form-control" id="lastName" placeholder="Tus Apellidos">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Correo Electrónico</label>
+                        <input type="email" class="form-control" id="email" placeholder="tu.correo@ejemplo.com">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Contraseña</label>
+                        <input type="password" class="form-control" id="password" placeholder="Crea tu contraseña">
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirmPassword" class="form-label">Confirmar Contraseña</label>
+                        <input type="password" class="form-control" id="confirmPassword" placeholder="Confirma tu contraseña">
+                    </div>
+                    <div class="mb-3">
+                        <label for="favoriteSport" class="form-label">Deporte Favorito</label>
+                        <select class="form-select" id="favoriteSport">
+                            <option selected>Elige tu deporte...</option>
+                            <option value="futbol">Fútbol</option>
+                            <option value="baloncesto">Baloncesto</option>
+                            <option value="tenis">Tenis</option>
+                            <option value="beisbol">Béisbol</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">Completar Registro</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center">
+                <p class="mb-0">¿Ya eres parte del equipo? <a href="/login">Inicia sesión aquí</a></p>
+            </div>
+        </div>
+    </div>
+</div>
