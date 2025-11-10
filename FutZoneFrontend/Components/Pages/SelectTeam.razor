@@ -1,0 +1,39 @@
+@page "/select-team"
+
+<div class="teams-header">
+    <h1 class="teams-title"><i class="bi bi-people"></i> Selecciona un Equipo</h1>
+    <button class="btn btn-primary-custom">
+        <i class="bi bi-plus-circle-fill"></i> Nuevo Equipo
+    </button>
+</div>
+
+<div class="teams-grid">
+    <div class="team-card" @onclick="() => ElegirEquipo("Tigres FC")">
+        <div class="team-logo">🐯</div>
+        <div class="team-name">Tigres FC</div>
+        <div class="team-meta">Fútbol • 22 miembros</div>
+        <div class="team-description">Equipo de fútbol profesional con enfoque juvenil y competitivo.</div>
+        <button class="btn btn-success select-btn">
+            <i class="bi bi-check2-circle"></i> Seleccionar
+        </button>
+    </div>
+    <div class="team-card" @onclick="() => ElegirEquipo("Águilas Elite")">
+        <div class="team-logo">🦅</div>
+        <div class="team-name">Águilas Elite</div>
+        <div class="team-meta">Básquetbol • 15 miembros</div>
+        <div class="team-description">Apasionadas por el baloncesto, juegan en torneos estatales y nacionales.</div>
+        <button class="btn btn-success select-btn">
+            <i class="bi bi-check2-circle"></i> Seleccionar
+        </button>
+    </div>
+    <div class="team-card" @onclick="() => ElegirEquipo("Dragones Metropolitanos")">
+        <div class="team-logo">🐉</div>
+    </div>
+</div>
+
+@code {
+    private void ElegirEquipo(string teamName)
+    {
+        Console.WriteLine($"Equipo seleccionado: {teamName}");
+    }
+}

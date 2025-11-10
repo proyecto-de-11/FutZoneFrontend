@@ -1,23 +1,16 @@
 @page "/home"
+@inject NavigationManager Navigation
 
-<PageTitle>Bienvenido a FutZone</PageTitle>
+<PageTitle>Home</PageTitle>
 
-<h1>⚽ ¡Bienvenido a FutZone! 🥅</h1>
+<h1>Hello, world!</h1>
 
-<p>
-    ¡Prepárate para la acción! Este es tu nuevo campo de juego digital, ya sea que vengas por
-    <strong>los resultados, las reservas de cancha o el debate interminable</strong>
-</p>
+Welcome to your new app.
 
-<p>
-    En esta aplicación, encontrarás todo lo necesario para vivir la pasión del fútbol.
-    ¡Explora, interactúa y que no te saquen tarjeta roja por aburrimiento!
-</p>
+<button class="btn btn-primary" @onclick="GoToSelectTeam">Go to Select Team</button>
 
-<div class="mt-4">
-    <a href="/acerca" class="btn btn-primary">Conoce más sobre FutZone</a>
-</div>
-
-<blockquote class="blockquote mt-5">
-    <p class="mb-0">"La vida es como el fútbol, al final siempre hay una prórroga para los despistados."</p>
-</blockquote>
+@code {
+    private void GoToSelectTeam() {
+        Navigation.NavigateTo("/select-team");
+    }
+}
