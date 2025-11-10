@@ -8,7 +8,7 @@
 </div>
 
 <div class="teams-grid">
-    <div class="team-card" @onclick="() => ElegirEquipo("Tigres FC")">
+    <div class="team-card" @onclick="@(async () => await ElegirEquipo("Tigres FC"))">
         <div class="team-logo">🐯</div>
         <div class="team-name">Tigres FC</div>
         <div class="team-meta">Fútbol • 22 miembros</div>
@@ -17,7 +17,7 @@
             <i class="bi bi-check2-circle"></i> Seleccionar
         </button>
     </div>
-    <div class="team-card" @onclick="() => ElegirEquipo("Águilas Elite")">
+    <div class="team-card" @onclick="@(async () => await ElegirEquipo("Águilas Elite"))">
         <div class="team-logo">🦅</div>
         <div class="team-name">Águilas Elite</div>
         <div class="team-meta">Básquetbol • 15 miembros</div>
@@ -26,13 +26,19 @@
             <i class="bi bi-check2-circle"></i> Seleccionar
         </button>
     </div>
-    <div class="team-card" @onclick="() => ElegirEquipo("Dragones Metropolitanos")">
+    <div class="team-card" @onclick="@(async () => await ElegirEquipo("Dragones Metropolitanos"))">
         <div class="team-logo">🐉</div>
+        <div class="team-name">Dragones Metropolitanos</div>
+        <div class="team-meta">Voleibol • 18 miembros</div>
+        <div class="team-description">Equipo destacado en ligas metropolitanas de voleibol.</div>
+        <button class="btn btn-success select-btn">
+            <i class="bi bi-check2-circle"></i> Seleccionar
+        </button>
     </div>
 </div>
 
 @code {
-    private void ElegirEquipo(string teamName)
+    private async Task ElegirEquipo(string teamName)
     {
         Console.WriteLine($"Equipo seleccionado: {teamName}");
     }
