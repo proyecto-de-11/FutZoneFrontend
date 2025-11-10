@@ -1,0 +1,33 @@
+body { background: #f8fafc; }
+.registro-container {
+    max-width: 500px;
+    margin: 45px auto;
+}
+.card-registro {
+    border-radius: 18px;
+    box-shadow: 0 4px 24px rgba(24, 119, 242, 0.10);
+    padding: 36px 30px 28px 30px;
+    background: white;
+}
+.card-registro .title {
+    font-weight: 800; 
+    color: #185a9d;
+    font-size: 2rem; 
+    margin-bottom: 12px;
+}
+.card-registro .subtitle {
+    color: #444; 
+    font-size: 1.1rem;
+    margin-bottom: 34px;
+}
+.form-label { font-weight: 600; color: #166fe5; }
+.form-control, .form-select { border-radius: 8px; }
+.btn-crear {
+    background: linear-gradient(90deg, #185a9d 0%, #43cea2 100%); 
+    color: white; 
+    font-weight: bold; 
+    font-size: 1.1rem; 
+    border-radius: 10px; 
+    padding: 12px 0;
+}
+.btn-crear:hover { opacity: 0.96; }

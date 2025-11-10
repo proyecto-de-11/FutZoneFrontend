@@ -1,0 +1,40 @@
+@page "/create-team"
+
+<div class="registro-container">
+    <div class="card-registro">
+        <div class="title"><i class="bi bi-people-fill"></i> Crear Nuevo Equipo</div>
+        <div class="subtitle">Completa la información para registrar tu equipo en la plataforma.</div>
+        <form>
+            <div class="mb-3">
+                <label class="form-label" for="nombre">Nombre del Equipo</label>
+                <input type="text" class="form-control" id="nombre" placeholder="Ejemplo: Tigres FC">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="disciplina">Disciplina Deportiva</label>
+                <select class="form-select" id="disciplina">
+                    <option value="">Selecciona...</option>
+                    <option>Fútbol</option>
+                    <option>Básquetbol</option>
+                    <option>Voleibol</option>
+                    <option>Tenis</option>
+                    <option>Natación</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="logo">Logo del Equipo</label>
+                <input type="file" class="form-control" id="logo">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="integrantes">Miembros</label>
+                <input type="number" class="form-control" id="integrantes" min="1" max="40" placeholder="Ejemplo: 18">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="descripcion">Descripción</label>
+                <textarea class="form-control" id="descripcion" rows="2" placeholder="Trayectoria y datos relevantes"></textarea>
+            </div>
+            <button type="submit" class="btn btn-crear w-100 mt-3">
+                <i class="bi bi-save"></i> Registrar Equipo
+            </button>
+        </form>
+    </div>
+</div>
