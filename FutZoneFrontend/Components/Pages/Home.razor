@@ -1,16 +1,101 @@
 @page "/home"
-@inject NavigationManager Navigation
+@using System.Collections.Generic
 
-<PageTitle>Home</PageTitle>
+<style>
+    body { background: linear-gradient(135deg,#155A8A 70%,#fafafa); }
+    .inicio-header {
+        background: #166b9e;
+        color: #fff;
+        border-radius: 1.2em;
+        box-shadow: 0 3px 12px -4px #003053;
+        margin: 0 0 2em 0; 
+        padding: 1.3em;
+    }
+    .card-torneo { border-left: 8px solid #36d06f; border-radius: 1em; }
+    .card-equipos { border-left: 8px solid #1678B7; border-radius: 1em; }
+    .list-group-item { background: #fcfcfc; }
+    .equipo-ico { width: 52px; margin-bottom:0.4em; border-radius: 50%; border:2px solid #1678B7; }
+</style>
 
-<h1>Hello, world!</h1>
+<div class="container py-4">
+  <div class="inicio-header mb-4 text-center">
+    <h2 class="mb-1"><i class="bi bi-house-door-fill"></i> Inicio de Usuario</h2>
+    <small>Explora publicaciones, torneos y equipos cerca de ti</small>
+  </div>
 
-Welcome to your new app.
+  <!-- Publicación Torneo -->
+  <div class="card card-torneo shadow-sm mb-3">
+    <div class="card-header bg-success text-white">
+      <i class="bi bi-trophy"></i> Torneo Relámpago Empresarial
+    </div>
+    <div class="card-body">
+      <div class="d-flex align-items-center flex-wrap gap-2">
+        <span class="badge bg-secondary">CD FutbolCoorp | Monterrey</span>
+        <span class="badge bg-info">Inicia: 25/11</span>
+      </div>
+      <p class="mt-2 mb-2"><b>Equipos inscritos:</b> 8</p>
+      <a href="tournament-details" class="btn btn-success btn-sm me-2"><i class="bi bi-star"></i> Ver detalles</a>
+      <a href="#" class="btn btn-outline-dark btn-sm"><i class="bi bi-share"></i> Compartir</a>
+    </div>
+  </div>
 
-<button class="btn btn-primary" @onclick="GoToSelectTeam">Go to Select Team</button>
+  <!-- Publicación Equipos Zona -->
+  <div class="card card-equipos shadow-sm mb-3">
+    <div class="card-header bg-primary text-white">
+      <i class="bi bi-people-fill"></i> Equipos en tu zona
+    </div>
+    <div class="card-body d-flex flex-wrap gap-3">
+      @foreach (var team in FeaturedTeams)
+      {
+        <div class="text-center">
+          <img src="@team.ImageUrl" class="equipo-ico" alt="@team.Name">
+          <div><small>@team.Name</small></div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Posteos sociales, anuncios -->
+  <div class="list-group shadow-sm">
+    @foreach (var post in RecentPosts)
+    {
+      <div class="list-group-item">
+        <b>@@{post.Author}</b> @post.Content<br>
+        <span class="text-muted small"><i class="bi bi-clock"></i> @post.TimeAgo</span>
+      </div>
+    }
+  </div>
+</div>
 
 @code {
-    private void GoToSelectTeam() {
-        Navigation.NavigateTo("/select-team");
+    private class TeamModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public string ImageUrl { get; set; } = string.Empty;
+    }
+
+    private class PostModel
+    {
+        public string Author { get; set; } = string.Empty;
+        public string Content { get; set; } = string.Empty;
+        public string TimeAgo { get; set; } = string.Empty;
+    }
+
+    private List<TeamModel> FeaturedTeams = new();
+    private List<PostModel> RecentPosts = new();
+
+    protected override void OnInitialized()
+    {
+        FeaturedTeams = new List<TeamModel>
+        {
+            new TeamModel { Name = "Revolución FC", ImageUrl = "https://cdn-icons-png.flaticon.com/512/841/841432.png" },
+            new TeamModel { Name = "Tecnólogos United", ImageUrl = "https://cdn-icons-png.flaticon.com/512/841/841461.png" }
+        };
+
+        RecentPosts = new List<PostModel>
+        {
+            new PostModel { Author = "Luis", Content = "busca jugadores para amistoso este viernes.", TimeAgo = "Hace 2 horas" },
+            new PostModel { Author = "SportsMX", Content = "publicó resultados de jornada #10.", TimeAgo = "Hace 1 hora" }
+        };
     }
 }
