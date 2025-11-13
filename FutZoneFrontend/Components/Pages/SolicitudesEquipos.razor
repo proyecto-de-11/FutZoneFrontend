@@ -1,0 +1,489 @@
+@page "/solicitudes/equipos"
+
+<PageTitle>Solicitudes de Equipos - FutZone</PageTitle>
+
+<div class="solicitudes-container">
+    <!-- Header -->
+    <div class="solicitudes-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h1 class="mb-0">📋 Solicitudes de Equipos a Torneos</h1>
+                    <p class="text-muted mb-0">Gestiona las solicitudes de participación en torneos</p>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-success" @onclick="AbrirModalNuevaSolicitud">
+                        <i class="bi bi-plus-circle"></i> Nueva Solicitud
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros y Tabs -->
+    <div class="container-fluid mt-4">
+        <ul class="nav nav-tabs mb-4" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link @(_filtroSeleccionado == "pendiente" ? "active" : "")" 
+                    href="javascript:void(0)" @onclick="@((e) => CambiarFiltro("pendiente"))" @onclick:preventDefault>
+                    <i class="bi bi-hourglass-split"></i> Pendientes (@_solicitudes.Count(s => s.Estado == "Pendiente"))
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(_filtroSeleccionado == "aprobada" ? "active" : "")" 
+                    href="javascript:void(0)" @onclick="@((e) => CambiarFiltro("aprobada"))" @onclick:preventDefault>
+                    <i class="bi bi-check-circle"></i> Aprobadas (@_solicitudes.Count(s => s.Estado == "Aprobada"))
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(_filtroSeleccionado == "rechazada" ? "active" : "")" 
+                    href="javascript:void(0)" @onclick="@((e) => CambiarFiltro("rechazada"))" @onclick:preventDefault>
+                    <i class="bi bi-x-circle"></i> Rechazadas (@_solicitudes.Count(s => s.Estado == "Rechazada"))
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link @(_filtroSeleccionado == "todas" ? "active" : "")" 
+                    href="javascript:void(0)" @onclick="@((e) => CambiarFiltro("todas"))" @onclick:preventDefault>
+                    <i class="bi bi-list"></i> Todas (@_solicitudes.Count())
+                </a>
+            </li>
+        </ul>
+
+        <!-- Lista de Solicitudes -->
+        <div class="row">
+            @if (!ObtenerSolicitudesFiltradas().Any())
+            {
+                <div class="col-12">
+                    <div class="alert alert-info text-center py-5">
+                        <i class="bi bi-info-circle" style="font-size: 2rem;"></i>
+                        <p class="mt-3 mb-0">No hay solicitudes en esta categoría</p>
+                    </div>
+                </div>
+            }
+            else
+            {
+                @foreach (var solicitud in ObtenerSolicitudesFiltradas())
+                {
+                    <div class="col-md-6 col-lg-4 mb-4">
+                        <div class="card solicitud-card h-100 @GetEstadoClass(solicitud.Estado)">
+                            <div class="card-header">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h5 class="mb-1">@solicitud.NombreEquipo</h5>
+                                        <p class="mb-0 text-muted small">@solicitud.NombreTorneo</p>
+                                    </div>
+                                    <span class="badge @GetBadgeClass(solicitud.Estado)">@solicitud.Estado</span>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <div class="info-row mb-2">
+                                    <span class="label">Categoría:</span>
+                                    <span class="value">@solicitud.Categoria</span>
+                                </div>
+                                <div class="info-row mb-2">
+                                    <span class="label">Jugadores:</span>
+                                    <span class="value">@solicitud.NumeroJugadores</span>
+                                </div>
+                                <div class="info-row mb-3">
+                                    <span class="label">Fecha Solicitud:</span>
+                                    <span class="value">@solicitud.FechaSolicitud.ToShortDateString()</span>
+                                </div>
+                                <p class="text-muted small mb-3">
+                                    <strong>Comentario:</strong> @solicitud.Comentario
+                                </p>
+                            </div>
+                            <div class="card-footer bg-white">
+                                <div class="btn-group w-100" role="group">
+                                    @if (solicitud.Estado == "Pendiente")
+                                    {
+                                        <button type="button" class="btn btn-sm btn-success" @onclick="() => AprobarSolicitud(solicitud)">
+                                            <i class="bi bi-check-lg"></i> Aprobar
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-danger" @onclick="() => RechazarSolicitud(solicitud)">
+                                            <i class="bi bi-x-lg"></i> Rechazar
+                                        </button>
+                                    }
+                                    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="() => VerDetalles(solicitud)">
+                                        <i class="bi bi-eye"></i> Ver
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" @onclick="() => EliminarSolicitud(solicitud)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Nueva Solicitud -->
+@if (_mostrarModalNueva)
+{
+    <div class="modal fade show d-block" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">Crear Nueva Solicitud de Equipo</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre del Equipo</label>
+                        <input type="text" class="form-control" placeholder="Ej. Los Campeones" @bind="_formularioSolicitud.NombreEquipo">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Torneo</label>
+                        <select class="form-select" @bind="_formularioSolicitud.NombreTorneo">
+                            <option value="">-- Seleccionar Torneo --</option>
+                            <option value="Torneo Nacional 2025">Torneo Nacional 2025</option>
+                            <option value="Copa Libertadores">Copa Libertadores</option>
+                            <option value="Campeonato Regional">Campeonato Regional</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Categoría</label>
+                        <select class="form-select" @bind="_formularioSolicitud.Categoria">
+                            <option value="">-- Seleccionar Categoría --</option>
+                            <option value="Sub-17">Sub-17</option>
+                            <option value="Sub-20">Sub-20</option>
+                            <option value="Mayores">Mayores</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Número de Jugadores</label>
+                        <input type="number" class="form-control" placeholder="11" @bind="_formularioSolicitud.NumeroJugadores">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Comentario</label>
+                        <textarea class="form-control" rows="3" placeholder="Ingresa comentarios adicionales" @bind="_formularioSolicitud.Comentario"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CerrarModal">Cancelar</button>
+                    <button type="button" class="btn btn-success" @onclick="GuardarSolicitud">Enviar Solicitud</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal: Detalles -->
+@if (_mostrarModalDetalles && _solicitudSeleccionada != null)
+{
+    <div class="modal fade show d-block" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalles de Solicitud</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModalDetalles"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="detail-item mb-3">
+                        <strong>Equipo:</strong> @_solicitudSeleccionada.NombreEquipo
+                    </div>
+                    <div class="detail-item mb-3">
+                        <strong>Torneo:</strong> @_solicitudSeleccionada.NombreTorneo
+                    </div>
+                    <div class="detail-item mb-3">
+                        <strong>Categoría:</strong> @_solicitudSeleccionada.Categoria
+                    </div>
+                    <div class="detail-item mb-3">
+                        <strong>Jugadores:</strong> @_solicitudSeleccionada.NumeroJugadores
+                    </div>
+                    <div class="detail-item mb-3">
+                        <strong>Estado:</strong> <span class="badge @GetBadgeClass(_solicitudSeleccionada.Estado)">@_solicitudSeleccionada.Estado</span>
+                    </div>
+                    <div class="detail-item mb-3">
+                        <strong>Comentario:</strong>
+                        <p>@_solicitudSeleccionada.Comentario</p>
+                    </div>
+                    <div class="detail-item">
+                        <strong>Fechas:</strong>
+                        <p class="mb-0">Solicitud: @_solicitudSeleccionada.FechaSolicitud.ToShortDateString()</p>
+                        <p>Respuesta: @(_solicitudSeleccionada.FechaRespuesta?.ToShortDateString() ?? "Pendiente")</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CerrarModalDetalles">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .solicitudes-container {
+        min-height: 100vh;
+        background-color: #f8f9fa;
+    }
+
+    .solicitudes-header {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 2rem 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    .solicitudes-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+    }
+
+    .nav-tabs .nav-link {
+        color: #6b7280;
+        border-bottom: 3px solid transparent;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #10b981;
+        border-bottom-color: #10b981;
+        background-color: transparent;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: #10b981;
+    }
+
+    .solicitud-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .solicitud-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .solicitud-card.pendiente {
+        border-left: 4px solid #f59e0b;
+    }
+
+    .solicitud-card.aprobada {
+        border-left: 4px solid #10b981;
+    }
+
+    .solicitud-card.rechazada {
+        border-left: 4px solid #ef4444;
+    }
+
+    .solicitud-card .card-header {
+        background-color: #f3f4f6;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .info-row .label {
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .info-row .value {
+        color: #6b7280;
+    }
+
+    .btn-group-vertical .btn {
+        border-right: 1px solid #e5e7eb;
+    }
+
+    .btn-group-vertical .btn:last-child {
+        border-right: none;
+    }
+
+    .modal.d-block {
+        display: block;
+    }
+
+    .detail-item {
+        padding: 1rem;
+        background-color: #f9fafb;
+        border-radius: 0.5rem;
+    }
+</style>
+
+@code {
+    private bool _mostrarModalNueva = false;
+    private bool _mostrarModalDetalles = false;
+    private string _filtroSeleccionado = "pendiente";
+    private SolicitudEquipoDTO? _solicitudSeleccionada;
+    private SolicitudEquipoFormularioDTO _formularioSolicitud = new();
+
+    private List<SolicitudEquipoDTO> _solicitudes = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarSolicitudes();
+    }
+
+    private Task CargarSolicitudes()
+    {
+        _solicitudes = new List<SolicitudEquipoDTO>
+        {
+            new() {
+                Id = 1,
+                NombreEquipo = "Los Campeones",
+                NombreTorneo = "Torneo Nacional 2025",
+                Categoria = "Mayores",
+                NumeroJugadores = 18,
+                Estado = "Pendiente",
+                FechaSolicitud = DateTime.Now.AddDays(-3),
+                Comentario = "Equipo fuerte con experiencia en competencias nacionales"
+            },
+            new() {
+                Id = 2,
+                NombreEquipo = "Juventud Deportiva",
+                NombreTorneo = "Copa Libertadores",
+                Categoria = "Sub-20",
+                NumeroJugadores = 16,
+                Estado = "Aprobada",
+                FechaSolicitud = DateTime.Now.AddDays(-7),
+                FechaRespuesta = DateTime.Now.AddDays(-5),
+                Comentario = "Equipo promisorio con buenos resultados"
+            },
+            new() {
+                Id = 3,
+                NombreEquipo = "FC Fuerte",
+                NombreTorneo = "Campeonato Regional",
+                Categoria = "Sub-17",
+                NumeroJugadores = 14,
+                Estado = "Rechazada",
+                FechaSolicitud = DateTime.Now.AddDays(-10),
+                FechaRespuesta = DateTime.Now.AddDays(-8),
+                Comentario = "Cupos limitados para esta categoría"
+            },
+            new() {
+                Id = 4,
+                NombreEquipo = "Atlético Unido",
+                NombreTorneo = "Torneo Nacional 2025",
+                Categoria = "Sub-20",
+                NumeroJugadores = 17,
+                Estado = "Pendiente",
+                FechaSolicitud = DateTime.Now.AddDays(-2),
+                Comentario = "Segunda solicitud con mejoras respecto a la primera"
+            }
+        };
+        return Task.CompletedTask;
+    }
+
+    private List<SolicitudEquipoDTO> ObtenerSolicitudesFiltradas()
+    {
+        return _filtroSeleccionado switch
+        {
+            "pendiente" => _solicitudes.Where(s => s.Estado == "Pendiente").ToList(),
+            "aprobada" => _solicitudes.Where(s => s.Estado == "Aprobada").ToList(),
+            "rechazada" => _solicitudes.Where(s => s.Estado == "Rechazada").ToList(),
+            _ => _solicitudes
+        };
+    }
+
+    private string GetEstadoClass(string estado) => estado.ToLower() switch
+    {
+        "pendiente" => "pendiente",
+        "aprobada" => "aprobada",
+        "rechazada" => "rechazada",
+        _ => ""
+    };
+
+    private string GetBadgeClass(string estado) => estado switch
+    {
+        "Pendiente" => "bg-warning",
+        "Aprobada" => "bg-success",
+        "Rechazada" => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    private void CambiarFiltro(string filtro)
+    {
+        _filtroSeleccionado = filtro;
+    }
+
+    private void AbrirModalNuevaSolicitud()
+    {
+        _formularioSolicitud = new();
+        _mostrarModalNueva = true;
+    }
+
+    private void CerrarModal()
+    {
+        _mostrarModalNueva = false;
+    }
+
+    private void GuardarSolicitud()
+    {
+        var nuevaSolicitud = new SolicitudEquipoDTO
+        {
+            Id = _solicitudes.Max(s => s.Id) + 1,
+            NombreEquipo = _formularioSolicitud.NombreEquipo,
+            NombreTorneo = _formularioSolicitud.NombreTorneo,
+            Categoria = _formularioSolicitud.Categoria,
+            NumeroJugadores = _formularioSolicitud.NumeroJugadores,
+            Estado = "Pendiente",
+            FechaSolicitud = DateTime.Now,
+            Comentario = _formularioSolicitud.Comentario
+        };
+        _solicitudes.Add(nuevaSolicitud);
+        CerrarModal();
+    }
+
+    private void AprobarSolicitud(SolicitudEquipoDTO solicitud)
+    {
+        solicitud.Estado = "Aprobada";
+        solicitud.FechaRespuesta = DateTime.Now;
+    }
+
+    private void RechazarSolicitud(SolicitudEquipoDTO solicitud)
+    {
+        solicitud.Estado = "Rechazada";
+        solicitud.FechaRespuesta = DateTime.Now;
+    }
+
+    private void VerDetalles(SolicitudEquipoDTO solicitud)
+    {
+        _solicitudSeleccionada = solicitud;
+        _mostrarModalDetalles = true;
+    }
+
+    private void CerrarModalDetalles()
+    {
+        _mostrarModalDetalles = false;
+        _solicitudSeleccionada = null;
+    }
+
+    private void EliminarSolicitud(SolicitudEquipoDTO solicitud)
+    {
+        _solicitudes.Remove(solicitud);
+    }
+
+    public class SolicitudEquipoDTO
+    {
+        public int Id { get; set; }
+        public string NombreEquipo { get; set; } = "";
+        public string NombreTorneo { get; set; } = "";
+        public string Categoria { get; set; } = "";
+        public int NumeroJugadores { get; set; }
+        public string Estado { get; set; } = "Pendiente";
+        public DateTime FechaSolicitud { get; set; }
+        public DateTime? FechaRespuesta { get; set; }
+        public string Comentario { get; set; } = "";
+    }
+
+    public class SolicitudEquipoFormularioDTO
+    {
+        public string NombreEquipo { get; set; } = "";
+        public string NombreTorneo { get; set; } = "";
+        public string Categoria { get; set; } = "";
+        public int NumeroJugadores { get; set; }
+        public string Comentario { get; set; } = "";
+    }
+}

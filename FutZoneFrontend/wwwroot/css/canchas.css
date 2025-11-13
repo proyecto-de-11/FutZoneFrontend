@@ -1,0 +1,313 @@
+/* Estilos para Gestión de Canchas */
+
+/* Header Gradient */
+.header-gradient-empresas {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    padding: 40px 20px !important;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+/* Stat Cards */
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card.gradient-blue {
+    border-left: 5px solid #3b82f6;
+}
+
+.stat-card.gradient-green {
+    border-left: 5px solid #10b981;
+}
+
+.stat-card.gradient-orange {
+    border-left: 5px solid #f59e0b;
+}
+
+.stat-card.gradient-purple {
+    border-left: 5px solid #8b5cf6;
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.stat-content h5 {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-bottom: 5px;
+}
+
+.stat-number {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #374151;
+    margin: 0;
+}
+
+/* Cancha Card */
+.cancha-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.cancha-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: #667eea;
+    transform: translateY(-5px);
+}
+
+.cancha-card.deshabilitada {
+    opacity: 0.7;
+    background-color: #f9fafb;
+}
+
+.cancha-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.cancha-nombre {
+    margin: 0;
+    font-weight: bold;
+    color: white;
+}
+
+.cancha-ubicacion {
+    margin: 5px 0 0 0;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+}
+
+.cancha-details {
+    padding: 15px;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 0.95rem;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-label {
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.detail-value {
+    color: #374151;
+    font-weight: 500;
+}
+
+/* Horarios Section */
+.horarios-section {
+    padding: 15px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.horarios-title {
+    margin: 0 0 12px 0;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+.horarios-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.horario-badge {
+    padding: 8px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.horario-badge.disponible {
+    background: #dbeafe;
+    color: #1e40af;
+    border: 1px solid #3b82f6;
+}
+
+.horario-badge.disponible:hover {
+    background: #bfdbfe;
+    transform: scale(1.05);
+}
+
+.horario-badge.ocupado {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #ef4444;
+}
+
+.horario-hora {
+    display: block;
+    margin-bottom: 4px;
+}
+
+.horario-estado {
+    font-size: 0.7rem;
+}
+
+/* Días Section */
+.dias-section {
+    padding: 15px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.dias-title {
+    margin: 0 0 12px 0;
+    color: #374151;
+    font-size: 0.9rem;
+}
+
+.dias-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+}
+
+.dia-badge {
+    padding: 8px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.dia-badge.activo {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.dia-badge.inactivo {
+    background: #f3f4f6;
+    color: #9ca3af;
+}
+
+/* Cancha Actions */
+.cancha-actions {
+    padding: 12px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: white;
+    justify-content: space-between;
+}
+
+.cancha-actions .btn {
+    flex: 1;
+    min-width: 90px;
+}
+
+/* Modales */
+.modal {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.modal.show {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    border: none;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.dias-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+}
+
+.horarios-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.horario-check {
+    padding: 8px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.horario-check:has(.form-check-input:checked) {
+    background: #dbeafe;
+    border-color: #3b82f6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .cancha-card {
+        margin-bottom: 20px;
+    }
+
+    .horarios-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .cancha-actions {
+        flex-direction: column;
+    }
+
+    .cancha-actions .btn {
+        width: 100%;
+    }
+
+    .stat-card {
+        flex-direction: column;
+        text-align: center;
+    }
+}

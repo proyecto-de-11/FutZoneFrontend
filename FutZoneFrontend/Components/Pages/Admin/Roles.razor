@@ -1,0 +1,101 @@
+@page "/admin/roles"
+
+<PageTitle>Gestión de Roles - FutZone</PageTitle>
+
+<div class="container-fluid">
+    <h1>Gestión de Roles</h1>
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">Roles</h3>
+                <button class="btn btn-primary" @onclick="() => ShowCreateModal()">
+                    <i class="bi bi-plus-circle"></i> Nuevo Rol
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (_roles == null)
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center">Cargando...</td>
+                            </tr>
+                        }
+                        else if (!_roles.Any())
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center">No hay roles registrados</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var rol in _roles)
+                            {
+                                <tr>
+                                    <td>@rol.Id</td>
+                                    <td>@rol.Nombre</td>
+                                    <td>@rol.Descripcion</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info me-1" @onclick="() => ShowEditModal(rol)">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" @onclick="() => ShowDeleteModal(rol)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Rol> _roles = new();
+
+    protected override Task OnInitializedAsync()
+    {
+        // TODO: Implementar carga de roles desde el servicio
+        _roles = new List<Rol>
+        {
+            new() { Id = 1, Nombre = "Admin", Descripcion = "Administrador del sistema" },
+            new() { Id = 2, Nombre = "Usuario", Descripcion = "Usuario regular" }
+        };
+        return Task.CompletedTask;
+    }
+
+    private void ShowCreateModal()
+    {
+        // TODO: Implementar modal de creación
+    }
+
+    private void ShowEditModal(Rol rol)
+    {
+        // TODO: Implementar modal de edición
+    }
+
+    private void ShowDeleteModal(Rol rol)
+    {
+        // TODO: Implementar modal de eliminación
+    }
+
+    public class Rol
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = "";
+        public string Descripcion { get; set; } = "";
+    }
+}

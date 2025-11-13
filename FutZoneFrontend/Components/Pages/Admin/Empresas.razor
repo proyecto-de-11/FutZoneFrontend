@@ -1,0 +1,129 @@
+@page "/admin/empresas"
+
+<PageTitle>Gestión de Empresas - FutZone</PageTitle>
+
+<div class="container-fluid">
+    <h1>Gestión de Empresas</h1>
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">Empresas</h3>
+                <button class="btn btn-primary" @onclick="() => ShowCreateModal()">
+                    <i class="bi bi-plus-circle"></i> Nueva Empresa
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>RUC</th>
+                            <th>Dirección</th>
+                            <th>Teléfono</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (_empresas == null)
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center">Cargando...</td>
+                            </tr>
+                        }
+                        else if (!_empresas.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center">No hay empresas registradas</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var empresa in _empresas)
+                            {
+                                <tr>
+                                    <td>@empresa.Id</td>
+                                    <td>@empresa.Nombre</td>
+                                    <td>@empresa.RUC</td>
+                                    <td>@empresa.Direccion</td>
+                                    <td>@empresa.Telefono</td>
+                                    <td>
+                                        <span class="badge @(empresa.Estado ? "bg-success" : "bg-danger")">
+                                            @(empresa.Estado ? "Activo" : "Inactivo")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info me-1" @onclick="() => ShowEditModal(empresa)">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-warning me-1" @onclick="() => ToggleEstado(empresa)">
+                                            <i class="bi bi-power"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" @onclick="() => ShowDeleteModal(empresa)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Empresa> _empresas = new();
+
+    protected override Task OnInitializedAsync()
+    {
+        // TODO: Implementar carga de empresas desde el servicio
+        _empresas = new List<Empresa>
+        {
+            new() { 
+                Id = 1, 
+                Nombre = "Empresa Demo", 
+                RUC = "20123456789", 
+                Direccion = "Av. Principal 123",
+                Telefono = "999888777",
+                Estado = true
+            }
+        };
+        return Task.CompletedTask;
+    }
+
+    private void ShowCreateModal()
+    {
+        // TODO: Implementar modal de creación
+    }
+
+    private void ShowEditModal(Empresa empresa)
+    {
+        // TODO: Implementar modal de edición
+    }
+
+    private void ShowDeleteModal(Empresa empresa)
+    {
+        // TODO: Implementar modal de eliminación
+    }
+
+    private void ToggleEstado(Empresa empresa)
+    {
+        // TODO: Implementar cambio de estado
+        empresa.Estado = !empresa.Estado;
+    }
+
+    public class Empresa
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = "";
+        public string RUC { get; set; } = "";
+        public string Direccion { get; set; } = "";
+        public string Telefono { get; set; } = "";
+        public bool Estado { get; set; }
+    }
+}

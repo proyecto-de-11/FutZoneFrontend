@@ -1,0 +1,573 @@
+@page "/admin/dashboard"
+
+<PageTitle>Dashboard Administrativo - FutZone</PageTitle>
+
+<div class="admin-dashboard">
+    <!-- Header -->
+    <div class="admin-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h1 class="mb-0">⚽ Dashboard de Propietario de Publicidad</h1>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-primary" @onclick="AbrirModalNuevaEmpresa">
+                        <i class="bi bi-plus-circle"></i> Nueva Empresa
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="admin-content">
+        <div class="container-fluid">
+            <!-- Tarjetas de Resumen -->
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="stat-card bg-primary">
+                        <div class="stat-icon">
+                            <i class="bi bi-building"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h6>Empresas Activas</h6>
+                            <h3>@_empresasActivas</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="stat-card bg-success">
+                        <div class="stat-icon">
+                            <i class="bi bi-people"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h6>Usuarios Totales</h6>
+                            <h3>@_usuariosTotales</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="stat-card bg-info">
+                        <div class="stat-icon">
+                            <i class="bi bi-calendar-event"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h6>Reservas Este Mes</h6>
+                            <h3>@_reservasEsteMes</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="stat-card bg-warning">
+                        <div class="stat-icon">
+                            <i class="bi bi-currency-dollar"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h6>Ingresos Mensuales</h6>
+                            <h3>$@_ingresosMensuales</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección Principal -->
+            <div class="row">
+                <!-- Lista de Empresas -->
+                <div class="col-lg-8">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Empresas Registradas</h5>
+                            <small class="text-muted">Total: @_empresas.Count()</small>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Nombre</th>
+                                            <th>RUC</th>
+                                            <th>Empleados</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @if (_empresas == null || !_empresas.Any())
+                                        {
+                                            <tr>
+                                                <td colspan="5" class="text-center py-4 text-muted">
+                                                    No hay empresas registradas
+                                                </td>
+                                            </tr>
+                                        }
+                                        else
+                                        {
+                                            @foreach (var empresa in _empresas)
+                                            {
+                                                <tr>
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="avatar-sm bg-primary text-white rounded me-2">
+                                                                <span class="fw-bold">@empresa.Nombre.Substring(0, 1)</span>
+                                                            </div>
+                                                            @empresa.Nombre
+                                                        </div>
+                                                    </td>
+                                                    <td>@empresa.RUC</td>
+                                                    <td>@empresa.NumeroEmpleados</td>
+                                                    <td>
+                                                        <span class="badge @(empresa.Activa ? "bg-success" : "bg-danger")">
+                                                            @(empresa.Activa ? "Activa" : "Inactiva")
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-outline-primary me-2" @onclick="() => EditarEmpresa(empresa)">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </button>
+                                                        <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarEmpresa(empresa)">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel Derecho -->
+                <div class="col-lg-4">
+                    <!-- Actividad Reciente -->
+                    <div class="card shadow-sm mb-3">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0">Actividad Reciente</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="activity-list">
+                                @foreach (var actividad in _actividadReciente)
+                                {
+                                    <div class="activity-item d-flex mb-3 pb-3 border-bottom">
+                                        <div class="activity-icon me-3">
+                                            <i class="bi @actividad.Icono"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <p class="mb-1"><strong>@actividad.Titulo</strong></p>
+                                            <small class="text-muted">@actividad.Descripcion</small>
+                                            <br />
+                                            <small class="text-muted">@actividad.Hora</small>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Roles del Sistema -->
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Roles del Sistema</h5>
+                            <button class="btn btn-sm btn-primary" @onclick="AbrirModalNuevoRol">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush">
+                                @foreach (var rol in _roles)
+                                {
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">@rol.Nombre</h6>
+                                            <small class="text-muted">@rol.Descripcion</small>
+                                        </div>
+                                        <span class="badge bg-secondary">@rol.Usuarios</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Nueva Empresa -->
+@if (_mostrarModalEmpresa)
+{
+    <div class="modal fade show d-block" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(_empresaSeleccionada == null ? "Crear Nueva Empresa" : "Editar Empresa")</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModalEmpresa"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre de la Empresa</label>
+                        <input type="text" class="form-control" placeholder="Ej. Tech Solutions" @bind="_empresaFormulario.Nombre">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descripción</label>
+                        <textarea class="form-control" rows="3" placeholder="Describe brevemente tu empresa" @bind="_empresaFormulario.Descripcion"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Número de Empleados</label>
+                        <input type="number" class="form-control" placeholder="Ej. 50" @bind="_empresaFormulario.NumeroEmpleados">
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="activa" @bind="_empresaFormulario.Activa">
+                        <label class="form-check-label" for="activa">
+                            Empresa Activa
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CerrarModalEmpresa">Cancelar</button>
+                    <button type="button" class="btn btn-primary" @onclick="GuardarEmpresa">
+                        @(_empresaSeleccionada == null ? "Crear Empresa" : "Actualizar Empresa")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal: Nuevo Rol -->
+@if (_mostrarModalRol)
+{
+    <div class="modal fade show d-block" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Crear Nuevo Rol</h5>
+                    <button type="button" class="btn-close" @onclick="CerrarModalRol"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nombre del Rol</label>
+                        <input type="text" class="form-control" placeholder="Ej. Gerente" @bind="_rolFormulario.Nombre">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descripción</label>
+                        <textarea class="form-control" rows="3" placeholder="Describe los permisos de este rol" @bind="_rolFormulario.Descripcion"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CerrarModalRol">Cancelar</button>
+                    <button type="button" class="btn btn-primary" @onclick="GuardarRol">Crear Rol</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<style>
+    .admin-dashboard {
+        min-height: 100vh;
+        background-color: #f8f9fa;
+    }
+
+    .admin-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    .admin-header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+    }
+
+    .admin-content {
+        padding-bottom: 2rem;
+    }
+
+    .stat-card {
+        padding: 1.5rem;
+        border-radius: 0.75rem;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+    }
+
+    .stat-icon {
+        font-size: 2.5rem;
+        opacity: 0.8;
+    }
+
+    .stat-content h6 {
+        font-size: 0.875rem;
+        font-weight: 600;
+        opacity: 0.9;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-content h3 {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .bg-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .bg-success {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .bg-info {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    .bg-warning {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+
+    .avatar-sm {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+    }
+
+    .activity-item {
+        transition: all 0.2s;
+    }
+
+    .activity-item:hover {
+        background-color: #f8f9fa;
+        padding-left: 0.5rem;
+    }
+
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        color: #667eea;
+    }
+
+    .card {
+        border: none;
+        border-radius: 0.75rem;
+    }
+
+    .card-header {
+        border-bottom: 1px solid #e9ecef;
+        border-radius: 0.75rem 0.75rem 0 0;
+    }
+
+    .modal.d-block {
+        display: block;
+    }
+</style>
+
+@code {
+    private int _empresasActivas = 8;
+    private int _usuariosTotales = 156;
+    private int _reservasEsteMes = 245;
+    private decimal _ingresosMensuales = 12500;
+
+    private List<EmpresaDTO> _empresas = new();
+    private List<RolDTO> _roles = new();
+    private List<ActividadDTO> _actividadReciente = new();
+
+    private bool _mostrarModalEmpresa = false;
+    private bool _mostrarModalRol = false;
+
+    private EmpresaDTO? _empresaSeleccionada;
+    private EmpresaFormularioDTO _empresaFormulario = new();
+    private RolFormularioDTO _rolFormulario = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private Task CargarDatos()
+    {
+        // Cargar empresas
+        _empresas = new List<EmpresaDTO>
+        {
+            new() { Id = 1, Nombre = "Tech Solutions", RUC = "20123456789", NumeroEmpleados = 50, Activa = true, Descripcion = "Soluciones tecnológicas" },
+            new() { Id = 2, Nombre = "SportZone", RUC = "20987654321", NumeroEmpleados = 35, Activa = true, Descripcion = "Gestión de espacios deportivos" },
+            new() { Id = 3, Nombre = "FutAcademy", RUC = "20555666777", NumeroEmpleados = 25, Activa = true, Descripcion = "Academia de fútbol" },
+            new() { Id = 4, Nombre = "EventCenter", RUC = "20111222333", NumeroEmpleados = 40, Activa = false, Descripcion = "Centro de eventos" },
+        };
+
+        // Cargar roles
+        _roles = new List<RolDTO>
+        {
+            new() { Id = 1, Nombre = "Administrador", Descripcion = "Acceso total al sistema", Usuarios = 5 },
+            new() { Id = 2, Nombre = "Gerente", Descripcion = "Gestión de empresas", Usuarios = 12 },
+            new() { Id = 3, Nombre = "Usuario", Descripcion = "Usuario regular", Usuarios = 139 },
+        };
+
+        // Cargar actividad reciente
+        _actividadReciente = new List<ActividadDTO>
+        {
+            new() { Titulo = "Nueva empresa registrada", Descripcion = "SportZone se unió a la plataforma", Hora = "Hace 2 horas", Icono = "bi-building" },
+            new() { Titulo = "Reserva confirmada", Descripcion = "150 reservas procesadas este mes", Hora = "Hace 4 horas", Icono = "bi-check-circle" },
+            new() { Titulo = "Usuario nuevo", Descripcion = "Se registró un nuevo usuario", Hora = "Hace 1 día", Icono = "bi-person-plus" },
+            new() { Titulo = "Pago procesado", Descripcion = "$2,500 en transacciones", Hora = "Hace 1 día", Icono = "bi-cash" },
+        };
+        return Task.CompletedTask;
+    }
+
+    private void AbrirModalNuevaEmpresa()
+    {
+        _empresaSeleccionada = null;
+        _empresaFormulario = new();
+        _mostrarModalEmpresa = true;
+    }
+
+    private void CerrarModalEmpresa()
+    {
+        _mostrarModalEmpresa = false;
+        _empresaFormulario = new();
+    }
+
+    private void EditarEmpresa(EmpresaDTO empresa)
+    {
+        _empresaSeleccionada = empresa;
+        _empresaFormulario = new()
+        {
+            Nombre = empresa.Nombre,
+            Descripcion = empresa.Descripcion,
+            NumeroEmpleados = empresa.NumeroEmpleados,
+            Activa = empresa.Activa
+        };
+        _mostrarModalEmpresa = true;
+    }
+
+    private void GuardarEmpresa()
+    {
+        if (string.IsNullOrEmpty(_empresaFormulario.Nombre))
+        {
+            return;
+        }
+
+        if (_empresaSeleccionada == null)
+        {
+            // Crear nueva
+            var nuevaEmpresa = new EmpresaDTO
+            {
+                Id = _empresas.Max(e => e.Id) + 1,
+                Nombre = _empresaFormulario.Nombre,
+                Descripcion = _empresaFormulario.Descripcion,
+                NumeroEmpleados = _empresaFormulario.NumeroEmpleados,
+                Activa = _empresaFormulario.Activa,
+                RUC = "20" + new Random().Next(100000000, 999999999)
+            };
+            _empresas.Add(nuevaEmpresa);
+        }
+        else
+        {
+            // Actualizar
+            _empresaSeleccionada.Nombre = _empresaFormulario.Nombre;
+            _empresaSeleccionada.Descripcion = _empresaFormulario.Descripcion;
+            _empresaSeleccionada.NumeroEmpleados = _empresaFormulario.NumeroEmpleados;
+            _empresaSeleccionada.Activa = _empresaFormulario.Activa;
+        }
+
+        CerrarModalEmpresa();
+    }
+
+    private void EliminarEmpresa(EmpresaDTO empresa)
+    {
+        _empresas.Remove(empresa);
+    }
+
+    private void AbrirModalNuevoRol()
+    {
+        _rolFormulario = new();
+        _mostrarModalRol = true;
+    }
+
+    private void CerrarModalRol()
+    {
+        _mostrarModalRol = false;
+        _rolFormulario = new();
+    }
+
+    private void GuardarRol()
+    {
+        if (string.IsNullOrEmpty(_rolFormulario.Nombre))
+        {
+            return;
+        }
+
+        var nuevoRol = new RolDTO
+        {
+            Id = _roles.Max(r => r.Id) + 1,
+            Nombre = _rolFormulario.Nombre,
+            Descripcion = _rolFormulario.Descripcion,
+            Usuarios = 0
+        };
+        _roles.Add(nuevoRol);
+
+        CerrarModalRol();
+    }
+
+    public class EmpresaDTO
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = "";
+        public string Descripcion { get; set; } = "";
+        public string RUC { get; set; } = "";
+        public int NumeroEmpleados { get; set; }
+        public bool Activa { get; set; }
+    }
+
+    public class RolDTO
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = "";
+        public string Descripcion { get; set; } = "";
+        public int Usuarios { get; set; }
+    }
+
+    public class ActividadDTO
+    {
+        public string Titulo { get; set; } = "";
+        public string Descripcion { get; set; } = "";
+        public string Hora { get; set; } = "";
+        public string Icono { get; set; } = "";
+    }
+
+    public class EmpresaFormularioDTO
+    {
+        public string Nombre { get; set; } = "";
+        public string Descripcion { get; set; } = "";
+        public int NumeroEmpleados { get; set; }
+        public bool Activa { get; set; } = true;
+    }
+
+    public class RolFormularioDTO
+    {
+        public string Nombre { get; set; } = "";
+        public string Descripcion { get; set; } = "";
+    }
+}
