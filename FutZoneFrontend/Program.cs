@@ -24,6 +24,7 @@ builder.Services.AddScoped<HttpClient>(sp =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IRolService, RolService>();
 builder.Services.AddScoped<ITipoDeporteService, TipoDeporteService>();
+builder.Services.AddScoped<IPropietarioService, PropietarioService>();
 
 var app = builder.Build();
 

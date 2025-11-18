@@ -58,17 +58,6 @@
                         <input type="password" class="form-control" id="confirmPassword" placeholder="Confirma tu contraseña"
                                @bind="RegisterModel.ConfirmPassword" required disabled="@IsLoading">
                     </div>
-                    <div class="mb-3">
-                        <label for="favoriteSport" class="form-label">Deporte Favorito</label>
-                        <select class="form-select" id="favoriteSport" @bind="RegisterModel.FavoriteSport" disabled="@IsLoading">
-                            <option value="">Elige tu deporte...</option>
-                            <option value="futbol">Fútbol</option>
-                            <option value="baloncesto">Baloncesto</option>
-                            <option value="tenis">Tenis</option>
-                            <option value="beisbol">Béisbol</option>
-                            <option value="otro">Otro</option>
-                        </select>
-                    </div>
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-success btn-lg" disabled="@IsLoading">
                             @if (IsLoading)

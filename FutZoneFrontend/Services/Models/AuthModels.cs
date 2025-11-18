@@ -8,10 +8,14 @@ namespace FutZoneFrontend.Services.Models
 
     public class LoginResponse
     {
-        public bool Success { get; set; }
+        public bool Success { get; set; } = true;  // Por defecto true si deserializa correctamente
         public string Message { get; set; } = string.Empty;
         public string? Token { get; set; }
         public Usuario? User { get; set; }
+        // Campos adicionales para compatibilidad con API Java
+        public int? UserId { get; set; }
+        public string? Email { get; set; }
+        public string? Rol { get; set; }
     }
 
     public class RegisterRequest

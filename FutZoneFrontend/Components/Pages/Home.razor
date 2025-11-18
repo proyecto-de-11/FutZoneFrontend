@@ -1,5 +1,8 @@
 @page "/home"
 @using System.Collections.Generic
+@using FutZoneFrontend.Services
+@using FutZoneFrontend.Services.Models
+@inject IPropietarioService PropietarioService
 
 <style>
     body { background: linear-gradient(135deg,#155A8A 70%,#fafafa); }
@@ -18,10 +21,28 @@
 </style>
 
 <div class="container py-4">
-  <div class="inicio-header mb-4 text-center">
-    <h2 class="mb-1"><i class="bi bi-house-door-fill"></i> Inicio de Usuario</h2>
-    <small>Explora publicaciones, torneos y equipos cerca de ti</small>
-  </div>
+  @if (IsLoading)
+  {
+    <div class="alert alert-info text-center">
+      <span class="spinner-border spinner-border-sm me-2"></span>
+      <span>Cargando información...</span>
+    </div>
+  }
+
+  @if (!string.IsNullOrEmpty(ErrorMessage))
+  {
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      @ErrorMessage
+      <button type="button" class="btn-close" @onclick="() => ErrorMessage = string.Empty"></button>
+    </div>
+  }
+
+  @if (!IsLoading)
+  {
+    <div class="inicio-header mb-4 text-center">
+      <h2 class="mb-1"><i class="bi bi-house-door-fill"></i> Inicio de Usuario</h2>
+      <small>Explora publicaciones, torneos y equipos cerca de ti</small>
+    </div>
 
   <!-- Publicación Torneo -->
   <div class="card card-torneo shadow-sm mb-3">
@@ -56,7 +77,7 @@
   </div>
 
   <!-- Posteos sociales, anuncios -->
-  <div class="list-group shadow-sm">
+  <div class="list-group shadow-sm mb-4">
     @foreach (var post in RecentPosts)
     {
       <div class="list-group-item">
@@ -65,6 +86,61 @@
       </div>
     }
   </div>
+
+  <!-- Tipos de Deporte -->
+  @if (TiposDeporte.Any())
+  {
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-info text-white">
+        <i class="bi bi-trophy"></i> Deportes Disponibles
+      </div>
+      <div class="card-body">
+        <div class="row">
+          @foreach (var deporte in TiposDeporte)
+          {
+            <div class="col-md-6 col-lg-4 mb-3">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h5 class="card-title">@deporte.Nombre</h5>
+                  <p class="card-text text-muted">@deporte.Descripcion</p>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Membresías Disponibles -->
+  @if (Membresias.Any())
+  {
+    <div class="card shadow-sm">
+      <div class="card-header bg-warning text-dark">
+        <i class="bi bi-star-fill"></i> Membresías Disponibles
+      </div>
+      <div class="card-body">
+        <div class="row">
+          @foreach (var membresia in Membresias)
+          {
+            <div class="col-md-6 col-lg-4 mb-3">
+              <div class="card border-primary h-100">
+                <div class="card-body">
+                  <h5 class="card-title">@membresia.Nombre</h5>
+                  <p class="card-text">@membresia.Descripcion</p>
+                  <p class="text-primary fw-bold">
+                    <i class="bi bi-currency-dollar"></i> @membresia.Precio.ToString("N2")
+                  </p>
+                  <small class="text-muted">Duración: @membresia.DuracionDias días</small>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+  }
 </div>
 
 @code {
@@ -83,19 +159,63 @@
 
     private List<TeamModel> FeaturedTeams = new();
     private List<PostModel> RecentPosts = new();
+    private List<TipoDeporte> TiposDeporte = new();
+    private List<Membresia> Membresias = new();
+    private bool IsLoading = true;
+    private string ErrorMessage = string.Empty;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        FeaturedTeams = new List<TeamModel>
+        try
         {
-            new TeamModel { Name = "Revolución FC", ImageUrl = "https://cdn-icons-png.flaticon.com/512/841/841432.png" },
-            new TeamModel { Name = "Tecnólogos United", ImageUrl = "https://cdn-icons-png.flaticon.com/512/841/841461.png" }
-        };
+            IsLoading = true;
+            ErrorMessage = string.Empty;
 
-        RecentPosts = new List<PostModel>
+            // Cargar tipos de deporte
+            var deportesResponse = await PropietarioService.GetTiposDeporteAsync();
+            if (deportesResponse.Success)
+            {
+                TiposDeporte = deportesResponse.Data;
+                Console.WriteLine($"Tipos de deporte cargados: {TiposDeporte.Count}");
+            }
+            else
+            {
+                Console.WriteLine($"Error cargando deportes: {deportesResponse.Message}");
+            }
+
+            // Cargar membresías
+            var membresiasResponse = await PropietarioService.GetMembresiasAsync();
+            if (membresiasResponse.Success)
+            {
+                Membresias = membresiasResponse.Data;
+                Console.WriteLine($"Membresías cargadas: {Membresias.Count}");
+            }
+            else
+            {
+                Console.WriteLine($"Error cargando membresías: {membresiasResponse.Message}");
+            }
+
+            // Datos estáticos
+            FeaturedTeams = new List<TeamModel>
+            {
+                new TeamModel { Name = "Revolución FC", ImageUrl = "https://cdn-icons-png.flaticon.com/512/841/841432.png" },
+                new TeamModel { Name = "Tecnólogos United", ImageUrl = "https://cdn-icons-png.flaticon.com/512/841/841461.png" }
+            };
+
+            RecentPosts = new List<PostModel>
+            {
+                new PostModel { Author = "Luis", Content = "busca jugadores para amistoso este viernes.", TimeAgo = "Hace 2 horas" },
+                new PostModel { Author = "SportsMX", Content = "publicó resultados de jornada #10.", TimeAgo = "Hace 1 hora" }
+            };
+        }
+        catch (Exception ex)
         {
-            new PostModel { Author = "Luis", Content = "busca jugadores para amistoso este viernes.", TimeAgo = "Hace 2 horas" },
-            new PostModel { Author = "SportsMX", Content = "publicó resultados de jornada #10.", TimeAgo = "Hace 1 hora" }
-        };
+            ErrorMessage = $"Error al cargar datos: {ex.Message}";
+            Console.WriteLine($"Excepción: {ex}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
     }
 }

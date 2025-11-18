@@ -29,62 +29,97 @@ namespace FutZoneFrontend.Services
         {
             try
             {
-                // GET /api/usuarios con email y contrasena
-                var url = $"/api/usuarios?email={Uri.EscapeDataString(request.Email)}&contrasena={Uri.EscapeDataString(request.Password)}";
+                Console.WriteLine($"\n========== INICIAR SESIÓN ==========");
+                Console.WriteLine($"Email: {request.Email}");
+                Console.WriteLine($"Contraseña: {new string('*', request.Password.Length)}");
                 
-                Console.WriteLine($"Login Request URL: {url}");
-                var response = await _httpClient.GetAsync(url);
+                // Consumir endpoint: POST /api/auth/login
+                var url = "/api/auth/login";
+                
+                // Enviar con los nombres exactos que espera la API Java
+                var loginData = new 
+                { 
+                    email = request.Email.Trim().ToLower(), 
+                    password = request.Password  // Campo correcto: "password" no "contrasena"
+                };
+                
+                var jsonContent = JsonSerializer.Serialize(loginData);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+                
+                Console.WriteLine($"Enviando a: {url}");
+                Console.WriteLine($"Body: {jsonContent}");
+                
+                var response = await _httpClient.PostAsync(url, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+                
+                Console.WriteLine($"Status: {response.StatusCode}");
+                Console.WriteLine($"Response: {responseContent}");
+                Console.WriteLine($"====================================\n");
                 
                 if (response.IsSuccessStatusCode)
                 {
-                    var jsonContent = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"Login Response: {jsonContent}");
-                    
-                    // Intentar deserializar como lista primero
-                    var usuarios = JsonSerializer.Deserialize<List<Usuario>>(jsonContent, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                    
-                    // Buscar el usuario que coincida EXACTAMENTE con email y contrasena
-                    var user = usuarios?.FirstOrDefault(u => 
-                        u.Email.Equals(request.Email, StringComparison.OrdinalIgnoreCase) &&
-                        u.Contrasena == request.Password);
-                    
-                    if (user != null && !string.IsNullOrEmpty(user.Email) && user.EstaActivo)
+                    try
                     {
-                        // Simulamos un token (en producción vendrá del servidor)
-                        var token = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{user.Email}:{DateTime.UtcNow.Ticks}"));
-                        SetToken(token);
+                        var loginResponse = JsonSerializer.Deserialize<LoginResponse>(responseContent, 
+                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                         
-                        return new LoginResponse 
-                        { 
-                            Success = true, 
-                            Message = "Login exitoso",
-                            Token = token,
-                            User = user
-                        };
-                    }
-                    else
-                    {
+                        if (!string.IsNullOrEmpty(loginResponse?.Token))
+                        {
+                            SetToken(loginResponse.Token);
+                            loginResponse.Success = true;
+                            loginResponse.Message = "Login exitoso";
+                            Console.WriteLine($"✓ LOGIN EXITOSO - Token almacenado");
+                            return loginResponse;
+                        }
+                        
+                        Console.WriteLine($"✗ Respuesta sin token");
                         return new LoginResponse 
                         { 
                             Success = false, 
-                            Message = "Credenciales inválidas o usuario inactivo" 
+                            Message = "No se recibió token" 
+                        };
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"✗ Error deserializando: {ex.Message}");
+                        return new LoginResponse 
+                        { 
+                            Success = false, 
+                            Message = $"Error procesando respuesta: {ex.Message}" 
                         };
                     }
                 }
                 else
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"Login Error Response ({response.StatusCode}): {errorContent}");
-                    return new LoginResponse 
-                    { 
-                        Success = false, 
-                        Message = $"Credenciales inválidas - {response.StatusCode}" 
-                    };
+                    // Mostrar error específico
+                    try
+                    {
+                        var errorObj = JsonSerializer.Deserialize<JsonElement>(responseContent);
+                        var errorMsg = errorObj.GetProperty("message").GetString() ?? 
+                                     errorObj.GetProperty("error").GetString() ?? 
+                                     responseContent;
+                        
+                        Console.WriteLine($"✗ Error API: {errorMsg}");
+                        return new LoginResponse 
+                        { 
+                            Success = false, 
+                            Message = errorMsg ?? "Credenciales inválidas" 
+                        };
+                    }
+                    catch
+                    {
+                        return new LoginResponse 
+                        { 
+                            Success = false, 
+                            Message = $"Error: {response.StatusCode} - Verifica tu email y contraseña" 
+                        };
+                    }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Login Exception: {ex.Message}\n{ex.StackTrace}");
+                Console.WriteLine($"✗ EXCEPCIÓN: {ex.Message}");
+                Console.WriteLine($"Stack: {ex.StackTrace}");
                 return new LoginResponse 
                 { 
                     Success = false, 
@@ -109,9 +144,9 @@ namespace FutZoneFrontend.Services
                 var jsonPayload = JsonSerializer.Serialize(usuarioData);
                 Console.WriteLine($"Register Request Payload: {jsonPayload}");
 
-                // POST /api/usuarios para crear nuevo usuario
+                // POST /api/auth/registrar para crear nuevo usuario
                 var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-                var response = await _httpClient.PostAsync("/api/usuarios", content);
+                var response = await _httpClient.PostAsync("/api/auth/registrar", content);
                 
                 var responseContent = await response.Content.ReadAsStringAsync();
                 Console.WriteLine($"Register Response ({response.StatusCode}): {responseContent}");

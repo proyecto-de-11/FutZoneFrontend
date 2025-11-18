@@ -2,6 +2,9 @@
 @rendermode InteractiveServer
 @using System.Collections.Generic
 @using System.Linq
+@using FutZoneFrontend.Services
+@using FutZoneFrontend.Services.Models
+@inject IPropietarioService PropietarioService
 
 <div class="misreservas-container">
     <!-- HEADER CON GRADIENTE -->
@@ -254,15 +257,38 @@
     private List<Reserva> _reservas = new();
     private List<Reserva> _reservasFiltradas = new();
     private List<Cancha> _canchas = new();
+    private List<UsuarioMembresia> _membresias = new();
     private string _filtroEstado = string.Empty;
     private int _filtroCancha = 0;
     private string _ordenamiento = "fecha-desc";
+    private bool IsLoading = true;
+    private string ErrorMessage = string.Empty;
 
     // CICLO DE VIDA
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        CargarDatos();
-        AplicarFiltros();
+        try
+        {
+            IsLoading = true;
+            // Cargar membresías del usuario
+            var membresiasResponse = await PropietarioService.GetMisMembresiasAsync();
+            if (membresiasResponse.Success)
+            {
+                _membresias = membresiasResponse.Data;
+                Console.WriteLine($"Membresías cargadas: {_membresias.Count}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error al cargar membresías: {ex.Message}";
+            Console.WriteLine($"Excepción: {ex}");
+        }
+        finally
+        {
+            IsLoading = false;
+            CargarDatos();
+            AplicarFiltros();
+        }
     }
 
     // MÉTODOS DE CARGA
