@@ -1,0 +1,453 @@
+/* Dashboard Propietario Styles */
+
+.propietario-dashboard {
+    min-height: 100vh;
+    background: #f8f9fa;
+}
+
+.dashboard-header {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    color: white;
+    padding: 30px 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.dashboard-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.dashboard-header small {
+    display: block;
+    font-size: 0.9rem;
+    margin-top: 5px;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.dashboard-content {
+    padding: 0 20px 50px 20px;
+}
+
+/* KPI Cards */
+.kpi-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-left: 4px solid #0d9488;
+    min-height: 120px;
+}
+
+.kpi-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.kpi-card.kpi-ingresos {
+    border-left-color: #10b981;
+}
+
+.kpi-card.kpi-reservas {
+    border-left-color: #f59e0b;
+}
+
+.kpi-card.kpi-ocupacion {
+    border-left-color: #3b82f6;
+}
+
+.kpi-card.kpi-clientes {
+    border-left-color: #ec4899;
+}
+
+.kpi-icon {
+    font-size: 2.5rem;
+    min-width: 60px;
+    text-align: center;
+}
+
+.kpi-body {
+    flex: 1;
+}
+
+.kpi-body h6 {
+    margin: 0;
+    color: #6b7280;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.kpi-body h2 {
+    margin: 10px 0 5px 0;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.kpi-body small {
+    color: #10b981;
+    font-weight: 600;
+}
+
+/* Section Headers */
+.section-header {
+    margin-top: 40px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.section-header h3 {
+    margin: 0;
+    color: #1f2937;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.section-header .text-muted {
+    font-size: 0.9rem;
+    color: #9ca3af;
+}
+
+/* Mis Canchas Section */
+.canchas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.cancha-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease;
+}
+
+.cancha-card:hover {
+    transform: translateY(-5px);
+}
+
+.cancha-header {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cancha-header h5 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.cancha-body {
+    padding: 15px;
+}
+
+.cancha-stat {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.cancha-stat:last-child {
+    border-bottom: none;
+}
+
+.cancha-stat-label {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.cancha-stat-value {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* Reservas Section */
+.reservas-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.reserva-item {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    border-left: 4px solid #0d9488;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.reserva-info {
+    flex: 1;
+}
+
+.reserva-cancha {
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 5px;
+}
+
+.reserva-detalles {
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+.reserva-status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-right: 10px;
+}
+
+.reserva-status.pendiente {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.reserva-status.confirmada {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.reserva-status.cancelada {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Acciones Rápidas */
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.action-btn {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.action-btn:hover {
+    border-color: #0d9488;
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.15);
+    transform: translateY(-3px);
+    text-decoration: none;
+    color: inherit;
+}
+
+.action-icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.action-title {
+    font-weight: 600;
+    color: #1f2937;
+    margin: 10px 0 5px 0;
+}
+
+.action-desc {
+    font-size: 0.85rem;
+    color: #9ca3af;
+}
+
+/* Tabla Transacciones */
+.transactions-table {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table thead {
+    background: #f3f4f6;
+}
+
+.table th {
+    font-weight: 600;
+    color: #6b7280;
+    border-bottom: 2px solid #e5e7eb;
+    padding: 12px;
+}
+
+.table td {
+    padding: 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.table tbody tr:hover {
+    background: #f9fafb;
+}
+
+.transaction-amount {
+    font-weight: 600;
+    color: #10b981;
+}
+
+.transaction-amount.negative {
+    color: #ef4444;
+}
+
+.transaction-status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.transaction-status.completada {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.transaction-status.pendiente {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+/* Resumen Mensual */
+.resumen-card {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.resumen-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.resumen-item:last-child {
+    border-bottom: none;
+}
+
+.resumen-label {
+    color: #6b7280;
+}
+
+.resumen-valor {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dashboard-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .dashboard-content {
+        padding: 0 15px 30px 15px;
+    }
+
+    .kpi-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+        min-height: auto;
+    }
+
+    .kpi-icon {
+        min-width: auto;
+    }
+
+    .kpi-body h2 {
+        font-size: 1.5rem;
+    }
+
+    .canchas-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .header-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .header-actions button {
+        width: 100%;
+    }
+
+    .reserva-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .reserva-item > div:last-child {
+        width: 100%;
+        margin-top: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-header {
+        padding: 20px 0;
+    }
+
+    .dashboard-content {
+        padding: 0 10px 20px 10px;
+    }
+
+    .section-header h3 {
+        font-size: 1.2rem;
+    }
+
+    .kpi-body h2 {
+        font-size: 1.3rem;
+    }
+
+    .quick-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .table {
+        font-size: 0.8rem;
+    }
+
+    .canchas-grid {
+        grid-template-columns: 1fr;
+    }
+}

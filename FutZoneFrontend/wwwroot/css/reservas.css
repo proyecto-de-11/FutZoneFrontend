@@ -11,10 +11,10 @@
 
 /* HEADER CON GRADIENTE */
 .header-gradient-reservas {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     color: white;
     padding: 40px 0;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
     margin-bottom: 20px;
 }
 
@@ -155,8 +155,8 @@
 }
 
 .filter-item .form-control:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    border-color: #0d9488;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
 }
 
 /* SECCIÓN DE RESERVAS */
@@ -198,12 +198,12 @@
 .reserva-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
-    border-color: #667eea;
+    border-color: #0d9488;
 }
 
 /* HEADER DE CARD */
 .reserva-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
     color: white;
     padding: 16px;
     display: flex;
@@ -309,14 +309,14 @@
 
 .info-item.important .info-value {
     font-weight: 700;
-    color: #667eea;
+    color: #0d9488;
     font-size: 16px;
 }
 
 /* CAJA DE NOTAS */
 .notes-box {
     background: #f9fafb;
-    border-left: 3px solid #667eea;
+    border-left: 3px solid #0d9488;
     padding: 12px;
     border-radius: 6px;
     font-size: 13px;
@@ -642,7 +642,7 @@
 
     .notes-box {
         background: #111827;
-        border-color: #667eea;
+        border-color: #0d9488;
         color: #d1d5db;
     }
 

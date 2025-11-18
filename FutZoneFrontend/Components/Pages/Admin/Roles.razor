@@ -1,101 +1,277 @@
 @page "/admin/roles"
+@using System.Collections.Generic
 
 <PageTitle>Gestión de Roles - FutZone</PageTitle>
 
-<div class="container-fluid">
-    <h1>Gestión de Roles</h1>
-    <div class="card">
-        <div class="card-header">
-            <div class="d-flex justify-content-between align-items-center">
-                <h3 class="mb-0">Roles</h3>
-                <button class="btn btn-primary" @onclick="() => ShowCreateModal()">
-                    <i class="bi bi-plus-circle"></i> Nuevo Rol
-                </button>
+<div class="roles-container">
+    <!-- Header -->
+    <div class="roles-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h1>👥 Gestión de Roles</h1>
+                    <small>Administra los roles y permisos del sistema</small>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-light me-2" onclick="alert('Función disponible pronto')">
+                        <i class="bi bi-plus-circle"></i> Nuevo Rol
+                    </button>
+                </div>
             </div>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>Descripción</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (_roles == null)
-                        {
-                            <tr>
-                                <td colspan="4" class="text-center">Cargando...</td>
-                            </tr>
-                        }
-                        else if (!_roles.Any())
-                        {
-                            <tr>
-                                <td colspan="4" class="text-center">No hay roles registrados</td>
-                            </tr>
-                        }
-                        else
-                        {
-                            @foreach (var rol in _roles)
-                            {
-                                <tr>
-                                    <td>@rol.Id</td>
-                                    <td>@rol.Nombre</td>
-                                    <td>@rol.Descripcion</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-info me-1" @onclick="() => ShowEditModal(rol)">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" @onclick="() => ShowDeleteModal(rol)">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="roles-content">
+        <div class="container-fluid">
+
+            <!-- Roles Grid -->
+            <div class="roles-grid">
+                <!-- Rol: Admin -->
+                <div class="role-card">
+                    <div class="role-header">
+                        <div class="role-icon">🔐</div>
+                        <div class="role-title-section">
+                            <h4 class="role-name">Administrador</h4>
+                            <span class="role-badge admin-badge">Sistema</span>
+                        </div>
+                    </div>
+
+                    <div class="role-body">
+                        <div class="role-description">
+                            Acceso total a todas las funcionalidades del sistema
+                        </div>
+
+                        <div class="role-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Usuarios con este rol:</span>
+                                <span class="stat-value">2</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Permisos:</span>
+                                <span class="stat-value">15</span>
+                            </div>
+                        </div>
+
+                        <div class="role-permissions">
+                            <h6 class="permissions-title">Permisos Principales:</h6>
+                            <div class="permission-list">
+                                <span class="permission-badge">Crear usuarios</span>
+                                <span class="permission-badge">Editar usuarios</span>
+                                <span class="permission-badge">Ver reportes</span>
+                                <span class="permission-badge">Gestionar roles</span>
+                                <span class="permission-badge">Sistema completo</span>
+                            </div>
+                        </div>
+
+                        <div class="role-actions">
+                            <button class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> Ver Detalles
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rol: Empresa -->
+                <div class="role-card">
+                    <div class="role-header">
+                        <div class="role-icon">🏢</div>
+                        <div class="role-title-section">
+                            <h4 class="role-name">Empresa</h4>
+                            <span class="role-badge empresa-badge">Negocio</span>
+                        </div>
+                    </div>
+
+                    <div class="role-body">
+                        <div class="role-description">
+                            Gestión completa de canchas, reservas e ingresos
+                        </div>
+
+                        <div class="role-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Usuarios con este rol:</span>
+                                <span class="stat-value">12</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Permisos:</span>
+                                <span class="stat-value">8</span>
+                            </div>
+                        </div>
+
+                        <div class="role-permissions">
+                            <h6 class="permissions-title">Permisos Principales:</h6>
+                            <div class="permission-list">
+                                <span class="permission-badge">Crear canchas</span>
+                                <span class="permission-badge">Gestionar reservas</span>
+                                <span class="permission-badge">Ver ingresos</span>
+                                <span class="permission-badge">Dashboard propio</span>
+                            </div>
+                        </div>
+
+                        <div class="role-actions">
+                            <button class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> Ver Detalles
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rol: Cliente -->
+                <div class="role-card">
+                    <div class="role-header">
+                        <div class="role-icon">👤</div>
+                        <div class="role-title-section">
+                            <h4 class="role-name">Cliente</h4>
+                            <span class="role-badge cliente-badge">Usuario</span>
+                        </div>
+                    </div>
+
+                    <div class="role-body">
+                        <div class="role-description">
+                            Búsqueda y reserva de canchas disponibles
+                        </div>
+
+                        <div class="role-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Usuarios con este rol:</span>
+                                <span class="stat-value">245</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Permisos:</span>
+                                <span class="stat-value">4</span>
+                            </div>
+                        </div>
+
+                        <div class="role-permissions">
+                            <h6 class="permissions-title">Permisos Principales:</h6>
+                            <div class="permission-list">
+                                <span class="permission-badge">Ver canchas</span>
+                                <span class="permission-badge">Crear reservas</span>
+                                <span class="permission-badge">Perfil propio</span>
+                                <span class="permission-badge">Historial reservas</span>
+                            </div>
+                        </div>
+
+                        <div class="role-actions">
+                            <button class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> Ver Detalles
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rol: Moderador -->
+                <div class="role-card">
+                    <div class="role-header">
+                        <div class="role-icon">⚖️</div>
+                        <div class="role-title-section">
+                            <h4 class="role-name">Moderador</h4>
+                            <span class="role-badge moderador-badge">Soporte</span>
+                        </div>
+                    </div>
+
+                    <div class="role-body">
+                        <div class="role-description">
+                            Supervisión de conflictos y soporte a usuarios
+                        </div>
+
+                        <div class="role-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Usuarios con este rol:</span>
+                                <span class="stat-value">5</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Permisos:</span>
+                                <span class="stat-value">6</span>
+                            </div>
+                        </div>
+
+                        <div class="role-permissions">
+                            <h6 class="permissions-title">Permisos Principales:</h6>
+                            <div class="permission-list">
+                                <span class="permission-badge">Ver reportes</span>
+                                <span class="permission-badge">Resolver conflictos</span>
+                                <span class="permission-badge">Suspender usuarios</span>
+                                <span class="permission-badge">Contactar soporte</span>
+                            </div>
+                        </div>
+
+                        <div class="role-actions">
+                            <button class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> Ver Detalles
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            <!-- Tabla de Resumen -->
+            <div class="roles-summary mt-5">
+                <h3 class="summary-title">Resumen de Roles</h3>
+                <div class="summary-table-wrapper">
+                    <table class="summary-table">
+                        <thead>
+                            <tr>
+                                <th>Rol</th>
+                                <th>Descripción</th>
+                                <th>Usuarios</th>
+                                <th>Permisos</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Administrador</strong></td>
+                                <td>Acceso total del sistema</td>
+                                <td><span class="badge bg-teal">2</span></td>
+                                <td><span class="badge bg-teal">15</span></td>
+                                <td><span class="status-badge active">Activo</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Empresa</strong></td>
+                                <td>Gestión de negocio</td>
+                                <td><span class="badge bg-teal">12</span></td>
+                                <td><span class="badge bg-teal">8</span></td>
+                                <td><span class="status-badge active">Activo</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Cliente</strong></td>
+                                <td>Usuario final</td>
+                                <td><span class="badge bg-teal">245</span></td>
+                                <td><span class="badge bg-teal">4</span></td>
+                                <td><span class="status-badge active">Activo</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Moderador</strong></td>
+                                <td>Supervisor</td>
+                                <td><span class="badge bg-teal">5</span></td>
+                                <td><span class="badge bg-teal">6</span></td>
+                                <td><span class="status-badge active">Activo</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
 
 @code {
-    private List<Rol> _roles = new();
-
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        // TODO: Implementar carga de roles desde el servicio
-        _roles = new List<Rol>
-        {
-            new() { Id = 1, Nombre = "Admin", Descripcion = "Administrador del sistema" },
-            new() { Id = 2, Nombre = "Usuario", Descripcion = "Usuario regular" }
-        };
-        return Task.CompletedTask;
-    }
-
-    private void ShowCreateModal()
-    {
-        // TODO: Implementar modal de creación
-    }
-
-    private void ShowEditModal(Rol rol)
-    {
-        // TODO: Implementar modal de edición
-    }
-
-    private void ShowDeleteModal(Rol rol)
-    {
-        // TODO: Implementar modal de eliminación
-    }
-
-    public class Rol
-    {
-        public int Id { get; set; }
-        public string Nombre { get; set; } = "";
-        public string Descripcion { get; set; } = "";
+        await Task.CompletedTask;
     }
 }

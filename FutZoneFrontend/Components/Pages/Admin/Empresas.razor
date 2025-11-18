@@ -1,129 +1,327 @@
 @page "/admin/empresas"
+@using System.Collections.Generic
 
 <PageTitle>Gestión de Empresas - FutZone</PageTitle>
 
-<div class="container-fluid">
-    <h1>Gestión de Empresas</h1>
-    <div class="card">
-        <div class="card-header">
-            <div class="d-flex justify-content-between align-items-center">
-                <h3 class="mb-0">Empresas</h3>
-                <button class="btn btn-primary" @onclick="() => ShowCreateModal()">
-                    <i class="bi bi-plus-circle"></i> Nueva Empresa
-                </button>
+<div class="empresas-container">
+    <!-- Header -->
+    <div class="empresas-header">
+        <div class="container-fluid">
+            <div class="row align-items-center">
+                <div class="col">
+                    <h1>🏢 Gestión de Empresas</h1>
+                    <small>Administra todas las empresas asociadas a FutZone</small>
+                </div>
+                <div class="col-auto">
+                    <button class="btn btn-light me-2" onclick="alert('Función disponible pronto')">
+                        <i class="bi bi-plus-circle"></i> Nueva Empresa
+                    </button>
+                </div>
             </div>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nombre</th>
-                            <th>RUC</th>
-                            <th>Dirección</th>
-                            <th>Teléfono</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (_empresas == null)
-                        {
-                            <tr>
-                                <td colspan="7" class="text-center">Cargando...</td>
-                            </tr>
-                        }
-                        else if (!_empresas.Any())
-                        {
-                            <tr>
-                                <td colspan="7" class="text-center">No hay empresas registradas</td>
-                            </tr>
-                        }
-                        else
-                        {
-                            @foreach (var empresa in _empresas)
-                            {
-                                <tr>
-                                    <td>@empresa.Id</td>
-                                    <td>@empresa.Nombre</td>
-                                    <td>@empresa.RUC</td>
-                                    <td>@empresa.Direccion</td>
-                                    <td>@empresa.Telefono</td>
-                                    <td>
-                                        <span class="badge @(empresa.Estado ? "bg-success" : "bg-danger")">
-                                            @(empresa.Estado ? "Activo" : "Inactivo")
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-sm btn-info me-1" @onclick="() => ShowEditModal(empresa)">
-                                            <i class="bi bi-pencil"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-warning me-1" @onclick="() => ToggleEstado(empresa)">
-                                            <i class="bi bi-power"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-danger" @onclick="() => ShowDeleteModal(empresa)">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="empresas-content">
+        <div class="container-fluid">
+
+            <!-- Stats Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="stat-card">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-body">
+                            <h6>Total Empresas</h6>
+                            <h3>28</h3>
+                            <small class="stat-trend">↑ 3 nuevas este mes</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-body">
+                            <h6>Activas</h6>
+                            <h3>25</h3>
+                            <small class="stat-trend">89% del total</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="stat-card">
+                        <div class="stat-icon">⏸️</div>
+                        <div class="stat-body">
+                            <h6>Suspendidas</h6>
+                            <h3>3</h3>
+                            <small class="stat-trend">Por revisar</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3 mb-3">
+                    <div class="stat-card">
+                        <div class="stat-icon">🎟️</div>
+                        <div class="stat-body">
+                            <h6>Total Canchas</h6>
+                            <h3>87</h3>
+                            <small class="stat-trend">3.1 por empresa</small>
+                        </div>
+                    </div>
+                </div>
             </div>
+
+            <!-- Empresas Grid -->
+            <div class="empresas-grid">
+                <!-- Empresa 1 -->
+                <div class="empresa-card">
+                    <div class="empresa-header">
+                        <div class="empresa-logo">FC</div>
+                        <div class="empresa-info-top">
+                            <h4 class="empresa-nombre">FutCenter Pro</h4>
+                            <span class="empresa-status active">Activa</span>
+                        </div>
+                    </div>
+
+                    <div class="empresa-body">
+                        <div class="empresa-detail">
+                            <span class="detail-label">RUC:</span>
+                            <span class="detail-value">20456789012</span>
+                        </div>
+
+                        <div class="empresa-detail">
+                            <span class="detail-label">Dirección:</span>
+                            <span class="detail-value">Av. Principal 456, Lima</span>
+                        </div>
+
+                        <div class="empresa-detail">
+                            <span class="detail-label">Teléfono:</span>
+                            <span class="detail-value">+51 987 654 321</span>
+                        </div>
+
+                        <div class="empresa-detail">
+                            <span class="detail-label">Email:</span>
+                            <span class="detail-value">info@futcenter.pe</span>
+                        </div>
+
+                        <div class="empresa-metrics">
+                            <div class="metric">
+                                <span class="metric-value">8</span>
+                                <span class="metric-label">Canchas</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-value">342</span>
+                                <span class="metric-label">Reservas</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-value">S/8,450</span>
+                                <span class="metric-label">Ingresos</span>
+                            </div>
+                        </div>
+
+                        <div class="empresa-actions">
+                            <button class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> Ver
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empresa 2 -->
+                <div class="empresa-card">
+                    <div class="empresa-header">
+                        <div class="empresa-logo">SF</div>
+                        <div class="empresa-info-top">
+                            <h4 class="empresa-nombre">Sports Fields</h4>
+                            <span class="empresa-status active">Activa</span>
+                        </div>
+                    </div>
+
+                    <div class="empresa-body">
+                        <div class="empresa-detail">
+                            <span class="detail-label">RUC:</span>
+                            <span class="detail-value">20567890123</span>
+                        </div>
+
+                        <div class="empresa-detail">
+                            <span class="detail-label">Dirección:</span>
+                            <span class="detail-value">Jr. Comercio 789, Lima</span>
+                        </div>
+
+                        <div class="empresa-detail">
+                            <span class="detail-label">Teléfono:</span>
+                            <span class="detail-value">+51 987 123 456</span>
+                        </div>
+
+                        <div class="empresa-detail">
+                            <span class="detail-label">Email:</span>
+                            <span class="detail-value">contact@sportsfields.pe</span>
+                        </div>
+
+                        <div class="empresa-metrics">
+                            <div class="metric">
+                                <span class="metric-value">5</span>
+                                <span class="metric-label">Canchas</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-value">218</span>
+                                <span class="metric-label">Reservas</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-value">S/5,200</span>
+                                <span class="metric-label">Ingresos</span>
+                            </div>
+                        </div>
+
+                        <div class="empresa-actions">
+                            <button class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> Ver
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empresa 3 -->
+                <div class="empresa-card">
+                    <div class="empresa-header">
+                        <div class="empresa-logo">PC</div>
+                        <div class="empresa-info-top">
+                            <h4 class="empresa-nombre">Play Complex</h4>
+                            <span class="empresa-status suspended">Suspendida</span>
+                        </div>
+                    </div>
+
+                    <div class="empresa-body">
+                        <div class="empresa-detail">
+                            <span class="detail-label">RUC:</span>
+                            <span class="detail-value">20678901234</span>
+                        </div>
+
+                        <div class="empresa-detail">
+                            <span class="detail-label">Dirección:</span>
+                            <span class="detail-value">Av. Universitaria 321, Lima</span>
+                        </div>
+
+                        <div class="empresa-detail">
+                            <span class="detail-label">Teléfono:</span>
+                            <span class="detail-value">+51 987 456 789</span>
+                        </div>
+
+                        <div class="empresa-detail">
+                            <span class="detail-label">Email:</span>
+                            <span class="detail-value">admin@playcomplex.pe</span>
+                        </div>
+
+                        <div class="empresa-metrics">
+                            <div class="metric">
+                                <span class="metric-value">6</span>
+                                <span class="metric-label">Canchas</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-value">156</span>
+                                <span class="metric-label">Reservas</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-value">S/3,900</span>
+                                <span class="metric-label">Ingresos</span>
+                            </div>
+                        </div>
+
+                        <div class="empresa-actions">
+                            <button class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> Ver
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Empresa 4 -->
+                <div class="empresa-card">
+                    <div class="empresa-header">
+                        <div class="empresa-logo">AF</div>
+                        <div class="empresa-info-top">
+                            <h4 class="empresa-nombre">Arena Futsal</h4>
+                            <span class="empresa-status active">Activa</span>
+                        </div>
+                    </div>
+
+                    <div class="empresa-body">
+                        <div class="empresa-detail">
+                            <span class="detail-label">RUC:</span>
+                            <span class="detail-value">20789012345</span>
+                        </div>
+
+                        <div class="empresa-detail">
+                            <span class="detail-label">Dirección:</span>
+                            <span class="detail-value">Jr. Junín 654, Lima</span>
+                        </div>
+
+                        <div class="empresa-detail">
+                            <span class="detail-label">Teléfono:</span>
+                            <span class="detail-value">+51 987 321 654</span>
+                        </div>
+
+                        <div class="empresa-detail">
+                            <span class="detail-label">Email:</span>
+                            <span class="detail-value">ventas@arenafutsal.pe</span>
+                        </div>
+
+                        <div class="empresa-metrics">
+                            <div class="metric">
+                                <span class="metric-value">4</span>
+                                <span class="metric-label">Canchas</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-value">289</span>
+                                <span class="metric-label">Reservas</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-value">S/6,800</span>
+                                <span class="metric-label">Ingresos</span>
+                            </div>
+                        </div>
+
+                        <div class="empresa-actions">
+                            <button class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> Ver
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning">
+                                <i class="bi bi-pencil"></i> Editar
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
 
 @code {
-    private List<Empresa> _empresas = new();
-
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        // TODO: Implementar carga de empresas desde el servicio
-        _empresas = new List<Empresa>
-        {
-            new() { 
-                Id = 1, 
-                Nombre = "Empresa Demo", 
-                RUC = "20123456789", 
-                Direccion = "Av. Principal 123",
-                Telefono = "999888777",
-                Estado = true
-            }
-        };
-        return Task.CompletedTask;
-    }
-
-    private void ShowCreateModal()
-    {
-        // TODO: Implementar modal de creación
-    }
-
-    private void ShowEditModal(Empresa empresa)
-    {
-        // TODO: Implementar modal de edición
-    }
-
-    private void ShowDeleteModal(Empresa empresa)
-    {
-        // TODO: Implementar modal de eliminación
-    }
-
-    private void ToggleEstado(Empresa empresa)
-    {
-        // TODO: Implementar cambio de estado
-        empresa.Estado = !empresa.Estado;
-    }
-
-    public class Empresa
-    {
-        public int Id { get; set; }
-        public string Nombre { get; set; } = "";
-        public string RUC { get; set; } = "";
-        public string Direccion { get; set; } = "";
-        public string Telefono { get; set; } = "";
-        public bool Estado { get; set; }
+        await Task.CompletedTask;
     }
 }
