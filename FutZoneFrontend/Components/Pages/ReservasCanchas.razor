@@ -1,0 +1,151 @@
+@page "/reservas-canchas"
+@using System.Collections.Generic
+
+<style>
+    body { background: linear-gradient(120deg,#186c4a 80%,#f7f6ec); }
+    .reserva-header {
+        background: #21a17b;
+        color: #fff;
+        border-radius: 1.2em;
+        box-shadow: 0 3px 12px -4px #073830;
+        margin-bottom:2em; 
+        padding:1.2em;
+    }
+    .card-reserva { border-left:8px solid #199467; border-radius:1em;}
+    .form-label { font-weight: 600; }
+    .badge.bg-success, .badge.bg-secondary { font-size:.98em; }
+</style>
+
+<div class="container py-4">
+  <div class="reserva-header text-center mb-4">
+    <h2><i class="bi bi-calendar-event"></i> Reservas de Canchas</h2>
+    <small>Agenda tu partido fácilmente</small>
+  </div>
+
+  <div class="card card-reserva shadow mb-3">
+    <div class="card-header bg-dark text-white">
+      <i class="bi bi-check-circle"></i> Reserva tu cancha
+    </div>
+    <div class="card-body">
+      <form @onsubmit="HandleReserva">
+        <div class="row mb-3">
+          <div class="col-lg-6 mb-2">
+            <label class="form-label">Cancha</label>
+            <select class="form-select" @bind="SelectedCancha" required>
+              <option value="">-- Selecciona una cancha --</option>
+              @foreach (var cancha in Canchas)
+              {
+                <option value="@cancha.Id">@cancha.Nombre (@cancha.Tipo)</option>
+              }
+            </select>
+          </div>
+          <div class="col-lg-6 mb-2">
+            <label class="form-label">Fecha y hora</label>
+            <input type="datetime-local" class="form-control" @bind="FechaHoraObj" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-success">
+          <i class="bi bi-calendar-plus"></i> Reservar ahora
+        </button>
+      </form>
+    </div>
+    <div class="card-footer text-muted">
+      <i class="bi bi-info-circle"></i> Recuerda llegar 10 minutos antes de tu hora reservada.
+    </div>
+  </div>
+
+  <!-- Histórico / próximas reservas -->
+  <div class="card shadow">
+    <div class="card-header bg-info text-dark">
+      <i class="bi bi-clock-history"></i> Próximas reservas
+    </div>
+    @if (ProximasReservas.Count > 0)
+    {
+      <ul class="list-group list-group-flush">
+        @foreach (var reserva in ProximasReservas)
+        {
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            @reserva.NombreCancha - @reserva.Fecha @reserva.Hora hs
+            <span class="badge bg-@(reserva.Estado == "Confirmada" ? "success" : "secondary")">@reserva.Estado</span>
+          </li>
+        }
+      </ul>
+    }
+    else
+    {
+      <div class="card-body text-center text-muted">
+        <i class="bi bi-inbox"></i> No tienes reservas próximas
+      </div>
+    }
+  </div>
+</div>
+
+@code {
+    private class CanchaModel
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+        public string Tipo { get; set; } = string.Empty;
+    }
+
+    private class ReservaModel
+    {
+        public int Id { get; set; }
+        public string NombreCancha { get; set; } = string.Empty;
+        public string Fecha { get; set; } = string.Empty;
+        public string Hora { get; set; } = string.Empty;
+        public string Estado { get; set; } = string.Empty;
+    }
+
+    private List<CanchaModel> Canchas = new();
+    private List<ReservaModel> ProximasReservas = new();
+
+    private string SelectedCancha = "";
+    private DateTime? FechaHoraObj = null;
+
+    protected override void OnInitialized()
+    {
+        // Inicializar canchas disponibles
+        Canchas = new List<CanchaModel>
+        {
+            new CanchaModel { Id = 1, Nombre = "Cancha 1", Tipo = "Sintética" },
+            new CanchaModel { Id = 2, Nombre = "Cancha 2", Tipo = "Pasto natural" },
+            new CanchaModel { Id = 3, Nombre = "Cancha 3", Tipo = "Sintética" }
+        };
+
+        // Inicializar próximas reservas de ejemplo
+        ProximasReservas = new List<ReservaModel>
+        {
+            new ReservaModel { Id = 1, NombreCancha = "Cancha 1", Fecha = "18/11", Hora = "19:00", Estado = "Confirmada" },
+            new ReservaModel { Id = 2, NombreCancha = "Cancha 2", Fecha = "20/11", Hora = "21:00", Estado = "Pendiente" }
+        };
+    }
+
+    private async Task HandleReserva()
+    {
+        if (!string.IsNullOrEmpty(SelectedCancha) && FechaHoraObj.HasValue)
+        {
+            var cancha = Canchas.FirstOrDefault(c => c.Id.ToString() == SelectedCancha);
+            if (cancha != null)
+            {
+                var fechaObj = FechaHoraObj.Value;
+                ProximasReservas.Add(new ReservaModel
+                {
+                    Id = ProximasReservas.Count + 1,
+                    NombreCancha = cancha.Nombre,
+                    Fecha = fechaObj.ToString("dd/MM"),
+                    Hora = fechaObj.ToString("HH:mm"),
+                    Estado = "Pendiente"
+                });
+
+                // Limpiar formulario
+                SelectedCancha = "";
+                FechaHoraObj = null;
+
+                StateHasChanged();
+            }
+        }
+
+        await Task.CompletedTask;
+    }
+}

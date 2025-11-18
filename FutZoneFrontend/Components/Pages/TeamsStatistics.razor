@@ -1,0 +1,177 @@
+@page "/teams-statistics"
+@using System.Collections.Generic
+
+<style>
+    body {
+        background: linear-gradient(130deg, #e9ecef 60%, #f8fafc 100%);
+    }
+    .dashboard-header {
+        padding: 2rem 0 1rem 0;
+        background: #fff;
+        border-radius: 0.75rem;
+        box-shadow: 0 2px 8px #e2e6ea;
+        margin-bottom: 1.5rem;
+    }
+    .team-card {
+        border-radius: 1.25rem;
+        border: none;
+        box-shadow: 0 4px 16px -4px #adb5bd;
+        background: #fff;
+        transition: box-shadow .1s, transform .1s;
+    }
+    .team-card:hover {
+        box-shadow: 0 12px 36px -8px #ced4da;
+        transform: translateY(-4px) scale(1.02);
+    }
+    .stat-badge { 
+        margin-right: .75em; 
+        padding: .5em 1.1em; 
+        border-radius: 1em; 
+        font-size: 1.05em;
+    }
+    .avatar {
+        width: 48px; 
+        height: 48px;
+        border-radius: 50%;
+        background: #f7f7fc;
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+        font-size: 1.7em; 
+        color: #777;
+        margin-right: 1em;
+    }
+    .dashboard-filters select {
+        max-width: 280px;
+        margin: 0 .7em 0 0;
+        box-shadow: 0 2px 10px -4px #adb5bd;
+    }
+</style>
+
+<div class="container mt-5">
+    <div class="dashboard-header text-center mb-4">
+        <h1 class="mb-2 fw-bold">
+            <i class="bi bi-bar-chart-steps"></i> Panel de Equipos & Estadísticas
+        </h1>
+        <p class="lead mb-2 text-muted">Gestión visual de equipos, roles y rendimiento por empresa</p>
+        <div class="dashboard-filters d-flex justify-content-center align-items-center flex-wrap gap-2 mt-2">
+            <select class="form-select shadow-sm" @onchange="OnEmpresaChanged">
+                <option selected>Empresa 1</option>
+                <option>Empresa 2</option>
+            </select>
+            <select class="form-select shadow-sm" @onchange="OnRolChanged">
+                <option selected>Todos los roles</option>
+                <option>Administrador</option>
+                <option>Jugador</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Tarjetas de equipos visuales -->
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 mb-4">
+        @foreach (var team in Teams)
+        {
+            <div class="col">
+                <div class="team-card card">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="avatar bg-light flex-shrink-0"><i class="bi bi-people"></i></div>
+                            <div>
+                                <strong class="fs-5">@team.Name</strong>
+                                <span class="badge bg-secondary ms-2">@team.Role</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <span class="badge bg-primary stat-badge mb-2">Miembros: @team.Members</span>
+                            <span class="badge bg-success stat-badge mb-2">Victorias: @team.Wins</span>
+                            <span class="badge bg-info stat-badge mb-2">Partidos: @team.Matches</span>
+                            <span class="badge bg-warning text-dark stat-badge mb-2">Goles: @team.Goals</span>
+                        </div>
+                        <div>
+                            <button class="btn btn-outline-primary btn-sm me-1" @onclick="() => EditTeam(team.Id)">
+                                <i class="bi bi-pencil-square"></i> Editar
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteTeam(team.Id)">
+                                <i class="bi bi-trash3"></i> Eliminar
+                            </button>
+                        </div>
+                        <canvas id="chart-@team.Id" height="70" class="mt-3"></canvas>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private string selectedEmpresa = "Empresa 1";
+    private string selectedRol = "Todos los roles";
+    private List<TeamModel> Teams = new();
+
+    private class TeamModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public int Members { get; set; }
+        public int Wins { get; set; }
+        public int Matches { get; set; }
+        public int Goals { get; set; }
+        public int[]? ChartData { get; set; }
+    }
+
+    protected override void OnInitialized()
+    {
+        // Inicializar datos de equipos de ejemplo
+        Teams = new List<TeamModel>
+        {
+            new TeamModel 
+            { 
+                Id = 1,
+                Name = "Equipo A", 
+                Role = "Administrador", 
+                Members = 12, 
+                Wins = 10, 
+                Matches = 18, 
+                Goals = 43,
+                ChartData = new[] { 10, 5, 3 }
+            },
+            new TeamModel 
+            { 
+                Id = 2,
+                Name = "Equipo B", 
+                Role = "Jugador", 
+                Members = 9, 
+                Wins = 7, 
+                Matches = 14, 
+                Goals = 31,
+                ChartData = new[] { 7, 6, 1 }
+            }
+        };
+    }
+
+    private void OnEmpresaChanged(ChangeEventArgs e)
+    {
+        selectedEmpresa = e.Value?.ToString() ?? string.Empty;
+        // Aquí iría la lógica para filtrar por empresa
+    }
+
+    private void OnRolChanged(ChangeEventArgs e)
+    {
+        selectedRol = e.Value?.ToString() ?? string.Empty;
+        // Aquí iría la lógica para filtrar por rol
+    }
+
+    private void EditTeam(int teamId)
+    {
+        // Lógica para editar equipo
+        Console.WriteLine($"Editar equipo {teamId}");
+    }
+
+    private void DeleteTeam(int teamId)
+    {
+        // Lógica para eliminar equipo
+        Teams.RemoveAll(t => t.Id == teamId);
+        StateHasChanged();
+    }
+}

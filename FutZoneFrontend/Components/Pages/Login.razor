@@ -1,4 +1,9 @@
 @page "/"
+@layout Layout.EmptyLayout
+@using FutZoneFrontend.Services
+@using FutZoneFrontend.Services.Models
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
 
 <PageTitle>Iniciar Sesión - FutZone</PageTitle>
 
@@ -9,17 +14,37 @@
                 <h1 class="text-center mb-0">⚽ Iniciar Sesión en FutZone ⚽</h1>
             </div>
             <div class="card-body">
-                <form>
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        @ErrorMessage
+                        <button type="button" class="btn-close" @onclick="() => ErrorMessage = string.Empty"></button>
+                    </div>
+                }
+
+                <form @onsubmit="HandleLogin">
                     <div class="mb-3">
                         <label for="email" class="form-label">Correo Electrónico</label>
-                        <input type="email" class="form-control" id="email" placeholder="tu.correo@ejemplo.com">
+                        <input type="email" class="form-control" id="email" placeholder="tu.correo@ejemplo.com" 
+                               @bind="LoginModel.Email" required disabled="@IsLoading">
                     </div>
                     <div class="mb-3">
                         <label for="password" class="form-label">Contraseña</label>
-                        <input type="password" class="form-control" id="password" placeholder="Contraseña">
+                        <input type="password" class="form-control" id="password" placeholder="Contraseña" 
+                               @bind="LoginModel.Password" required disabled="@IsLoading">
                     </div>
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary btn-lg">Entrar al Campo</button>
+                        <button type="submit" class="btn btn-primary btn-lg" disabled="@IsLoading">
+                            @if (IsLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                <span>Verificando...</span>
+                            }
+                            else
+                            {
+                                <span>Entrar al Campo</span>
+                            }
+                        </button>
                     </div>
                 </form>
             </div>
@@ -29,3 +54,45 @@
         </div>
     </div>
 </div>
+
+@code {
+    private LoginRequest LoginModel = new();
+    private string ErrorMessage = string.Empty;
+    private bool IsLoading = false;
+
+    private async Task HandleLogin()
+    {
+        if (string.IsNullOrEmpty(LoginModel.Email) || string.IsNullOrEmpty(LoginModel.Password))
+        {
+            ErrorMessage = "Por favor completa todos los campos";
+            return;
+        }
+
+        IsLoading = true;
+        ErrorMessage = string.Empty;
+
+        try
+        {
+            var response = await AuthService.LoginAsync(LoginModel);
+            
+            if (response.Success)
+            {
+                // Redirigir a home después del login exitoso
+                NavigationManager.NavigateTo("/home", forceLoad: true);
+            }
+            else
+            {
+                ErrorMessage = response.Message ?? "Error al iniciar sesión";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}
+

@@ -1,4 +1,9 @@
 @page "/register"
+@layout Layout.EmptyLayout
+@using FutZoneFrontend.Services
+@using FutZoneFrontend.Services.Models
+@inject IAuthService AuthService
+@inject NavigationManager NavigationManager
 
 <PageTitle>Registro - FutZone</PageTitle>
 
@@ -9,33 +14,54 @@
                 <h1 class="text-center mb-0">👟 ¡Regístrate y Salta al Campo en FutZone! 👟</h1>
             </div>
             <div class="card-body">
-                <form>
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        @ErrorMessage
+                        <button type="button" class="btn-close" @onclick="() => ErrorMessage = string.Empty"></button>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(SuccessMessage))
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        @SuccessMessage
+                        <button type="button" class="btn-close" @onclick="() => SuccessMessage = string.Empty"></button>
+                    </div>
+                }
+
+                <form @onsubmit="HandleRegister">
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="firstName" class="form-label">Nombre</label>
-                            <input type="text" class="form-control" id="firstName" placeholder="Tu Nombre">
+                            <input type="text" class="form-control" id="firstName" placeholder="Tu Nombre"
+                                   @bind="RegisterModel.FirstName" required disabled="@IsLoading">
                         </div>
                         <div class="col-md-6 mb-3">
                             <label for="lastName" class="form-label">Apellidos</label>
-                            <input type="text" class="form-control" id="lastName" placeholder="Tus Apellidos">
+                            <input type="text" class="form-control" id="lastName" placeholder="Tus Apellidos"
+                                   @bind="RegisterModel.LastName" required disabled="@IsLoading">
                         </div>
                     </div>
                     <div class="mb-3">
                         <label for="email" class="form-label">Correo Electrónico</label>
-                        <input type="email" class="form-control" id="email" placeholder="tu.correo@ejemplo.com">
+                        <input type="email" class="form-control" id="email" placeholder="tu.correo@ejemplo.com"
+                               @bind="RegisterModel.Email" required disabled="@IsLoading">
                     </div>
                     <div class="mb-3">
                         <label for="password" class="form-label">Contraseña</label>
-                        <input type="password" class="form-control" id="password" placeholder="Crea tu contraseña">
+                        <input type="password" class="form-control" id="password" placeholder="Crea tu contraseña"
+                               @bind="RegisterModel.Password" required disabled="@IsLoading">
                     </div>
                     <div class="mb-3">
                         <label for="confirmPassword" class="form-label">Confirmar Contraseña</label>
-                        <input type="password" class="form-control" id="confirmPassword" placeholder="Confirma tu contraseña">
+                        <input type="password" class="form-control" id="confirmPassword" placeholder="Confirma tu contraseña"
+                               @bind="RegisterModel.ConfirmPassword" required disabled="@IsLoading">
                     </div>
                     <div class="mb-3">
                         <label for="favoriteSport" class="form-label">Deporte Favorito</label>
-                        <select class="form-select" id="favoriteSport">
-                            <option selected>Elige tu deporte...</option>
+                        <select class="form-select" id="favoriteSport" @bind="RegisterModel.FavoriteSport" disabled="@IsLoading">
+                            <option value="">Elige tu deporte...</option>
                             <option value="futbol">Fútbol</option>
                             <option value="baloncesto">Baloncesto</option>
                             <option value="tenis">Tenis</option>
@@ -44,13 +70,84 @@
                         </select>
                     </div>
                     <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-success btn-lg">Completar Registro</button>
+                        <button type="submit" class="btn btn-success btn-lg" disabled="@IsLoading">
+                            @if (IsLoading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2"></span>
+                                <span>Registrando...</span>
+                            }
+                            else
+                            {
+                                <span>Completar Registro</span>
+                            }
+                        </button>
                     </div>
                 </form>
             </div>
             <div class="card-footer text-center">
-                <p class="mb-0">¿Ya eres parte del equipo? <a href="/login">Inicia sesión aquí</a></p>
+                <p class="mb-0">¿Ya eres parte del equipo? <a href="/">Inicia sesión aquí</a></p>
             </div>
         </div>
     </div>
 </div>
+
+@code {
+    private RegisterRequest RegisterModel = new();
+    private string ErrorMessage = string.Empty;
+    private string SuccessMessage = string.Empty;
+    private bool IsLoading = false;
+
+    private async Task HandleRegister()
+    {
+        // Validaciones
+        if (string.IsNullOrEmpty(RegisterModel.FirstName) || 
+            string.IsNullOrEmpty(RegisterModel.LastName) || 
+            string.IsNullOrEmpty(RegisterModel.Email) || 
+            string.IsNullOrEmpty(RegisterModel.Password))
+        {
+            ErrorMessage = "Por favor completa todos los campos requeridos";
+            return;
+        }
+
+        if (RegisterModel.Password != RegisterModel.ConfirmPassword)
+        {
+            ErrorMessage = "Las contraseñas no coinciden";
+            return;
+        }
+
+        if (RegisterModel.Password.Length < 6)
+        {
+            ErrorMessage = "La contraseña debe tener al menos 6 caracteres";
+            return;
+        }
+
+        IsLoading = true;
+        ErrorMessage = string.Empty;
+        SuccessMessage = string.Empty;
+
+        try
+        {
+            var response = await AuthService.RegisterAsync(RegisterModel);
+            
+            if (response.Success)
+            {
+                SuccessMessage = "¡Registro exitoso! Redirigiendo...";
+                await Task.Delay(2000); // Esperar 2 segundos antes de redirigir
+                NavigationManager.NavigateTo("/home", forceLoad: true);
+            }
+            else
+            {
+                ErrorMessage = response.Message ?? "Error al registrarse";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+}
+
