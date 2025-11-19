@@ -22,9 +22,14 @@ builder.Services.AddScoped<HttpClient>(sp =>
     return new HttpClient { BaseAddress = new Uri(baseAddress) };
 });
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<IRolService, RolService>();
 builder.Services.AddScoped<ITipoDeporteService, TipoDeporteService>();
 builder.Services.AddScoped<IPropietarioService, PropietarioService>();
+// Services stubs for endpoints that are referenced in API inventory
+builder.Services.AddScoped<IDocumentosLegalesService, DocumentosLegalesService>();
+builder.Services.AddScoped<IPreferenciasService, PreferenciasService>();
+builder.Services.AddScoped<IAceptacionesService, AceptacionesService>();
 
 var app = builder.Build();
 

@@ -1,0 +1,63 @@
+/* Navigation styles for gofit */
+:root{
+  --nav-bg-start: #0b6b9b;
+  --nav-bg-end: #195b9f;
+  --nav-accent: #36d06f;
+  --nav-text: #ffffff;
+  --nav-muted: rgba(255,255,255,0.85);
+}
+.gofit-nav{
+  background: linear-gradient(180deg,var(--nav-bg-start), var(--nav-bg-end));
+  color: var(--nav-text);
+  min-height: 100vh;
+  padding-top: 18px;
+  width: 260px; /* fixed sidebar width */
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  overflow: auto;
+}
+
+.gofit-nav .navbar-brand{
+  display:flex; align-items:center; gap:12px; color:var(--nav-text); font-weight:900; font-size:1.2rem; padding:18px 16px;
+}
+.gofit-nav .brand-logo{ width:42px; height:42px; border-radius:10px; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; box-shadow:0 8px 22px rgba(0,0,0,0.14); }
+
+.gofit-nav nav{ padding:12px 8px 72px 8px; }
+.gofit-nav .nav-list{ list-style:none; padding:0; margin:0; }
+.gofit-nav .nav-item{ margin:6px 6px; }
+.gofit-nav .nav-link{
+  display:flex; align-items:center; gap:14px; color:var(--nav-muted); padding:12px 14px; border-radius:10px; transition: all .17s cubic-bezier(.2,.9,.2,1); text-decoration:none; font-weight:600;
+  white-space: nowrap; /* keep icon and label in one line */
+  overflow: hidden;
+}
+.gofit-nav .nav-link .bi{ font-size:1.12rem; color: rgba(255,255,255,0.95); width:30px; text-align:center; flex: 0 0 30px; }
+.gofit-nav .nav-link .nav-label{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.gofit-nav .nav-link:hover{ background: rgba(255,255,255,0.06); color:#fff; transform: translateY(-2px); box-shadow: 0 10px 34px rgba(11,107,155,0.08); }
+
+/* Active link styling for NavLink (Blazor adds 'active' class) */
+.gofit-nav .nav-link.active{
+  background: linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03));
+  color:#fff; border-left:4px solid var(--nav-accent); padding-left:12px; box-shadow: 0 8px 30px rgba(11,107,155,0.06);
+}
+
+/* Small separators and footer */
+.gofit-nav .nav-separator{ height:1px; background: rgba(255,255,255,0.06); margin:10px 12px; border-radius:2px; }
+
+.gofit-nav .nav-footer{ position: absolute; bottom:18px; left:12px; right:12px; color:rgba(255,255,255,0.85); font-size:0.9rem; text-align:center; }
+
+/* Profile box at top of sidebar */
+.gofit-profile{ padding:16px 14px; display:flex; gap:14px; align-items:center; border-radius:12px; margin:8px 10px 16px 10px; background: rgba(255,255,255,0.06); box-shadow: 0 8px 28px rgba(0,0,0,0.08); }
+.gofit-profile .avatar{ width:50px; height:50px; border-radius:12px; background: linear-gradient(135deg,rgba(255,255,255,0.15), rgba(255,255,255,0.08)); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.3rem; color:#fff; flex-shrink:0; }
+.gofit-profile .profile-info{ display:flex; flex-direction:column; gap:2px; }
+.gofit-profile .profile-info .name{ color:#fff; font-weight:800; font-size:1rem; line-height:1.2; }
+.gofit-profile .profile-info .role{ color: rgba(255,255,255,0.8); font-weight:600; font-size:0.85rem; line-height:1.2; }
+
+/* Responsive: collapse to top bar on small screens */
+@media (max-width: 992px){
+  .gofit-nav{ position: relative; width:100%; height:auto; display:block; }
+  .gofit-nav .nav-separator{ display:none; }
+  .gofit-nav .nav-footer{ position:static; margin:12px 0 20px 0; }
+}
+

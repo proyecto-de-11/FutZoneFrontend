@@ -18,11 +18,15 @@ namespace FutZoneFrontend.Services
     public class AuthService : IAuthService
     {
         private readonly HttpClient _httpClient;
+        private readonly ILocalStorageService _localStorage;
         private const string TokenKey = "auth_token";
+        private string? _token;
 
-        public AuthService(HttpClient httpClient)
+        public AuthService(HttpClient httpClient, ILocalStorageService localStorage)
         {
             _httpClient = httpClient;
+            _localStorage = localStorage;
+            _ = InitializeTokenAsync();
         }
 
         public async Task<LoginResponse> LoginAsync(LoginRequest request)
@@ -202,22 +206,33 @@ namespace FutZoneFrontend.Services
             return Task.CompletedTask;
         }
 
+        private async Task InitializeTokenAsync()
+        {
+            try
+            {
+                _token = await _localStorage.GetItemAsync(TokenKey);
+            }
+            catch
+            {
+                _token = null;
+            }
+        }
+
         public string? GetToken()
         {
-            // Aquí puedes implementar la lógica para obtener el token desde localStorage
-            // Por ahora retorna null, necesitarás implementar interop con JavaScript
-            return null;
+            return _token;
         }
 
         public void SetToken(string token)
         {
-            // Aquí puedes implementar la lógica para guardar el token en localStorage
-            // Necesitarás usar interop con JavaScript
+            _token = token;
+            _ = _localStorage.SetItemAsync(TokenKey, token);
         }
 
         public void ClearToken()
         {
-            // Aquí puedes implementar la lógica para limpiar el token de localStorage
+            _token = null;
+            _ = _localStorage.RemoveItemAsync(TokenKey);
         }
     }
 }
