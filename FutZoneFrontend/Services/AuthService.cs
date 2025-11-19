@@ -20,9 +20,10 @@ namespace FutZoneFrontend.Services
         private readonly HttpClient _httpClient;
         private const string TokenKey = "auth_token";
 
-        public AuthService(HttpClient httpClient)
+        public AuthService(IHttpClientFactory httpClientFactory)
         {
-            _httpClient = httpClient;
+            // Creamos el cliente nombrado "AuthClient" que usa la AutenticacionUrl
+            _httpClient = httpClientFactory.CreateClient("AuthClient");
         }
 
         public async Task<LoginResponse> LoginAsync(LoginRequest request)
