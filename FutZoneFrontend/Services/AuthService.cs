@@ -138,7 +138,7 @@ namespace FutZoneFrontend.Services
                 {
                     email = request.Email,
                     contrasena = request.Password,
-                    idRol = 2, // Por defecto usuario normal (ajustar según tus roles)
+                    idRol = 3, // Por defecto usuario normal (ajustar según tus roles)
                     estaActivo = true
                 };
 

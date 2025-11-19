@@ -1,0 +1,49 @@
+@page "/empresa/crear"
+
+<link rel="stylesheet" href="~/css/crearEmpresa.css" />
+<div class="form-container">
+    <div class="header-futzone">
+        <h2>Nueva Empresa <span class="emoji">🏢</span></h2>
+    </div>
+
+    <form method="post" action="/empresa">
+
+        <div class="form-group">
+            <label for="Nombre">Nombre de la Empresa</label>
+            <input type="text" id="Nombre" name="Nombre" required />
+        </div>
+        
+        <div class="form-group">
+            <label for="Tipo">Tipo (Ej. Software, Deportes, Servicios)</label>
+            <input type="text" id="Tipo" name="Tipo" required />
+        </div>
+
+        <div class="form-group">
+            <label for="Descripcion">Descripción</label>
+            <textarea id="Descripcion" name="Descripcion" required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="Ubicacion">Ubicación</label>
+            <input type="text" id="Ubicacion" name="Ubicacion" required />
+        </div>
+
+        <div class="form-group-inline">
+            <div class="form-group">
+                <label for="contactos">Teléfono/Contactos</label>
+                <input type="text" id="contactos" name="contactos" />
+            </div>
+            <div class="form-group">
+                <label for="Correo">Correo Electrónico</label>
+                <input type="email" id="Correo" name="Correo" required />
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="imagen">URL del Logo/Imagen</label>
+            <input type="url" id="imagen" name="imagen" />
+        </div>
+
+        <button type="submit" class="btn-primary-futzone">Crear Empresa</button>
+    </form>
+</div>
