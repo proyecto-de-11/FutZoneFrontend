@@ -11,7 +11,7 @@ Se ha implementado exitosamente un componente Razor completo para la **Gestión 
 ## 2. ARCHIVOS CREADOS
 
 ### **Archivo: `Usuarios.razor`**
-- **Ubicación:** `/Components/Pages/Admin/Usuarios.razor`
+- **Ubicación:** `/Compones/Pages/Admin/Usuarios.razor`
 - **Líneas de Código:** 390+
 - **Propósito:** Componente principal que gestiona la obtención y visualización de usuarios
 

@@ -1,0 +1,121 @@
+/* Palette & shared auth styles for gofit (based on provided design) */
+:root{
+  --gofit-grad-top: #2dd4b1; /* light teal */
+  --gofit-grad-mid: #27a7b0; /* teal */
+  --gofit-grad-bottom: #195b9f; /* deep blue */
+  --gofit-accent: #0b6b9b; /* darker cyan */
+  --gofit-accent-2: #36d06f; /* green accent */
+  --gofit-card-bg: rgba(255,255,255,0.95);
+  --gofit-text-muted: #6b7785;
+}
+
+/* Page backgrounds */
+.gofit-bg, .gofit-reg-bg{
+  background: linear-gradient(180deg,var(--gofit-grad-top) 0%, var(--gofit-grad-mid) 50%, var(--gofit-grad-bottom) 100%);
+  min-height: 100vh;
+  padding-bottom: 40px;
+}
+
+/* Card containers */
+.gofit-card, .gofit-reg-card{
+  background: var(--gofit-card-bg);
+  border-radius: 14px;
+  box-shadow: 0 14px 34px rgba(12,40,60,0.12);
+  overflow: hidden;
+}
+
+/* Header hero */
+.gofit-hero{
+  background: linear-gradient(90deg,var(--gofit-accent), var(--gofit-accent-2));
+  color: #fff;
+  padding: 1.1rem 1.3rem;
+}
+
+.gofit-reg-hero{
+  background: rgba(255,255,255,0.92);
+  padding: 1rem 1.25rem;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.gofit-brand, .gofit-logo{
+  color: var(--gofit-accent);
+  font-weight:800;
+  font-size:1.4rem;
+}
+
+.gofit-subtitle{ color: rgba(0,0,0,0.55); font-size:0.95rem; }
+
+/* Buttons */
+.gofit-btn{
+  background: linear-gradient(90deg,var(--gofit-accent), var(--gofit-accent-2));
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: .8rem 1rem;
+}
+
+.gofit-btn:disabled{ opacity: .7; }
+
+.gofit-link{ color: var(--gofit-accent); font-weight:600; }
+
+/* Form controls */
+.form-control.form-control-lg{
+  background: rgba(255,255,255,0.6);
+  border: 1px solid rgba(255,255,255,0.25);
+  backdrop-filter: blur(4px);
+  color: #052235;
+}
+
+.form-control:focus{ box-shadow: 0 6px 18px rgba(11,107,155,0.12); border-color: rgba(11,107,155,0.35); }
+
+/* Small helpers */
+.card-body{ padding: 1.3rem; }
+.text-muted{ color: var(--gofit-text-muted) !important; }
+
+/* Responsive tweaks */
+@media (max-width: 576px){
+  .gofit-card { margin: 2vh 1rem; }
+  .gofit-reg-card { margin: 3vh 0.75rem; }
+}
+
+/* Enhanced auth visuals: icons in inputs, glass effect, hero */
+.auth-container{ display:flex; align-items:center; justify-content:center; min-height:70vh; }
+.auth-panel{ width:100%; max-width:760px; margin: 3vh auto; border-radius:14px; overflow:hidden; }
+.auth-hero-centered{ text-align:center; padding:2.2rem 1rem 1rem 1rem; }
+.auth-hero-centered .bi{ font-size:48px; color:#fff; background:rgba(255,255,255,0.08); padding:18px; border-radius:50%; box-shadow:0 8px 22px rgba(11,107,155,0.12); }
+.auth-hero-centered h2{ margin-top:0.7rem; color:#fff; font-weight:700; letter-spacing:0.2px; }
+
+.input-with-icon{ position:relative; }
+.input-with-icon .input-icon{ position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--gofit-accent); font-size:1.05rem; pointer-events:none; }
+.input-with-icon input.form-control{ padding-left:48px; }
+
+.glass-input{ background: #ffffff; border:1px solid rgba(6,46,80,0.08); color: #062235; border-radius:10px; padding:.78rem .75rem; box-shadow: 0 6px 18px rgba(8,32,56,0.06); }
+.glass-input::placeholder{ color: rgba(6,34,53,0.45); }
+.glass-input:focus{ background: #ffffff; outline: none; box-shadow: 0 10px 30px rgba(11,107,155,0.12); border-color: rgba(11,107,155,0.18); }
+
+.primary-white-button{ background:#fff; color:var(--gofit-accent); border-radius:12px; padding:0.9rem 1rem; font-weight:700; box-shadow: 0 10px 30px rgba(8,32,56,0.12); border:none; }
+.primary-white-button:active{ transform: translateY(1px); }
+
+.muted-note{ color: rgba(255,255,255,0.85); opacity:0.9; }
+
+/* Adjustments for register page inputs: high-contrast white inputs */
+.gofit-reg-card .form-control{
+  background: #ffffff;
+  color: #052235;
+  border:1px solid rgba(6,35,60,0.06);
+  border-radius:10px;
+  padding: .78rem .75rem;
+  box-shadow: 0 8px 20px rgba(6,35,60,0.05);
+}
+.gofit-reg-card .form-control::placeholder{ color: rgba(5,34,53,0.45); }
+
+@media (max-width: 768px){
+  .auth-hero-centered .bi{ font-size:40px; padding:14px; }
+}
+
+/* Help / secondary prompt with strong contrast on registration form */
+.auth-help{ color: rgba(6,34,53,0.85); font-weight:600; }
+.auth-help a{ color: var(--gofit-accent); font-weight:800; text-decoration:none; }
+.auth-help a:hover{ text-decoration:underline; }

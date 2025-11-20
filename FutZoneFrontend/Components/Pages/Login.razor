@@ -5,55 +5,64 @@
 @inject IAuthService AuthService
 @inject NavigationManager NavigationManager
 
-<PageTitle>Iniciar Sesión - FutZone</PageTitle>
+<PageTitle>Iniciar Sesión - gofit</PageTitle>
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow-lg">
-            <div class="card-header bg-primary text-white">
-                <h1 class="text-center mb-0">⚽ Iniciar Sesión en FutZone ⚽</h1>
-            </div>
-            <div class="card-body">
-                @if (!string.IsNullOrEmpty(ErrorMessage))
-                {
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        @ErrorMessage
-                        <button type="button" class="btn-close" @onclick="() => ErrorMessage = string.Empty"></button>
-                    </div>
-                }
+<link href="css/gofit-auth.css" rel="stylesheet" />
 
-                <form @onsubmit="HandleLogin">
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Correo Electrónico</label>
-                        <input type="email" class="form-control" id="email" placeholder="tu.correo@ejemplo.com" 
-                               @bind="LoginModel.Email" required disabled="@IsLoading">
-                    </div>
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Contraseña</label>
-                        <input type="password" class="form-control" id="password" placeholder="Contraseña" 
-                               @bind="LoginModel.Password" required disabled="@IsLoading">
-                    </div>
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary btn-lg" disabled="@IsLoading">
-                            @if (IsLoading)
-                            {
-                                <span class="spinner-border spinner-border-sm me-2"></span>
-                                <span>Verificando...</span>
-                            }
-                            else
-                            {
-                                <span>Entrar al Campo</span>
-                            }
-                        </button>
-                    </div>
-                </form>
-            </div>
-            <div class="card-footer text-center">
-                <p class="mb-0">¿No tienes cuenta? <a href="/register">Regístrate y únete al equipo</a></p>
-            </div>
-        </div>
-    </div>
-</div>
+<div class="gofit-bg">
+    <div class="auth-container">
+        <div class="auth-panel">
+            <div class="card gofit-card">
+                <div class="gofit-hero auth-hero-centered">
+                    <i class="bi bi-person-circle"></i>
+                    <h2>Bienvenido a gofit</h2>
+                    <div class="small muted-note">Accede para reservar y gestionar tus entrenos</div>
+                </div>
+                <div class="card-body p-4">
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @ErrorMessage
+                    <button type="button" class="btn-close" @onclick="() => ErrorMessage = string.Empty"></button>
+                </div>
+            }
+
+                    <form @onsubmit="HandleLogin">
+                        <div class="mb-3 input-with-icon">
+                            <i class="bi bi-envelope-fill input-icon"></i>
+                            <input type="email" class="form-control form-control-lg glass-input" id="email" placeholder="Correo electrónico" 
+                                   @bind="LoginModel.Email" required disabled="@IsLoading">
+                        </div>
+
+                        <div class="mb-3 input-with-icon">
+                            <i class="bi bi-lock-fill input-icon"></i>
+                            <input type="password" class="form-control form-control-lg glass-input" id="password" placeholder="Contraseña" 
+                                   @bind="LoginModel.Password" required disabled="@IsLoading">
+                        </div>
+
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="submit" class="primary-white-button btn-lg" disabled="@IsLoading">
+                                @if (IsLoading)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" style="border-width:2px"></span>
+                                    <span>Entrando...</span>
+                                }
+                                else
+                                {
+                                    <span>Iniciar sesión</span>
+                                }
+                            </button>
+                        </div>
+
+                        <div class="text-center">
+                            <small class="auth-help">¿No tienes cuenta? <a href="/register">Regístrate</a></small>
+                        </div>
+                    </form>
+                </div> <!-- card-body -->
+            </div> <!-- card gofit-card -->
+        </div> <!-- auth-panel -->
+    </div> <!-- auth-container -->
+</div> <!-- gofit-bg -->
 
 @code {
     private LoginRequest LoginModel = new();

@@ -1,107 +1,62 @@
-<div class="top-row ps-3 navbar navbar-dark">
+<link href="css/gofit-nav.css" rel="stylesheet" />
+
+<aside class="gofit-nav">
+    <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">FutZoneFrontend</a>
+        <a class="navbar-brand" href="/">
+            <div class="brand-logo"><i class="bi bi-joystick" style="font-size:18px;color:#fff"></i></div>
+            <span>gofit</span>
+        </a>
     </div>
 </div>
-
 <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <div class="gofit-profile">
+        <div class="avatar">G</div>
+        <div class="profile-info">
+            <div class="name">Usuario</div>
+            <div class="role">Administrador</div>
+        </div>
+    </div>
     <nav class="flex-column">
+        <!-- Owner / Propietario menu -->
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="home" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="admin/dashboard">
-                <span class="bi bi-speedometer2" aria-hidden="true"></span> Dashboard
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="admin/roles">
-                <span class="bi bi-person-badge" aria-hidden="true"></span> Roles
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="admin/empresas">
-                <span class="bi bi-building" aria-hidden="true"></span> Empresas
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="admin/usuarios">
-                <span class="bi bi-people-fill" aria-hidden="true"></span> Usuarios
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="solicitudes/equipos">
-                <span class="bi bi-envelope" aria-hidden="true"></span> Solicitudes Equipos
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="solicitudes/torneos">
-                <span class="bi bi-envelope-open" aria-hidden="true"></span> Solicitudes Torneos
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="empresa/canchas">
-                <span class="bi bi-football" aria-hidden="true"></span> Mis Canchas
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="empresa/reservas">
-                <span class="bi bi-calendar-check" aria-hidden="true"></span> Mis Reservas
+                <span class="bi bi-house-door-fill" aria-hidden="true"></span> <span class="nav-label">Home</span>
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="propietario/dashboard">
-                <span class="bi bi-graph-up" aria-hidden="true"></span> Dashboard Propietario
+                <span class="bi bi-graph-up" aria-hidden="true"></span> <span class="nav-label">Dashboard</span>
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="">
-                <span class="bi bi-box-arrow-in-right-nav-menu" aria-hidden="true"></span> Iniciar Sesión
+            <NavLink class="nav-link" href="empresa/canchas">
+                <span class="bi bi-building" aria-hidden="true"></span> <span class="nav-label">Mis Canchas</span>
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="register">
-                <span class="bi bi-person-plus-fill-nav-menu" aria-hidden="true"></span> Registro
+            <NavLink class="nav-link" href="empresa/reservas">
+                <span class="bi bi-calendar-check" aria-hidden="true"></span> <span class="nav-label">Mis Reservas</span>
             </NavLink>
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="select-team">
-                <span class="bi bi-people-fill-nav-menu" aria-hidden="true"></span> Select Team
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="tournament-details">
-                <span class="bi bi-trophy-fill-nav-menu" aria-hidden="true"></span> Tournament Details
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="teams-statistics">
-                <span class="bi bi-bar-chart-steps" aria-hidden="true"></span> Estadísticas Equipos
-            </NavLink>
-        </div>
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="reservas-canchas">
-                <span class="bi bi-calendar2-check" aria-hidden="true"></span> Reservas de Canchas
+                <span class="bi bi-calendar2-check" aria-hidden="true"></span> <span class="nav-label">Reservas de Canchas</span>
             </NavLink>
         </div>
     </nav>
+    <div class="nav-separator"></div>
+    <div class="nav-footer text-center">
+        <small>gofit · Admin Panel</small>
+    </div>
 </div>
+</aside>
 
 
 
