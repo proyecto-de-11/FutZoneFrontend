@@ -1,10 +1,11 @@
 @page "/propietario/dashboard"
 @using System.Collections.Generic
+@using System.Net.Http.Json
+@inject IHttpClientFactory HttpClientFactory
 
 <PageTitle>Dashboard Propietario - FutZone</PageTitle>
 
 <div class="propietario-dashboard">
-    <!-- Header -->
     <div class="dashboard-header">
         <div class="container-fluid">
             <div class="row align-items-center">
@@ -14,7 +15,7 @@
                 </div>
                 <div class="col-auto">
                     <div class="header-actions">
-                        <button class="btn btn-light me-2" title="Actualizar datos">
+                        <button class="btn btn-light me-2" title="Actualizar datos" @onclick="ActualizarAsync">
                             <i class="bi bi-arrow-clockwise"></i> Actualizar
                         </button>
                         <button class="btn btn-outline-light" title="Configuración">
@@ -26,309 +27,348 @@
         </div>
     </div>
 
-    <!-- Contenido Principal -->
     <div class="dashboard-content">
         <div class="container-fluid">
+            @if (_isLoading)
+            {
+                <div class="text-center p-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <p class="mt-3">Cargando datos del dashboard...</p>
+                </div>
+            }
+            else
+            {
+                <div class="row mb-4">
+                    <div class="col-md-3 mb-3">
+                        <div class="kpi-card kpi-ingresos">
+                            <div class="kpi-icon">💰</div>
+                            <div class="kpi-body">
+                                <h6>Ingresos Este Mes</h6>
+                                <h2>@KpiIngresosEsteMes?.ToString("C")</h2>
+                                <small>@KpiIngresosVariacion</small>
+                            </div>
+                        </div>
+                    </div>
 
-            <!-- KPIs Principales -->
-            <div class="row mb-4">
-                <div class="col-md-3 mb-3">
-                    <div class="kpi-card kpi-ingresos">
-                        <div class="kpi-icon">💰</div>
-                        <div class="kpi-body">
-                            <h6>Ingresos Este Mes</h6>
-                            <h2>$2,450.50</h2>
-                            <small>↑ 15% vs mes anterior</small>
+                    <div class="col-md-3 mb-3">
+                        <div class="kpi-card kpi-reservas">
+                            <div class="kpi-icon">📅</div>
+                            <div class="kpi-body">
+                                <h6>Reservas Pendientes</h6>
+                                <h2>@KpiReservasPendientes</h2>
+                                <small>@KpiReservasPendientesTexto</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <div class="kpi-card kpi-ocupacion">
+                            <div class="kpi-icon">📊</div>
+                            <div class="kpi-body">
+                                <h6>Ocupación Promedio</h6>
+                                <h2>@(KpiOcupacionPromedio?.ToString("P0"))</h2>
+                                <small>@KpiOcupacionVariacion</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <div class="kpi-card kpi-clientes">
+                            <div class="kpi-icon">👥</div>
+                            <div class="kpi-body">
+                                <h6>Clientes Activos</h6>
+                                <h2>@KpiClientesActivos</h2>
+                                <small>@KpiClientesNuevosSemana</small>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-3 mb-3">
-                    <div class="kpi-card kpi-reservas">
-                        <div class="kpi-icon">📅</div>
-                        <div class="kpi-body">
-                            <h6>Reservas Pendientes</h6>
-                            <h2>8</h2>
-                            <small>⚠️ Requieren acción</small>
-                        </div>
-                    </div>
+                <div class="section-header">
+                    <h3>Mis Canchas</h3>
+                    <small class="text-muted">Estado general de tus canchas</small>
                 </div>
 
-                <div class="col-md-3 mb-3">
-                    <div class="kpi-card kpi-ocupacion">
-                        <div class="kpi-icon">📊</div>
-                        <div class="kpi-body">
-                            <h6>Ocupación Promedio</h6>
-                            <h2>78%</h2>
-                            <small>↑ 5% vs mes anterior</small>
-                        </div>
-                    </div>
+                <div class="canchas-grid">
+                    @if (Canchas != null)
+                    {
+                        @foreach (var cancha in Canchas)
+                        {
+                            <div class="cancha-card">
+                                <div class="cancha-header">
+                                    <h5>@cancha.Nombre</h5>
+                                    <span class="badge @(cancha.Estatus == "Activa" ? "bg-success" : "bg-secondary")">@cancha.Estatus</span>
+                                </div>
+                                <div class="cancha-body">
+                                    <div class="cancha-stat">
+                                        <span class="cancha-stat-label">Hoy</span>
+                                        <span class="cancha-stat-value">@cancha.ReservasHoy.ToString() reservas</span>
+                                    </div>
+                                    <div class="cancha-stat">
+                                        <span class="cancha-stat-label">Ocupación</span>
+                                        <span class="cancha-stat-value">@(cancha.Ocupacion?.ToString("P0"))</span>
+                                    </div>
+                                    <div class="cancha-stat">
+                                        <span class="cancha-stat-label">Tarifa</span>
+                                        <span class="cancha-stat-value">@cancha.TarifaPorHora?.ToString("C")/hr</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    }
                 </div>
-
-                <div class="col-md-3 mb-3">
-                    <div class="kpi-card kpi-clientes">
-                        <div class="kpi-icon">👥</div>
-                        <div class="kpi-body">
-                            <h6>Clientes Activos</h6>
-                            <h2>45</h2>
-                            <small>➕ 5 nuevos esta semana</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Mis Canchas -->
-            <div class="section-header">
-                <h3>Mis Canchas</h3>
-                <small class="text-muted">Estado general de tus canchas</small>
-            </div>
-
-            <div class="canchas-grid">
-                <div class="cancha-card">
-                    <div class="cancha-header">
-                        <h5>Cancha Sintética - A</h5>
-                        <span class="badge bg-success">Activa</span>
-                    </div>
-                    <div class="cancha-body">
-                        <div class="cancha-stat">
-                            <span class="cancha-stat-label">Hoy</span>
-                            <span class="cancha-stat-value">3 reservas</span>
-                        </div>
-                        <div class="cancha-stat">
-                            <span class="cancha-stat-label">Ocupación</span>
-                            <span class="cancha-stat-value">85%</span>
-                        </div>
-                        <div class="cancha-stat">
-                            <span class="cancha-stat-label">Tarifa</span>
-                            <span class="cancha-stat-value">$50/hr</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="cancha-card">
-                    <div class="cancha-header">
-                        <h5>Cancha Pasto - B</h5>
-                        <span class="badge bg-success">Activa</span>
-                    </div>
-                    <div class="cancha-body">
-                        <div class="cancha-stat">
-                            <span class="cancha-stat-label">Hoy</span>
-                            <span class="cancha-stat-value">2 reservas</span>
-                        </div>
-                        <div class="cancha-stat">
-                            <span class="cancha-stat-label">Ocupación</span>
-                            <span class="cancha-stat-value">65%</span>
-                        </div>
-                        <div class="cancha-stat">
-                            <span class="cancha-stat-label">Tarifa</span>
-                            <span class="cancha-stat-value">$45/hr</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="cancha-card">
-                    <div class="cancha-header">
-                        <h5>Cancha Techada - C</h5>
-                        <span class="badge bg-secondary">Mantenimiento</span>
-                    </div>
-                    <div class="cancha-body">
-                        <div class="cancha-stat">
-                            <span class="cancha-stat-label">Hoy</span>
-                            <span class="cancha-stat-value">0 reservas</span>
-                        </div>
-                        <div class="cancha-stat">
-                            <span class="cancha-stat-label">Ocupación</span>
-                            <span class="cancha-stat-value">0%</span>
-                        </div>
-                        <div class="cancha-stat">
-                            <span class="cancha-stat-label">Tarifa</span>
-                            <span class="cancha-stat-value">$60/hr</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Reservas Recientes -->
-            <div class="section-header">
-                <h3>Reservas Recientes</h3>
-                <small class="text-muted">Las últimas solicitudes de reserva</small>
-            </div>
-
-            <div class="reservas-list">
-                <div class="reserva-item">
-                    <div class="reserva-info">
-                        <div class="reserva-cancha">Cancha Sintética - A</div>
-                        <div class="reserva-detalles">Hoy, 14:00 - 15:00 | Cliente: Juan Martínez</div>
-                    </div>
-                    <div>
-                        <span class="reserva-status pendiente">Pendiente</span>
-                        <button class="btn btn-sm btn-success me-2">Aceptar</button>
-                        <button class="btn btn-sm btn-danger">Rechazar</button>
-                    </div>
-                </div>
-
-                <div class="reserva-item">
-                    <div class="reserva-info">
-                        <div class="reserva-cancha">Cancha Pasto - B</div>
-                        <div class="reserva-detalles">Mañana, 18:00 - 19:00 | Cliente: Carlos López</div>
-                    </div>
-                    <div>
-                        <span class="reserva-status confirmada">Confirmada</span>
-                        <button class="btn btn-sm btn-secondary disabled">Gestionar</button>
-                    </div>
-                </div>
-
-                <div class="reserva-item">
-                    <div class="reserva-info">
-                        <div class="reserva-cancha">Cancha Sintética - A</div>
-                        <div class="reserva-detalles">Sábado, 19:00 - 20:00 | Cliente: Roberto García</div>
-                    </div>
-                    <div>
-                        <span class="reserva-status confirmada">Confirmada</span>
-                        <button class="btn btn-sm btn-secondary disabled">Gestionar</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Acciones Rápidas -->
-            <div class="section-header">
-                <h3>Acciones Rápidas</h3>
-            </div>
-
-            <div class="quick-actions">
-                <NavLink href="empresa/canchas" class="action-btn">
-                    <span class="action-icon">🏟️</span>
-                    <div class="action-title">Gestionar Canchas</div>
-                    <div class="action-desc">Ver y editar tus canchas</div>
-                </NavLink>
-
-                <NavLink href="empresa/reservas" class="action-btn">
-                    <span class="action-icon">📋</span>
-                    <div class="action-title">Mis Reservas</div>
-                    <div class="action-desc">Administrar todas las reservas</div>
-                </NavLink>
-
-                <button class="action-btn" onclick="alert('Función disponible pronto')">
-                    <span class="action-icon">📊</span>
-                    <div class="action-title">Reportes</div>
-                    <div class="action-desc">Generar reportes de ingresos</div>
-                </button>
-
-                <button class="action-btn" onclick="alert('Función disponible pronto')">
-                    <span class="action-icon">⚙️</span>
-                    <div class="action-title">Configuración</div>
-                    <div class="action-desc">Ajustar preferencias y tarifas</div>
-                </button>
-            </div>
-
-            <!-- Últimas Transacciones -->
-            <div class="section-header">
-                <h3>Últimas Transacciones</h3>
-                <small class="text-muted">Historial de pagos y movimientos</small>
-            </div>
-
-            <div class="transactions-table">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Concepto</th>
-                            <th>Cliente</th>
-                            <th>Monto</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>15 Nov, 2024</td>
-                            <td>Reserva Cancha A</td>
-                            <td>Juan Martínez</td>
-                            <td class="transaction-amount">+$50.00</td>
-                            <td><span class="transaction-status completada">Completada</span></td>
-                        </tr>
-                        <tr>
-                            <td>14 Nov, 2024</td>
-                            <td>Comisión Plataforma</td>
-                            <td>FutZone</td>
-                            <td class="transaction-amount negative">-$5.00</td>
-                            <td><span class="transaction-status completada">Completada</span></td>
-                        </tr>
-                        <tr>
-                            <td>13 Nov, 2024</td>
-                            <td>Reserva Cancha B</td>
-                            <td>Carlos López</td>
-                            <td class="transaction-amount">+$45.00</td>
-                            <td><span class="transaction-status completada">Completada</span></td>
-                        </tr>
-                        <tr>
-                            <td>12 Nov, 2024</td>
-                            <td>Reserva Cancha A</td>
-                            <td>María García</td>
-                            <td class="transaction-amount">+$50.00</td>
-                            <td><span class="transaction-status pendiente">Pendiente</span></td>
-                        </tr>
-                        <tr>
-                            <td>11 Nov, 2024</td>
-                            <td>Reserva Cancha A</td>
-                            <td>Roberto Fernández</td>
-                            <td class="transaction-amount">+$50.00</td>
-                            <td><span class="transaction-status completada">Completada</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Resumen Mensual -->
-            <div class="section-header">
-                <h3>Resumen Mensual</h3>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="resumen-card">
-                        <h5 class="mb-3">Ingresos Brutos</h5>
-                        <div class="resumen-item">
-                            <span class="resumen-label">Reservas</span>
-                            <span class="resumen-valor">$2,500.00</span>
-                        </div>
-                        <div class="resumen-item">
-                            <span class="resumen-label">Otros servicios</span>
-                            <span class="resumen-valor">$150.00</span>
-                        </div>
-                        <div class="resumen-item">
-                            <span class="resumen-label"><strong>Total Bruto</strong></span>
-                            <span class="resumen-valor"><strong>$2,650.00</strong></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-6">
-                    <div class="resumen-card">
-                        <h5 class="mb-3">Desagregación</h5>
-                        <div class="resumen-item">
-                            <span class="resumen-label">Comisión FutZone (5%)</span>
-                            <span class="resumen-valor negative" style="color: #ef4444;">-$132.50</span>
-                        </div>
-                        <div class="resumen-item">
-                            <span class="resumen-label">Impuestos (3%)</span>
-                            <span class="resumen-valor negative" style="color: #ef4444;">-$79.50</span>
-                        </div>
-                        <div class="resumen-item">
-                            <span class="resumen-label"><strong>Ingreso Neto</strong></span>
-                            <span class="resumen-valor"><strong style="color: #10b981;">$2,438.00</strong></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+            }
         </div>
     </div>
 </div>
 
+<style>
+.propietario-dashboard {
+    background-color: #f4f7f6;
+}
+
+.dashboard-header {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    padding: 2rem 1rem;
+    margin-bottom: 2rem;
+    border-radius: 0 0 15px 15px;
+}
+
+.dashboard-header h1 {
+    font-weight: 700;
+    font-size: 2.25rem;
+    margin: 0;
+}
+
+.dashboard-header small {
+    opacity: 0.8;
+}
+
+.kpi-card {
+    background-color: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.kpi-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.kpi-icon {
+    font-size: 2.5rem;
+}
+
+.kpi-body h6 {
+    color: #6c757d;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.kpi-body h2 {
+    font-weight: 700;
+    font-size: 2rem;
+    margin: 0;
+}
+
+.kpi-body small {
+    color: #28a745;
+}
+
+.section-header {
+    margin-top: 2.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.section-header h3 {
+    font-weight: 600;
+}
+
+.canchas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.cancha-card {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+.cancha-header {
+    padding: 1rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.cancha-header h5 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.cancha-body {
+    padding: 1.25rem;
+}
+
+.cancha-stat {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.cancha-stat-label {
+    color: #6c757d;
+}
+
+.reservas-list .reserva-item {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.reserva-status.pendiente { color: #ffc107; }
+.reserva-status.aceptada { color: #28a745; }
+.reserva-status.rechazada { color: #dc3545; }
+
+</style>
+
 @code {
+    private HttpClient _canchasHttpClient;
+    private bool _isLoading = true;
+
+    // KPIs
+    decimal? KpiIngresosEsteMes;
+    string KpiIngresosVariacion = "vs mes anterior";
+    int? KpiReservasPendientes;
+    string KpiReservasPendientesTexto = "para confirmar";
+    double? KpiOcupacionPromedio;
+    string KpiOcupacionVariacion = "en todas las canchas";
+    int? KpiClientesActivos;
+    string KpiClientesNuevosSemana = "nuevos esta semana";
+
+    List<CanchaDto> Canchas = new();
+    List<ReservaDto> ReservasRecientes = new();
+    List<TransaccionDto> Transacciones = new();
+
     protected override async Task OnInitializedAsync()
     {
-        // Aquí irían llamadas a la API para obtener datos reales
-        await Task.CompletedTask;
+        _canchasHttpClient = HttpClientFactory.CreateClient("Canchas");
+        await CargarDatosAsync();
+    }
+
+    private async Task ActualizarAsync()
+    {
+        await CargarDatosAsync();
+    }
+
+    private async Task CargarDatosAsync()
+    {
+        _isLoading = true;
+        StateHasChanged();
+        try
+        {
+            var canchasTask = _canchasHttpClient.GetFromJsonAsync<List<CanchaDto>>("canchas");
+            var reservasTask = _canchasHttpClient.GetFromJsonAsync<List<ReservaDto>>("reservas");
+            var transaccionesTask = _canchasHttpClient.GetFromJsonAsync<List<TransaccionDto>>("transacciones");
+
+            await Task.WhenAll(canchasTask, reservasTask, transaccionesTask);
+
+            Canchas = canchasTask.Result ?? new List<CanchaDto>();
+            ReservasRecientes = reservasTask.Result ?? new List<ReservaDto>();
+            Transacciones = transaccionesTask.Result ?? new List<TransaccionDto>();
+
+            CalcularKPIs();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar datos del dashboard: {ex.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void CalcularKPIs()
+    {
+        KpiIngresosEsteMes = Transacciones
+            .Where(t => t.Fecha.Month == DateTime.Now.Month && t.Fecha.Year == DateTime.Now.Year)
+            .Sum(t => t.Monto);
+
+        KpiReservasPendientes = ReservasRecientes.Count(r => r.Status == "Pendiente");
+        KpiOcupacionPromedio = Canchas.Any() ? Canchas.Average(c => c.Ocupacion ?? 0) : 0;
+        KpiClientesActivos = ReservasRecientes.Select(r => r.Cliente).Distinct().Count();
+    }
+
+    private async Task AceptarReserva(int reservaId)
+    {
+        await ModificarEstadoReserva(reservaId, "Aceptada");
+    }
+
+    private async Task RechazarReserva(int reservaId)
+    {
+        await ModificarEstadoReserva(reservaId, "Rechazada");
+    }
+
+    private async Task ModificarEstadoReserva(int reservaId, string nuevoEstado)
+    {
+        try
+        {
+            var response = await _canchasHttpClient.PutAsJsonAsync($"reservas/{reservaId}/estado", new { status = nuevoEstado });
+            if (response.IsSuccessStatusCode)
+            {
+                await ActualizarAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cambiar estado de reserva: {ex.Message}");
+        }
+    }
+
+    // DTOs
+    public class CanchaDto
+    {
+        public string Nombre { get; set; } = "";
+        public string Estatus { get; set; } = "Inactiva";
+        public int ReservasHoy { get; set; }
+        public double? Ocupacion { get; set; }
+        public decimal? TarifaPorHora { get; set; }
+    }
+
+    public class ReservaDto
+    {
+        public int Id { get; set; }
+        public string Cancha { get; set; } = "";
+        public string FechaHoraDetalle { get; set; } = "";
+        public string Cliente { get; set; } = "";
+        public string Status { get; set; } = "";
+    }
+
+    public class TransaccionDto
+    {
+        public DateTime Fecha { get; set; }
+        public string Concepto { get; set; } = "";
+        public string Cliente { get; set; } = "";
+        public decimal Monto { get; set; }
+        public string Status { get; set; } = "";
     }
 }
