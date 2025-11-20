@@ -126,7 +126,7 @@ namespace FutZoneFrontend.Services
         public void ClearToken()
         {
             _token = null;
-            _ = _localStorage.RemoveItemAsync(TokenKey, CancellationToken.None);
+            _ = _localStorage.RemoveItemAsync(TokenKey);
         }
     }
 }

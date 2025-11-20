@@ -1,308 +1,90 @@
 @page "/admin/usuarios"
 @using System.Net.Http
-@inject HttpClient HttpClient
+@using System.Net.Http.Json
+@inject IHttpClientFactory HttpClientFactory
 
-<PageTitle>Gestion de Usuarios - FutZone Admin</PageTitle>
+<PageTitle>Gestión de Usuarios - FutZone Admin</PageTitle>
 
-<div class="admin-usuarios">
-    <!-- Header -->
-    <div class="admin-header">
-        <div class="container-fluid">
-            <div class="row align-items-center">
-                <div class="col">
-                    <h1 class="mb-0">Gestion de Usuarios</h1>
-                </div>
-                <div class="col-auto">
-                    <button class="btn btn-primary" @onclick="CargarUsuarios">
-                        <i class="bi bi-arrow-clockwise"></i> Actualizar
-                    </button>
-                </div>
+<div class="container-fluid py-4">
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Gestión de Usuarios</h4>
+            <button class="btn btn-primary" @onclick="() => _selectedUsuario = null">Crear Usuario</button>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>Email</th>
+                            <th>Rol</th>
+                            <th>Activo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (_usuarios == null)
+                        {
+                            <tr><td colspan="5" class="text-center py-4 text-muted">Cargando...</td></tr>
+                        }
+                        else
+                        {
+                            @foreach (var usuario in _usuarios)
+                            {
+                                <tr class="align-middle">
+                                    <td>@usuario.Id</td>
+                                    <td>@usuario.Email</td>
+                                    <td>@_roles?.FirstOrDefault(r => r.Id == usuario.IdRol)?.Nombre</td>
+                                    <td><span class="badge @(usuario.EstaActivo ? "bg-success" : "bg-secondary")">@(usuario.EstaActivo ? "Sí" : "No")</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary me-1" @onclick="() => _selectedUsuario = usuario">Editar</button>
+                                        <button class="btn btn-sm btn-outline-danger" @onclick="async () => await EliminarUsuario(usuario.Id)">Eliminar</button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <!-- Contenido Principal -->
-    <div class="admin-content">
-        <div class="container-fluid">
-            
-            <!-- Estados de Carga -->
-            @if (_cargando)
-            {
-                <div class="alert alert-info d-flex align-items-center" role="alert">
-                    <div class="spinner-border spinner-border-sm me-2" role="status">
-                        <span class="visually-hidden">Cargando...</span>
-                    </div>
-                    <span>Cargando usuarios del sistema...</span>
-                </div>
-            }
-
-            @if (!string.IsNullOrEmpty(_mensajeError))
-            {
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="bi bi-exclamation-triangle"></i> <strong>Error:</strong> @_mensajeError
-                    <button type="button" class="btn-close" @onclick="() => _mensajeError = null"></button>
-                </div>
-            }
-
-            @if (_usuariosCargados && _usuarios != null && _usuarios.Any())
-            {
-                <!-- Tarjetas de Estadisticas -->
-                <div class="row mb-4">
-                    <div class="col-md-3 mb-3">
-                        <div class="stat-card bg-primary">
-                            <div class="stat-icon">
-                                <i class="bi bi-people-fill"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h6>Total de Usuarios</h6>
-                                <h3>@_usuarios.Count()</h3>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-3 mb-3">
-                        <div class="stat-card bg-success">
-                            <div class="stat-icon">
-                                <i class="bi bi-check-circle-fill"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h6>Usuarios Activos</h6>
-                                <h3>@_usuarios.Count(u => u.Activo)</h3>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-3 mb-3">
-                        <div class="stat-card bg-warning">
-                            <div class="stat-icon">
-                                <i class="bi bi-clock-history"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h6>Usuarios Inactivos</h6>
-                                <h3>@_usuarios.Count(u => !u.Activo)</h3>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-3 mb-3">
-                        <div class="stat-card bg-info">
-                            <div class="stat-icon">
-                                <i class="bi bi-shield-check"></i>
-                            </div>
-                            <div class="stat-content">
-                                <h6>Administradores</h6>
-                                <h3>@_usuarios.Count(u => u.Rol == "Admin")</h3>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Filtros -->
-                <div class="card shadow-sm mb-4">
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label">Buscar Usuario</label>
-                                <input type="text" class="form-control" placeholder="Nombre, email, telefono..." 
-                                       @bind="_busqueda" @oninput="FiltrarUsuarios" />
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Filtrar por Rol</label>
-                                <select class="form-select" @onchange="FiltrarPorRol">
-                                    <option value="">-- Todos los Roles --</option>
-                                    <option value="Admin">Admin</option>
-                                    <option value="Empresa">Empresa</option>
-                                    <option value="Cliente">Cliente</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Filtrar por Estado</label>
-                                <select class="form-select" @onchange="FiltrarPorEstado">
-                                    <option value="">-- Todos los Estados --</option>
-                                    <option value="activo">Activos</option>
-                                    <option value="inactivo">Inactivos</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tabla de Usuarios -->
-                <div class="card shadow-sm">
-                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">Listado de Usuarios</h5>
-                        <small class="text-muted">Mostrando @_usuariosFiltrados.Count() de @_usuarios.Count()</small>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>Nombre</th>
-                                        <th>Email</th>
-                                        <th>Telefono</th>
-                                        <th>Rol</th>
-                                        <th>Estado</th>
-                                        <th>Registro</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @if (!_usuariosFiltrados.Any())
-                                    {
-                                        <tr>
-                                            <td colspan="8" class="text-center py-4 text-muted">
-                                                <i class="bi bi-inbox"></i> No se encontraron usuarios
-                                            </td>
-                                        </tr>
-                                    }
-                                    else
-                                    {
-                                        @foreach (var usuario in _usuariosFiltrados)
-                                        {
-                                            <tr>
-                                                <td>
-                                                    <span class="badge bg-secondary">@usuario.Id</span>
-                                                </td>
-                                                <td>
-                                                    <strong>@usuario.Nombre</strong>
-                                                </td>
-                                                <td>
-                                                    <small>@usuario.Email</small>
-                                                </td>
-                                                <td>
-                                                    @if (!string.IsNullOrEmpty(usuario.Telefono))
-                                                    {
-                                                        <span>@usuario.Telefono</span>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="text-muted">-</span>
-                                                    }
-                                                </td>
-                                                <td>
-                                                    <span class="badge @GetRoloBadgeClass(usuario.Rol)">
-                                                        @usuario.Rol
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <span class="badge @(usuario.Activo ? "bg-success" : "bg-danger")">
-                                                        @(usuario.Activo ? "Activo" : "Inactivo")
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <small class="text-muted">
-                                                        @usuario.FechaRegistro.ToString("dd/MM/yyyy")
-                                                    </small>
-                                                </td>
-                                                <td>
-                                                    <div class="btn-group" role="group">
-                                                        <button class="btn btn-sm btn-outline-primary" 
-                                                                @onclick="() => VerDetalles(usuario)"
-                                                                title="Ver detalles">
-                                                            <i class="bi bi-eye"></i>
-                                                        </button>
-                                                        <button class="btn btn-sm btn-outline-warning"
-                                                                @onclick="() => EditarUsuario(usuario)"
-                                                                title="Editar">
-                                                            <i class="bi bi-pencil"></i>
-                                                        </button>
-                                                        <button class="btn btn-sm @(usuario.Activo ? "btn-outline-danger" : "btn-outline-success")"
-                                                                @onclick="() => ToggleBloqueo(usuario)"
-                                                                title="@(usuario.Activo ? "Bloquear" : "Desbloquear")">
-                                                            <i class="bi @(usuario.Activo ? "bi-lock" : "bi-unlock")"></i>
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        }
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Informacion de Paginacion -->
-                <div class="mt-3 text-muted text-center">
-                    <small>Mostrando @_usuariosFiltrados.Count() usuarios | Total en sistema: @_usuarios.Count()</small>
-                </div>
-            }
-            else if (_usuariosCargados && (_usuarios == null || !_usuarios.Any()))
-            {
-                <div class="alert alert-warning text-center">
-                    <i class="bi bi-info-circle"></i> No hay usuarios en el sistema
-                </div>
-            }
-        </div>
-    </div>
-
-    <!-- Modal de Detalles -->
-    @if (_mostrarModalDetalles && _usuarioSeleccionado != null)
+    @if (_selectedUsuario != null)
     {
-        <div class="modal d-block" style="background-color: rgba(0,0,0,0.5);" role="dialog">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title">Detalles del Usuario</h5>
-                        <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">@( _selectedUsuario.Id == 0 ? "Crear Nuevo Usuario" : "Editando Usuario")</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" @bind="_selectedUsuario.Email" />
                     </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">ID:</label>
-                            <p class="form-control-plaintext">@_usuarioSeleccionado.Id</p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Nombre:</label>
-                            <p class="form-control-plaintext">@_usuarioSeleccionado.Nombre</p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Email:</label>
-                            <p class="form-control-plaintext">@_usuarioSeleccionado.Email</p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Telefono:</label>
-                            <p class="form-control-plaintext">@(_usuarioSeleccionado.Telefono ?? "-")</p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Rol:</label>
-                            <p class="form-control-plaintext">
-                                <span class="badge @GetRoloBadgeClass(_usuarioSeleccionado.Rol)">
-                                    @_usuarioSeleccionado.Rol
-                                </span>
-                            </p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Estado:</label>
-                            <p class="form-control-plaintext">
-                                <span class="badge @(_usuarioSeleccionado.Activo ? "bg-success" : "bg-danger")">
-                                    @(_usuarioSeleccionado.Activo ? "Activo" : "Inactivo")
-                                </span>
-                            </p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Fecha de Registro:</label>
-                            <p class="form-control-plaintext">@_usuarioSeleccionado.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Ultimo Acceso:</label>
-                            <p class="form-control-plaintext">
-                                @if (_usuarioSeleccionado.UltimoAcceso.HasValue)
-                                {
-                                    @_usuarioSeleccionado.UltimoAcceso.Value.ToString("dd/MM/yyyy HH:mm")
-                                }
-                                else
-                                {
-                                    <span class="text-muted">Sin acceso registrado</span>
-                                }
-                            </p>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Contraseña (dejar en blanco para no cambiar)</label>
+                        <input type="password" class="form-control" @bind="_password" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Rol</label>
+                        <select class="form-select" @bind="_selectedUsuario.IdRol">
+                            @foreach (var rol in _roles!)
+                            {
+                                <option value="@rol.Id">@rol.Nombre</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3 d-flex align-items-end">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="estaActivo" @bind="_selectedUsuario.EstaActivo" />
+                            <label class="form-check-label" for="estaActivo">Está Activo</label>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" @onclick="CerrarModal">Cerrar</button>
-                        <button type="button" class="btn btn-primary" @onclick="() => { CerrarModal(); EditarUsuario(_usuarioSeleccionado); }">Editar</button>
-                    </div>
+                </div>
+                <div class="d-flex justify-content-end">
+                    <button class="btn btn-secondary me-2" @onclick="() => _selectedUsuario = null">Cancelar</button>
+                    <button class="btn btn-primary" @onclick="GuardarUsuario">Guardar Cambios</button>
                 </div>
             </div>
         </div>
@@ -310,136 +92,75 @@
 </div>
 
 @code {
-    private List<UsuarioDto> _usuarios = new();
-    private List<UsuarioDto> _usuariosFiltrados = new();
-    private bool _cargando = false;
-    private bool _usuariosCargados = false;
-    private string _mensajeError = string.Empty;
-    private string _busqueda = string.Empty;
-    private string _filtroRol = string.Empty;
-    private string _filtroEstado = string.Empty;
-    private UsuarioDto? _usuarioSeleccionado;
-    private bool _mostrarModalDetalles = false;
+    private HttpClient? _authApiClient;
+    private List<Usuario>? _usuarios;
+    private List<Rol>? _roles;
+    private Usuario? _selectedUsuario;
+    private string? _password;
 
     protected override async Task OnInitializedAsync()
     {
-        await CargarUsuarios();
+        _authApiClient = HttpClientFactory.CreateClient("Auth");
+        await CargarDatos();
     }
 
-    private async Task CargarUsuarios()
+    private async Task CargarDatos()
     {
-        _cargando = true;
-        _mensajeError = string.Empty;
-        _usuariosCargados = false;
-
         try
         {
-            // Cambiar la URL del endpoint segun tu API
-            var response = await HttpClient.GetAsync("https://localhost:7174/api/usuarios");
-
-            if (response.IsSuccessStatusCode)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                _usuarios = System.Text.Json.JsonSerializer.Deserialize<List<UsuarioDto>>(content,
-                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
-
-                _usuariosFiltrados = new List<UsuarioDto>(_usuarios);
-                _usuariosCargados = true;
-            }
-            else
-            {
-                _mensajeError = $"Error al cargar usuarios: {response.StatusCode}";
-            }
+            _usuarios = await _authApiClient!.GetFromJsonAsync<List<Usuario>>("usuarios");
+            _roles = await _authApiClient!.GetFromJsonAsync<List<Rol>>("roles");
         }
         catch (Exception ex)
         {
-            _mensajeError = $"Error de conexion: {ex.Message}. Asegurate de que la API este disponible en https://localhost:7174/api/usuarios";
-        }
-        finally
-        {
-            _cargando = false;
+            Console.WriteLine($"Error al cargar datos: {ex.Message}");
         }
     }
 
-    private void FiltrarUsuarios(ChangeEventArgs e)
+    private async Task GuardarUsuario()
     {
-        _busqueda = e.Value?.ToString() ?? string.Empty;
-        AplicarFiltros();
-    }
+        if (_selectedUsuario == null) return;
 
-    private void FiltrarPorRol(ChangeEventArgs e)
-    {
-        _filtroRol = e.Value?.ToString() ?? string.Empty;
-        AplicarFiltros();
-    }
+        var url = _selectedUsuario.Id == 0 ? "usuarios" : $"usuarios/{_selectedUsuario.Id}";
+        var method = _selectedUsuario.Id == 0 ? HttpMethod.Post : HttpMethod.Put;
 
-    private void FiltrarPorEstado(ChangeEventArgs e)
-    {
-        _filtroEstado = e.Value?.ToString() ?? string.Empty;
-        AplicarFiltros();
-    }
-
-    private void AplicarFiltros()
-    {
-        _usuariosFiltrados = _usuarios.Where(u =>
+        var request = new HttpRequestMessage(method, url)
         {
-            bool cumpleBusqueda = string.IsNullOrEmpty(_busqueda) ||
-                u.Nombre.Contains(_busqueda, StringComparison.OrdinalIgnoreCase) ||
-                u.Email.Contains(_busqueda, StringComparison.OrdinalIgnoreCase) ||
-                (u.Telefono != null && u.Telefono.Contains(_busqueda, StringComparison.OrdinalIgnoreCase));
+            Content = JsonContent.Create(new { _selectedUsuario.Email, _selectedUsuario.IdRol, _selectedUsuario.EstaActivo, Password = _password })
+        };
+        
+        var response = await _authApiClient!.SendAsync(request);
 
-            bool cumpleRol = string.IsNullOrEmpty(_filtroRol) || u.Rol == _filtroRol;
-
-            bool cumpleEstado = string.IsNullOrEmpty(_filtroEstado) ||
-                (_filtroEstado == "activo" && u.Activo) ||
-                (_filtroEstado == "inactivo" && !u.Activo);
-
-            return cumpleBusqueda && cumpleRol && cumpleEstado;
-        }).ToList();
+        if (response.IsSuccessStatusCode)
+        {
+            _selectedUsuario = null;
+            await CargarDatos();
+            StateHasChanged();
+        }
     }
 
-    private void VerDetalles(UsuarioDto usuario)
+    private async Task EliminarUsuario(int usuarioId)
     {
-        _usuarioSeleccionado = usuario;
-        _mostrarModalDetalles = true;
+        var response = await _authApiClient!.DeleteAsync($"usuarios/{usuarioId}");
+        if (response.IsSuccessStatusCode)
+        {
+            await CargarDatos();
+            StateHasChanged();
+        }
     }
 
-    private void EditarUsuario(UsuarioDto usuario)
-    {
-        // Aqui irias a una pagina de edicion o mostrarias un modal de edicion
-        Console.WriteLine($"Editar usuario: {usuario.Nombre}");
-    }
-
-    private void ToggleBloqueo(UsuarioDto usuario)
-    {
-        usuario.Activo = !usuario.Activo;
-        // Aqui harias una llamada PUT al endpoint para actualizar
-    }
-
-    private void CerrarModal()
-    {
-        _mostrarModalDetalles = false;
-        _usuarioSeleccionado = null;
-    }
-
-    private string GetRoloBadgeClass(string rol) => rol switch
-    {
-        "Admin" => "bg-danger",
-        "Empresa" => "bg-warning text-dark",
-        "Cliente" => "bg-info",
-        _ => "bg-secondary"
-    };
-
-    // DTO para mapear los datos del endpoint
-    public class UsuarioDto
+    // DTOs
+    public class Usuario
     {
         public int Id { get; set; }
-        public required string Nombre { get; set; }
-        public required string Email { get; set; }
-        public string? Telefono { get; set; }
-        public required string Rol { get; set; }
-        public bool Activo { get; set; }
-        public DateTime FechaRegistro { get; set; }
-        public DateTime? UltimoAcceso { get; set; }
+        public string Email { get; set; } = string.Empty;
+        public int IdRol { get; set; }
+        public bool EstaActivo { get; set; }
+    }
+
+    public class Rol
+    {
+        public int Id { get; set; }
+        public string Nombre { get; set; } = string.Empty;
     }
 }

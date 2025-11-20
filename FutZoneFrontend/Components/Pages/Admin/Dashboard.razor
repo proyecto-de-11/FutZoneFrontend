@@ -176,7 +176,7 @@
                         <input class="form-check-input" type="checkbox" id="activa" @bind="_empresaFormulario.Activa">
                         <label class="form-check-label" for="activa">
                             Empresa Activa
-                        </label>
+                        </label
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -202,7 +202,7 @@
     .stat-content h3 { font-size: 2rem; font-weight: 700; margin: 0; }
     .bg-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
     .bg-success { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
-    .avatar-sm { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; }
+    .avatar-sm { width: 32px; height: 32px; display: flex; align-items-center; justify-content: center; font-size: 0.875rem; }
     .activity-item:hover { background-color: #f8f9fa; padding-left: 0.5rem; }
     .activity-icon { width: 40px; height: 40px; border-radius: 50%; background-color: #e9ecef; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; color: #667eea; }
     .card { border: none; border-radius: 0.75rem; }
@@ -211,7 +211,7 @@
 </style>
 
 @code {
-    private HttpClient _publicidadHttpClient;
+    private HttpClient _publicidadHttpClient = null!;
     private int _empresasActivas;
     private int _publicacionesTotales;
 
