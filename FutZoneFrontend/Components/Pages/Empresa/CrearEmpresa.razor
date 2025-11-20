@@ -23,11 +23,6 @@
             <textarea id="Descripcion" name="Descripcion" required></textarea>
         </div>
 
-        <div class="form-group">
-            <label for="Ubicacion">Ubicación</label>
-            <input type="text" id="Ubicacion" name="Ubicacion" required />
-        </div>
-
         <div class="form-group-inline">
             <div class="form-group">
                 <label for="contactos">Teléfono/Contactos</label>
@@ -43,6 +38,28 @@
             <label for="imagen">URL del Logo/Imagen</label>
             <input type="url" id="imagen" name="imagen" />
         </div>
+        <div class="form-group">
+    <label for="Ubicacion">Ubicación Seleccionada (País, Departamento, Ciudad, Calle)</label>
+    <input type="text" id="Ubicacion" name="Ubicacion" required readonly placeholder="Selecciona la ubicación en el mapa de abajo..." />
+</div>
+
+<div class="form-group">
+    <div id="mapbox-ubicacion" style="width: 100%; height: 400px; border-radius: 8px;"></div>
+</div>
+
+<input type="hidden" id="cliePais" name="cliePais" />
+<input type="hidden" id="clieDepartamento" name="clieDepartamento" />
+<input type="hidden" id="clieCiudad" name="clieCiudad" />
+<input type="hidden" id="clieDepaCode" name="clieDepaCode" />
+<input type="hidden" id="cliePaisCode" name="cliePaisCode" />
+<input type="hidden" id="clieLatitud" name="clieLatitud" />
+<input type="hidden" id="clieLongitud" name="clieLongitud" />
+<input type="hidden" id="direccion" name="direccion" />
+<input type="hidden" id="alias" name="alias" /> 
+<div class="form-group">
+    <p id="location-message" class="text-info">Buscando tu ubicación...</p>
+</div>
+
 
         <button type="submit" class="btn-primary-futzone">Crear Empresa</button>
     </form>
