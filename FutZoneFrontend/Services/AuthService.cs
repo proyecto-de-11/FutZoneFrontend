@@ -2,6 +2,7 @@ using FutZoneFrontend.Services.Models;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using Blazored.LocalStorage;
 
 namespace FutZoneFrontend.Services
 {
@@ -18,14 +19,18 @@ namespace FutZoneFrontend.Services
     public class AuthService : IAuthService
     {
         private readonly HttpClient _httpClient;
-        private readonly ILocalStorageService _localStorage;
+        // CORRECCIÓN AMBIGÜEDAD (CS0104): Usar el nombre completamente cualificado.
+        private readonly Blazored.LocalStorage.ILocalStorageService _localStorage;
         private const string TokenKey = "auth_token";
         private string? _token;
 
-        public AuthService(IHttpClientFactory httpClientFactory)
+        // CORRECCIÓN AMBIGÜEDAD (CS0104): Usar el nombre completamente cualificado en el constructor.
+        public AuthService(HttpClient httpClient, Blazored.LocalStorage.ILocalStorageService localStorage)
         {
-            // Creamos el cliente nombrado "AuthClient" que usa la AutenticacionUrl
-            _httpClient = httpClientFactory.CreateClient("AuthClient");
+            _httpClient = httpClient;
+            _localStorage = localStorage;
+            // No usamos await aquí, solo iniciamos la tarea para cargar el token
+            _ = InitializeTokenAsync(); 
         }
 
         public async Task<LoginResponse> LoginAsync(LoginRequest request)
@@ -43,7 +48,7 @@ namespace FutZoneFrontend.Services
                 var loginData = new 
                 { 
                     email = request.Email.Trim().ToLower(), 
-                    password = request.Password  // Campo correcto: "password" no "contrasena"
+                    password = request.Password
                 };
                 
                 var jsonContent = JsonSerializer.Serialize(loginData);
@@ -99,8 +104,8 @@ namespace FutZoneFrontend.Services
                     {
                         var errorObj = JsonSerializer.Deserialize<JsonElement>(responseContent);
                         var errorMsg = errorObj.GetProperty("message").GetString() ?? 
-                                     errorObj.GetProperty("error").GetString() ?? 
-                                     responseContent;
+                                               errorObj.GetProperty("error").GetString() ?? 
+                                               responseContent;
                         
                         Console.WriteLine($"✗ Error API: {errorMsg}");
                         return new LoginResponse 
@@ -140,7 +145,7 @@ namespace FutZoneFrontend.Services
                 {
                     email = request.Email,
                     contrasena = request.Password,
-                    idRol = 3, // Por defecto usuario normal (ajustar según tus roles)
+                    idRol = 2, // Por defecto usuario normal (ajustar según tus roles)
                     estaActivo = true
                 };
 
@@ -209,7 +214,9 @@ namespace FutZoneFrontend.Services
         {
             try
             {
-                _token = await _localStorage.GetItemAsync(TokenKey);
+                // La corrección anterior ya usaba la sintaxis genérica: _localStorage.GetItemAsync<string>(TokenKey)
+                // Usar el tipo cualificado resolvió la ambigüedad que causaba el error CS0308.
+                _token = await _localStorage.GetItemAsync<string>(TokenKey); 
             }
             catch
             {

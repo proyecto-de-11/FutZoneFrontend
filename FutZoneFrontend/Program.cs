@@ -2,6 +2,9 @@ using FutZoneFrontend.Components;
 using FutZoneFrontend.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
+using Microsoft.Extensions.Configuration;
+using System.Net.Http; // Necesario para IHttpClientFactory
+using Blazored.LocalStorage; 
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,30 +20,41 @@ builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStat
 
 // --- INICIO DE LA CONFIGURACIÓN DE MÚLTIPLES HTTPCLIENTS ---
 
-// 1. Registro del Cliente para Autenticación (Login)
-// Utiliza la configuración "AutenticacionUrl": https://apiautentificacion.onrender.com
+// 1. Registro del Cliente para Autenticación (Login/Register)
 builder.Services.AddHttpClient("AuthClient", client =>
 {
-    // Usamos el operador ?? para asegurar que la configuración existe.
+    // Esto asegura que la URL base se toma de la configuración.
     client.BaseAddress = new Uri(builder.Configuration["AutenticacionUrl"] ?? throw new InvalidOperationException("ERROR: La clave 'AutenticacionUrl' no está configurada."));
 });
 
 // 2. Registro del Cliente para la API Principal (Empresa/Publicidad)
-// Utiliza la configuración "ApiBaseUrl": https://api-empresa-publicidad.onrender.com
 builder.Services.AddHttpClient("ApiClient", client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? throw new InvalidOperationException("ERROR: La clave 'ApiBaseUrl' no está configurada."));
 });
 
-// Nota: Al usar AddHttpClient, el servicio IHttpClientFactory se registra automáticamente.
-// Ahora, tus servicios deben inyectar IHttpClientFactory.
-// Los registros de servicios se mantienen, pero la inyección de dependencias dentro de ellos debe cambiar.
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
+// Registrar Blazored Local Storage
+builder.Services.AddBlazoredLocalStorage(); 
+
+// Registrar AuthService, inyectando el cliente nombrado "AuthClient"
+// Usamos un delegado para obtener el cliente configurado de IHttpClientFactory
+builder.Services.AddScoped<IAuthService, AuthService>(sp =>
+{
+    var clientFactory = sp.GetRequiredService<IHttpClientFactory>();
+    var authClient = clientFactory.CreateClient("AuthClient");
+    
+    // CORRECCIÓN AMBIGÜEDAD (CS0104): Usamos el nombre completamente cualificado 
+    // para asegurar que obtenemos la interfaz de Blazored.LocalStorage.
+    var localStorage = sp.GetRequiredService<Blazored.LocalStorage.ILocalStorageService>();
+    
+    // Inyectamos el HttpClient configurado al constructor de AuthService
+    return new AuthService(authClient, localStorage);
+});
+
+// Servicios restantes
 builder.Services.AddScoped<IRolService, RolService>();
 builder.Services.AddScoped<ITipoDeporteService, TipoDeporteService>();
 builder.Services.AddScoped<IPropietarioService, PropietarioService>();
-// Services stubs for endpoints that are referenced in API inventory
 builder.Services.AddScoped<IDocumentosLegalesService, DocumentosLegalesService>();
 builder.Services.AddScoped<IPreferenciasService, PreferenciasService>();
 builder.Services.AddScoped<IAceptacionesService, AceptacionesService>();
