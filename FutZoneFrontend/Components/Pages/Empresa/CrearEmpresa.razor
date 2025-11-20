@@ -1,66 +1,155 @@
 @page "/empresa/crear"
 
-<link rel="stylesheet" href="~/css/crearEmpresa.css" />
+@using FutZoneFrontend.Services.Models
+@using FutZoneFrontend.Services
+@inject EmpresaService EmpresaService
+@inject NavigationManager NavigationManager
+// La inyección de IJSRuntime se mantiene en el bloque
+
 <div class="form-container">
     <div class="header-futzone">
         <h2>Nueva Empresa <span class="emoji">🏢</span></h2>
     </div>
 
-    <form method="post" action="/empresa">
+    <EditForm Model="@Empresa" OnValidSubmit="@HandleValidSubmit">
+        <DataAnnotationsValidator />
+
+        @if (!string.IsNullOrEmpty(Message))
+        {
+            <div class="@(IsSuccess ? "alert-success" : "alert-danger")">
+                @Message
+            </div>
+        }
 
         <div class="form-group">
             <label for="Nombre">Nombre de la Empresa</label>
-            <input type="text" id="Nombre" name="Nombre" required />
+            <InputText id="Nombre" @bind-Value="Empresa.NombreEmpresa" class="form-control" required />
+            <ValidationMessage For="@(() => Empresa.NombreEmpresa)" />
         </div>
-        
+
         <div class="form-group">
             <label for="Tipo">Tipo (Ej. Software, Deportes, Servicios)</label>
-            <input type="text" id="Tipo" name="Tipo" required />
+            <InputText id="Tipo" @bind-Value="Empresa.TipoEmpresa" class="form-control" required />
         </div>
 
         <div class="form-group">
             <label for="Descripcion">Descripción</label>
-            <textarea id="Descripcion" name="Descripcion" required></textarea>
+            <InputTextArea id="Descripcion" @bind-Value="Empresa.DescripcionEmpresa" class="form-control" required />
         </div>
 
         <div class="form-group-inline">
             <div class="form-group">
                 <label for="contactos">Teléfono/Contactos</label>
-                <input type="text" id="contactos" name="contactos" />
+                <InputText id="contactos" @bind-Value="Empresa.Contactos" class="form-control" />
             </div>
             <div class="form-group">
                 <label for="Correo">Correo Electrónico</label>
-                <input type="email" id="Correo" name="Correo" required />
+                <!-- Usamos el InputText genérico y el ValidationMessage se encarga de la validación de formato email -->
+                <InputText id="Correo" @bind-Value="Empresa.Correo" class="form-control" required type="email"/> 
             </div>
         </div>
-        
+
         <div class="form-group">
             <label for="imagen">URL del Logo/Imagen</label>
-            <input type="url" id="imagen" name="imagen" />
+            <InputText id="imagen" @bind-Value="Empresa.ImagenUrl" class="form-control" type="url" />
         </div>
+
         <div class="form-group">
-    <label for="Ubicacion">Ubicación Seleccionada (País, Departamento, Ciudad, Calle)</label>
-    <input type="text" id="Ubicacion" name="Ubicacion" required readonly placeholder="Selecciona la ubicación en el mapa de abajo..." />
-</div>
+            <label for="Ubicacion">Ubicación Seleccionada</label>
+            <InputText id="Ubicacion" @bind-Value="Empresa.Ubicacion" class="form-control" required placeholder="Selecciona la ubicación en el mapa de abajo..." />
+        </div>
 
-<div class="form-group">
-    <div id="mapbox-ubicacion" style="width: 100%; height: 400px; border-radius: 8px;"></div>
-</div>
+        <div class="form-group">
+            <div id="mapbox-ubicacion" style="width: 100%; height: 400px; border-radius: 8px;"></div>
+        </div>
 
-<input type="hidden" id="cliePais" name="cliePais" />
-<input type="hidden" id="clieDepartamento" name="clieDepartamento" />
-<input type="hidden" id="clieCiudad" name="clieCiudad" />
-<input type="hidden" id="clieDepaCode" name="clieDepaCode" />
-<input type="hidden" id="cliePaisCode" name="cliePaisCode" />
-<input type="hidden" id="clieLatitud" name="clieLatitud" />
-<input type="hidden" id="clieLongitud" name="clieLongitud" />
-<input type="hidden" id="direccion" name="direccion" />
-<input type="hidden" id="alias" name="alias" /> 
-<div class="form-group">
-    <p id="location-message" class="text-info">Buscando tu ubicación...</p>
-</div>
+        <!-- Eliminamos los atributos 'name' ya que Blazor no los necesita, reduciendo el riesgo de envío nativo. -->
+        <input type="hidden" id="clieLatitud" />
+        <input type="hidden" id="clieLongitud" />
+        <div class="form-group">
+            <p id="location-message" class="text-info">Buscando tu ubicación...</p>
+        </div>
 
 
-        <button type="submit" class="btn-primary-futzone">Crear Empresa</button>
-    </form>
+        <button type="submit" class="btn-primary-futzone" disabled="@IsLoading">
+            @if (IsLoading)
+            {
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span>Guardando...</span>
+            }
+            else
+            {
+                <span>Crear Empresa</span>
+            }
+        </button>
+    </EditForm>
 </div>
+
+<style>
+    #mapbox-ubicacion {
+        width: 100%;
+        height: 350px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    .alert-success { background-color: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
+    .alert-danger { background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
+</style>
+
+@code {
+    [Inject] private IJSRuntime JSRuntime { get; set; }
+
+    // Objeto para enlazar los datos del formulario
+    private EmpresaModel Empresa = new EmpresaModel();
+    private bool IsLoading = false;
+    private string Message = string.Empty;
+    private bool IsSuccess = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Task.Delay(50);
+            await JSRuntime.InvokeVoidAsync("initMapbox");
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        IsLoading = true;
+        Message = string.Empty;
+        IsSuccess = false;
+
+        // ** Importante **: Llenar el UsuarioId aquí (asumiendo que viene de un servicio de autenticación)
+        // Por ahora, lo dejamos en 0 si no se ha llenado antes, pero este valor debe venir del IAuthService.
+        if (Empresa.UsuarioId == 0)
+        {
+             // Podrías obtener el ID del usuario actual aquí si el IAuthService tiene un método sincrónico.
+             // Ejemplo: Empresa.UsuarioId = await EmpresaService.GetLoggedInUserId();
+             // Dejamos que el EmpresaService lo gestione, como está en su implementación.
+        }
+
+        // 2. LLAMAR AL SERVICIO
+        var success = await EmpresaService.CrearEmpresaAsync(Empresa);
+
+        if (success)
+        {
+            IsSuccess = true;
+            Message = "¡Empresa creada exitosamente! Redirigiendo...";
+
+            // 3. REDIRECCIÓN TRAS ÉXITO
+            await Task.Delay(2000);
+            NavigationManager.NavigateTo("/empresas");
+        }
+        else
+        {
+            IsSuccess = false;
+            Message = "Error al crear la empresa. Verifica los datos o revisa la consola para ver el error de la API.";
+            StateHasChanged(); // Forzar la actualización para mostrar el mensaje de error
+        }
+
+        IsLoading = false;
+        // NO LLAMAMOS a StateHasChanged() si hubo éxito porque navegamos.
+        // Si falló, ya lo llamamos antes para mostrar el mensaje de error.
+    }
+}

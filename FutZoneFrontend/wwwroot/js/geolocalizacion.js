@@ -1,13 +1,27 @@
+// Variable global para mantener la referencia al objeto .NET
+let blazorReference = null;
+
 function updateLocationFields(country, department, city, depaCode, countryCode, lat, lng, direccion, alias) {
     // Construye la cadena de ubicación completa para el campo visible del usuario
     const fullLocationDisplay = `${country}, ${department}, ${city}, ${alias}`;
 
-    // Campo visible en el formulario (id="Ubicacion")
-    // Se usa .value porque es un <input>
-    document.getElementById("Ubicacion").value = fullLocationDisplay; 
+    // *******************************************************************
+    // CAMBIO CLAVE: Usar Blazor Interop en lugar de manipular el DOM directamente
+    // Esto asegura que el modelo de C# (Empresa.Ubicacion) se actualice, 
+    // permitiendo al usuario escribir después de la actualización del mapa.
+    // *******************************************************************
+    if (blazorReference) {
+        // Llama al método [JSInvokable] en el componente Blazor
+        blazorReference.invokeMethodAsync('UpdateLocationFromJs', fullLocationDisplay, lat, lng)
+            .catch(error => console.error("Error al invocar Blazor UpdateLocation:", error));
+    } else {
+        // Fallback (solo si la referencia de Blazor no está disponible, lo cual no debería pasar)
+        document.getElementById("Ubicacion").value = fullLocationDisplay;
+    }
 
-    // Campos OCULTOS que se enviarán al servidor (se asume que existen, por ejemplo:
-    // <input type="hidden" id="cliePais" name="cliePais" /> )
+
+    // Los campos OCULTOS (hidden inputs) SÍ se actualizan directamente
+    // ya que no están ligados a InputText de Blazor.
     document.getElementById("cliePais").value = country;
     document.getElementById("clieDepartamento").value = department;
     document.getElementById("clieCiudad").value = city;
@@ -18,19 +32,13 @@ function updateLocationFields(country, department, city, depaCode, countryCode, 
     document.getElementById("direccion").value = direccion; // Dirección detallada de Mapbox
     document.getElementById("alias").value = alias; // Nombre corto de la calle/lugar
 
-    // Oculta/Actualiza el mensaje de "Buscando ubicación" (ajustado para la consola, ya que no se ve el elemento en el HTML)
-    // Se comenta ya que el elemento 'location-message' no existe en el HTML proporcionado.
-    /*
+    // Oculta/Actualiza el mensaje de "Buscando ubicación" (si el elemento existe)
     const messageElement = document.getElementById("location-message");
     if (messageElement) {
-        messageElement.classList.remove('text-info'); 
+        messageElement.textContent = 'Ubicación seleccionada.';
+        messageElement.classList.remove('text-info');
         messageElement.classList.add('text-success');
-        messageElement.textContent = 'Ubicación seleccionada y guardada.';
-        setTimeout(() => {
-             messageElement.style.display = 'none';
-        }, 3000); 
     }
-    */
 }
 
 function reverseGeocode(lng, lat) {
@@ -66,7 +74,7 @@ function reverseGeocode(lng, lat) {
                 } else {
                     alias = detailedFeature.text_es || detailedFeature.text;
                 }
-                
+
                 data.features.forEach((feature) => {
                     const context = feature.context || [];
 
@@ -74,12 +82,8 @@ function reverseGeocode(lng, lat) {
                     context.forEach((item) => {
                         if (item.id.startsWith("country")) {
                             country = item.text;
-                            // **NOTA:** La función getCountryNumericCode no está definida. 
-                            // Se simula con el short_code para fines de prueba, si Mapbox lo proporciona.
-                            // Si necesitas el ISO Numérico, debes implementarla.
-                            // countryNumericCode = getCountryNumericCode(country);
                             if (item.short_code) {
-                                countryNumericCode = item.short_code; 
+                                countryNumericCode = item.short_code;
                             }
                         } else if (item.id.startsWith("region")) {
                             department = item.text;
@@ -88,7 +92,7 @@ function reverseGeocode(lng, lat) {
                             }
                         }
                     });
-                    
+
                     // Intenta obtener la ciudad del feature principal o 'place'
                     const type = feature.place_type[0];
                     if ((type === 'place' || type === 'locality') && city === "Municipio/Ciudad no encontrado") {
@@ -96,14 +100,9 @@ function reverseGeocode(lng, lat) {
                     }
                 });
             }
-            
-            // Revisa si getCountryNumericCode existe, si no, usa un valor placeholder.
-            // if (typeof getCountryNumericCode === 'function') {
-            //     countryNumericCode = getCountryNumericCode(country);
-            // }
 
             console.log(`Ubicación extraída: País: ${country}, Departamento: ${department} (${departmentCode}), Ciudad: ${city}, Direccion: ${direccion}, Calle: ${alias}`);
-            
+
             updateLocationFields(country, department, city, departmentCode, countryNumericCode, lat, lng, direccion, alias);
         })
         .catch((error) => {
@@ -114,13 +113,16 @@ function reverseGeocode(lng, lat) {
 
 function initializeMap(center) {
     const mapContainerId = "mapbox-ubicacion";
+    const mapElement = document.getElementById(mapContainerId);
 
-    if (!document.getElementById(mapContainerId)) {
-        console.error(`Contenedor del mapa con ID '${mapContainerId}' no encontrado. Se cancela la inicialización.`);
+    if (!mapElement) {
+        setTimeout(() => initializeMap(center), 50);
         return;
     }
 
-    // Inicialización del mapa de Mapbox (código conservado)
+    console.log(`Contenedor '${mapContainerId}' encontrado. Inicializando Mapbox.`);
+
+    // 2. INICIALIZACIÓN DEL MAPA
     const map = new mapboxgl.Map({
         container: mapContainerId,
         style: "mapbox://styles/mapbox/streets-v12",
@@ -128,20 +130,24 @@ function initializeMap(center) {
         zoom: 14,
     });
 
+    // 3. CREACIÓN DEL MARCADOR DRAGGABLE
     const marker = new mapboxgl.Marker({ draggable: true })
         .setLngLat(center)
         .addTo(map);
 
+    // Función para manejar el final del arrastre (drag) del marcador
     function onDragEnd() {
         const lngLat = marker.getLngLat();
         document.getElementById("clieLatitud").value = lngLat.lat;
         document.getElementById("clieLongitud").value = lngLat.lng;
+        // Llama a la geocodificación inversa para obtener la dirección
         reverseGeocode(lngLat.lng, lngLat.lat);
         console.log("Coordenadas del Marcador (Lat, Lng):", lngLat.lat, lngLat.lng);
     }
 
     marker.on("dragend", onDragEnd);
 
+    // 4. CONTROL DE GEOLOCALIZACIÓN
     const geolocate = new mapboxgl.GeolocateControl({
         positionOptions: { enableHighAccuracy: true },
         trackUserLocation: "until_known",
@@ -150,31 +156,11 @@ function initializeMap(center) {
 
     map.addControl(geolocate);
 
-    const MARKER_ACCURACY_THRESHOLD = 100;
-
-    geolocate.on("geolocate", (e) => {
-        const currentAccuracy = e.coords.accuracy;
-        const userLngLat = [e.coords.longitude, e.coords.latitude];
-
-        if (currentAccuracy <= MARKER_ACCURACY_THRESHOLD) {
-            marker.setLngLat(userLngLat);
-            document.getElementById("clieLatitud").value = userLngLat[1];
-            document.getElementById("clieLongitud").value = userLngLat[0];
-            reverseGeocode(userLngLat[0], userLngLat[1]);
-            console.log(`Marcador movido a ubicación precisa: ${currentAccuracy.toFixed(2)}m.`);
-            
-            // Detiene el seguimiento después de la primera ubicación precisa.
-            setTimeout(() => {
-                geolocate.trigger(); 
-            }, 100);
-
-        } else {
-            console.warn(`Ubicación ignorada. Precisión (${currentAccuracy.toFixed(2)}m) es mayor al umbral de ${MARKER_ACCURACY_THRESHOLD}m.`);
-        }
-    });
+    // 5. EVENTOS VARIOS DEL MAPA
 
     map.on("load", () => {
         map.resize();
+        // Dispara la geolocalización
         geolocate.trigger();
     });
 
@@ -198,8 +184,8 @@ function initializeMap(center) {
 function getUserLocation(successCallback, errorCallback) {
     if (navigator.geolocation) {
         const options = {
-            timeout: 5000, 
-            maximumAge: 0, 
+            timeout: 5000,
+            maximumAge: 0,
             enableHighAccuracy: true,
         };
 
@@ -232,7 +218,14 @@ function getUserLocation(successCallback, errorCallback) {
     }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+/**
+ * **NUEVA FUNCIÓN GLOBAL PARA INICIALIZAR DESDE BLazor**
+ * Recibe la referencia del objeto .NET.
+ */
+window.initMapbox = function (dotNetRef) {
+    // Guarda la referencia de .NET en la variable global
+    blazorReference = dotNetRef;
+
     // Coordenadas por defecto (Ejemplo: San Salvador, [Lng, Lat])
     const defaultCenter = [-89.1715584, 13.778944];
 
@@ -245,4 +238,4 @@ document.addEventListener("DOMContentLoaded", () => {
             initializeMap(defaultCenter);
         }
     );
-});
+};
