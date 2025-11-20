@@ -16,11 +16,21 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
 
 // Add HttpClient and Auth Service
-builder.Services.AddScoped<HttpClient>(sp =>
+builder.Services.AddHttpClient("Auth", client =>
 {
-    var baseAddress = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:8080";
-    return new HttpClient { BaseAddress = new Uri(baseAddress) };
+    client.BaseAddress = new Uri(builder.Configuration["ApiUrls:Auth"]!);
 });
+builder.Services.AddHttpClient("Canchas", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiUrls:Canchas"]!);
+});
+builder.Services.AddHttpClient("Publicidad", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ApiUrls:Publicidad"]!);
+});
+
+
+
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<IRolService, RolService>();

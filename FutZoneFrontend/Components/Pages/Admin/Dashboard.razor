@@ -1,5 +1,5 @@
 @page "/admin/dashboard"
-@inject HttpClient Http
+@inject IHttpClientFactory HttpClientFactory
 
 <PageTitle>Dashboard de Publicidad - FutZone</PageTitle>
 
@@ -25,7 +25,7 @@
         <div class="container-fluid">
             <!-- Tarjetas de Resumen -->
             <div class="row mb-4">
-                <div class="col-md-4 mb-3">
+                <div class="col-md-6 mb-3">
                     <div class="stat-card bg-primary">
                         <div class="stat-icon">
                             <i class="bi bi-building"></i>
@@ -37,7 +37,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-4 mb-3">
+                <div class="col-md-6 mb-3">
                     <div class="stat-card bg-success">
                         <div class="stat-icon">
                             <i class="bi bi-file-earmark-post"></i>
@@ -45,18 +45,6 @@
                         <div class="stat-content">
                             <h6>Publicaciones Totales</h6>
                             <h3>@_publicacionesTotales</h3>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-4 mb-3">
-                    <div class="stat-card bg-info">
-                        <div class="stat-icon">
-                            <i class="bi bi-eye"></i>
-                        </div>
-                        <div class="stat-content">
-                            <h6>Vistas Totales</h6>
-                            <h3>@_vistasTotales</h3>
                         </div>
                     </div>
                 </div>
@@ -87,7 +75,7 @@
                                         {
                                             <tr>
                                                 <td colspan="4" class="text-center py-4 text-muted">
-                                                    No hay empresas registradas
+                                                    Cargando empresas...
                                                 </td>
                                             </tr>
                                         }
@@ -194,7 +182,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @onclick="CerrarModalEmpresa">Cancelar</button>
                     <button type="button" class="btn btn-primary" @onclick="GuardarEmpresa">
-                        @(_empresaSeleccionada == null ? "Crear Empresa" : "Actualizar Empresa")
+                        @(_empresaSeleccionada == null ? "Crear" : "Actualizar")
                     </button>
                 </div>
             </div>
@@ -202,91 +190,30 @@
     </div>
 }
 
-
 <style>
-    .admin-dashboard {
-        min-height: 100vh;
-        background-color: #f8f9fa;
-    }
-    .admin-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 2rem 0;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        margin-bottom: 2rem;
-    }
-    .admin-header h1 {
-        font-size: 2rem;
-        font-weight: 700;
-    }
+    .admin-dashboard { min-height: 100vh; background-color: #f8f9fa; }
+    .admin-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2rem 0; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); margin-bottom: 2rem; }
+    .admin-header h1 { font-size: 2rem; font-weight: 700; }
     .admin-content { padding-bottom: 2rem; }
-    .stat-card {
-        padding: 1.5rem;
-        border-radius: 0.75rem;
-        color: white;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s;
-    }
+    .stat-card { padding: 1.5rem; border-radius: 0.75rem; color: white; display: flex; align-items: center; gap: 1rem; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); transition: transform 0.2s; }
     .stat-card:hover { transform: translateY(-4px); }
-    .stat-icon {
-        font-size: 2.5rem;
-        opacity: 0.8;
-    }
-    .stat-content h6 {
-        font-size: 0.875rem;
-        font-weight: 600;
-        opacity: 0.9;
-        margin-bottom: 0.5rem;
-    }
-    .stat-content h3 {
-        font-size: 2rem;
-        font-weight: 700;
-        margin: 0;
-    }
+    .stat-icon { font-size: 2.5rem; opacity: 0.8; }
+    .stat-content h6 { font-size: 0.875rem; font-weight: 600; opacity: 0.9; margin-bottom: 0.5rem; }
+    .stat-content h3 { font-size: 2rem; font-weight: 700; margin: 0; }
     .bg-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-    .bg-success { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-    .bg-info { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
-    .avatar-sm {
-        width: 32px;
-        height: 32px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0.875rem;
-    }
-    .activity-item:hover {
-        background-color: #f8f9fa;
-        padding-left: 0.5rem;
-    }
-    .activity-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background-color: #e9ecef;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.25rem;
-        color: #667eea;
-    }
-    .card {
-        border: none;
-        border-radius: 0.75rem;
-    }
-    .card-header {
-        border-bottom: 1px solid #e9ecef;
-        border-radius: 0.75rem 0.75rem 0 0;
-    }
+    .bg-success { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    .avatar-sm { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; }
+    .activity-item:hover { background-color: #f8f9fa; padding-left: 0.5rem; }
+    .activity-icon { width: 40px; height: 40px; border-radius: 50%; background-color: #e9ecef; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; color: #667eea; }
+    .card { border: none; border-radius: 0.75rem; }
+    .card-header { border-bottom: 1px solid #e9ecef; border-radius: 0.75rem 0.75rem 0 0; }
     .modal.d-block { display: block; }
 </style>
 
 @code {
+    private HttpClient _publicidadHttpClient;
     private int _empresasActivas;
     private int _publicacionesTotales;
-    private int _vistasTotales = 12500; // Placeholder
 
     private List<EmpresaDTO> _empresas = new();
     private List<PublicacionDTO> _publicaciones = new();
@@ -297,16 +224,25 @@
 
     protected override async Task OnInitializedAsync()
     {
+        _publicidadHttpClient = HttpClientFactory.CreateClient("Publicidad");
         await CargarDatos();
     }
 
     private async Task CargarDatos()
     {
-        _empresas = await Http.GetFromJsonAsync<List<EmpresaDTO>>("empresa") ?? new List<EmpresaDTO>();
-        _publicaciones = await Http.GetFromJsonAsync<List<PublicacionDTO>>("publicacion") ?? new List<PublicacionDTO>();
+        try
+        {
+            _empresas = await _publicidadHttpClient.GetFromJsonAsync<List<EmpresaDTO>>("empresa") ?? new List<EmpresaDTO>();
+            _publicaciones = await _publicidadHttpClient.GetFromJsonAsync<List<PublicacionDTO>>("publicacion") ?? new List<PublicacionDTO>();
 
-        _empresasActivas = _empresas.Count(e => e.Activa);
-        _publicacionesTotales = _publicaciones.Count;
+            _empresasActivas = _empresas.Count(e => e.Activa);
+            _publicacionesTotales = _publicaciones.Count;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error cargando datos: {ex.Message}");
+        }
+        StateHasChanged();
     }
 
     private void AbrirModalNuevaEmpresa()
@@ -336,27 +272,33 @@
 
     private async Task GuardarEmpresa()
     {
-        if (string.IsNullOrEmpty(_empresaFormulario.Nombre)) return;
+        if (string.IsNullOrEmpty(_empresaFormulario.Nombre) || string.IsNullOrEmpty(_empresaFormulario.RUC)) return;
 
-        if (_empresaSeleccionada == null)
-        {
-            await Http.PostAsJsonAsync("empresa", _empresaFormulario);
-        }
-        else
-        {
-            await Http.PutAsJsonAsync($"empresa/{_empresaSeleccionada.Id}", _empresaFormulario);
-        }
+        var url = _empresaSeleccionada == null ? "empresa" : $"empresa/{_empresaSeleccionada.Id}";
+        var method = _empresaSeleccionada == null ? HttpMethod.Post : HttpMethod.Put;
 
-        await CargarDatos();
-        CerrarModalEmpresa();
+        var request = new HttpRequestMessage(method, url)
+        {
+            Content = JsonContent.Create(_empresaFormulario)
+        };
+        var response = await _publicidadHttpClient.SendAsync(request);
+
+        if(response.IsSuccessStatusCode)
+        {
+            await CargarDatos();
+            CerrarModalEmpresa();
+        }
     }
 
     private async Task EliminarEmpresa(int empresaId)
     {
-        await Http.DeleteAsync($"empresa/{empresaId}");
-        await CargarDatos();
+        if ((await _publicidadHttpClient.DeleteAsync($"empresa/{empresaId}")).IsSuccessStatusCode)
+        {
+            await CargarDatos();
+        }
     }
 
+    // DTOs
     public class EmpresaDTO
     {
         public int Id { get; set; }
