@@ -9,7 +9,7 @@
     <div class="team-grid">
         @foreach (var team in _teams)
         {
-            <div class="team-card @(team.Abreviatura == _selectedTeamAbbreviation ? "selected" : "")" @onclick="() => SelectTeam(team.Abreviatura)">
+            <div class="team-card @(team.Abreviatura == _selectedTeamAbbreviation ? "selected" : "")" @onclick="() => HandleSelectTeam(team.Abreviatura)">
                 <div class="team-logo-container">
                     <img src="@team.LogoUrl" alt="@team.Nombre" class="team-logo">
                 </div>
@@ -52,7 +52,7 @@
         await Task.CompletedTask;
     }
 
-    private void SelectTeam(string abreviatura)
+    private void HandleSelectTeam(string abreviatura)
     {
         var team = _teams.FirstOrDefault(t => t.Abreviatura == abreviatura);
         if (team != null)
