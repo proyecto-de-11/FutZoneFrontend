@@ -7,10 +7,6 @@ const defaultCenter = [-89.1715584, 13.778944];
 // Umbral de precisión para mover el marcador (100 metros)
 const MARKER_ACCURACY_THRESHOLD = 100;
 
-// =================================================================
-// 1. JS INTEROP: Función llamada desde Blazor (el C#)
-// =================================================================
-
 /**
  * Función llamada por Blazor para inicializar Mapbox y pasar la referencia C#.
  */
@@ -52,15 +48,6 @@ function updateBlazorLocation(direccion, alias, lat, lng) {
             .catch(error => console.error("Error al llamar a UpdateLocation en C#:", error));
     }
 }
-
-
-// =================================================================
-// 3. GEOCÓDIFICACIÓN INVERSA (MODIFICADA para llamar a Blazor)
-// =================================================================
-
-// =================================================================
-// 3. GEOCÓDIFICACIÓN INVERSA (MODIFICADA para llamar a Blazor)
-// =================================================================
 
 function reverseGeocode(lng, lat) {
     if (typeof mapboxgl === "undefined" || !mapboxgl.accessToken) {
@@ -134,10 +121,6 @@ function reverseGeocode(lng, lat) {
             updateBlazorLocation("Error de Red / API", "Error de Ubicación", lat, lng);
         });
 }
-
-// =================================================================
-// 4. INICIALIZACIÓN DEL MAPA
-// =================================================================
 
 /**
  * Inicializa el mapa y los controles.
@@ -219,10 +202,6 @@ function initializeMap(center) {
     });
 }
 
-// =================================================================
-// 5. OBTENER UBICACIÓN DEL USUARIO
-// =================================================================
-
 /**
  * Intenta obtener la ubicación actual del usuario.
  * @param {function(number[])} successCallback - Función a ejecutar con las coordenadas [lng, lat].
@@ -262,8 +241,3 @@ function getUserLocation(successCallback, errorCallback) {
         errorCallback(); // Usa la ubicación por defecto
     }
 }
-
-// -------------------------------------------------------------------------------------------------------
-// NOTA IMPORTANTE: LA LLAMADA INICIAL DOCUMENT.ADDEVENTLISTENER("DOMContentLoaded", ...) SE HA ELIMINADO.
-// La inicialización ahora es controlada por Blazor a través de window.initMapbox.
-// -------------------------------------------------------------------------------------------------------

@@ -144,10 +144,6 @@ public void UpdateLocation(string direccion, string alias, double lat, double ln
 {
     // CAMBIO CLAVE: Usa 'direccion' (la dirección completa) en lugar de 'alias'
     Empresa.Ubicacion = direccion; 
-    
-    // Si necesitas guardar Lat/Lng para el API, pero no enlazarlos con un campo de UI:
-    // Empresa.Latitud = lat;
-    // Empresa.Longitud = lng;
 
     StateHasChanged();
 }
