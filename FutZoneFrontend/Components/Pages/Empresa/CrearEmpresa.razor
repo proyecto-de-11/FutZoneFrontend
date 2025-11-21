@@ -4,7 +4,6 @@
 @using FutZoneFrontend.Services
 @inject EmpresaService EmpresaService
 @inject NavigationManager NavigationManager
-// La inyección de IJSRuntime se mantiene en el bloque
 
 <div class="form-container">
     <div class="header-futzone">
@@ -44,28 +43,27 @@
             </div>
             <div class="form-group">
                 <label for="Correo">Correo Electrónico</label>
-                <!-- Usamos el InputText genérico y el ValidationMessage se encarga de la validación de formato email -->
-                <InputText id="Correo" @bind-Value="Empresa.Correo" class="form-control" required type="email"/> 
+                <InputText id="Correo" @bind-Value="Empresa.Correo" class="form-control" required type="email" /> 
+                <ValidationMessage For="@(() => Empresa.Correo)" />
             </div>
         </div>
 
         <div class="form-group">
             <label for="imagen">URL del Logo/Imagen</label>
             <InputText id="imagen" @bind-Value="Empresa.ImagenUrl" class="form-control" type="url" />
+            <ValidationMessage For="@(() => Empresa.ImagenUrl)" />
         </div>
 
         <div class="form-group">
-            <label for="Ubicacion">Ubicación Seleccionada</label>
-            <InputText id="Ubicacion" @bind-Value="Empresa.Ubicacion" class="form-control" required placeholder="Selecciona la ubicación en el mapa de abajo..." />
+            <label for="Ubicacion">Ubicación (Editable - Arrastra el marcador o haz click)</label>
+            <InputText id="Ubicacion" @bind-Value="Empresa.Ubicacion" class="form-control" required placeholder="Selecciona ubicación y luego edita el alias si es necesario." />
+            <ValidationMessage For="@(() => Empresa.Ubicacion)" />
         </div>
 
         <div class="form-group">
             <div id="mapbox-ubicacion" style="width: 100%; height: 400px; border-radius: 8px;"></div>
         </div>
-
-        <!-- Eliminamos los atributos 'name' ya que Blazor no los necesita, reduciendo el riesgo de envío nativo. -->
-        <input type="hidden" id="clieLatitud" />
-        <input type="hidden" id="clieLongitud" />
+        
         <div class="form-group">
             <p id="location-message" class="text-info">Buscando tu ubicación...</p>
         </div>
@@ -86,6 +84,7 @@
 </div>
 
 <style>
+    /* Estilos (sin cambios) */
     #mapbox-ubicacion {
         width: 100%;
         height: 350px;
@@ -94,24 +93,68 @@
     }
     .alert-success { background-color: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
     .alert-danger { background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 15px; }
+    
+    .form-control {
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        color: #495057;
+    }
+    .form-control:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    .form-group-inline {
+        display: flex;
+        gap: 20px;
+    }
+    .form-group-inline .form-group {
+        flex: 1;
+    }
 </style>
 
 @code {
     [Inject] private IJSRuntime JSRuntime { get; set; }
 
-    // Objeto para enlazar los datos del formulario
     private EmpresaModel Empresa = new EmpresaModel();
     private bool IsLoading = false;
     private string Message = string.Empty;
     private bool IsSuccess = false;
+
+    private DotNetObjectReference<CrearEmpresa> dotNetRef;
+
+    protected override void OnInitialized()
+    {
+        dotNetRef = DotNetObjectReference.Create(this);
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             await Task.Delay(50);
-            await JSRuntime.InvokeVoidAsync("initMapbox");
+            await JSRuntime.InvokeVoidAsync("initMapbox", dotNetRef);
         }
+    }
+
+    // CAMBIO CLAVE: Solo se usa el 'alias' para el campo 'Ubicacion'.
+    // Los demás parámetros (lat, lng, direccion) se reciben pero se ignoran en el modelo.
+    // Método que puede ser llamado desde JavaScript
+[JSInvokable]
+public void UpdateLocation(string direccion, string alias, double lat, double lng)
+{
+    // CAMBIO CLAVE: Usa 'direccion' (la dirección completa) en lugar de 'alias'
+    Empresa.Ubicacion = direccion; 
+    
+    // Si necesitas guardar Lat/Lng para el API, pero no enlazarlos con un campo de UI:
+    // Empresa.Latitud = lat;
+    // Empresa.Longitud = lng;
+
+    StateHasChanged();
+}
+    
+    public void Dispose()
+    {
+        dotNetRef?.Dispose();
     }
 
     private async Task HandleValidSubmit()
@@ -120,24 +163,17 @@
         Message = string.Empty;
         IsSuccess = false;
 
-        // ** Importante **: Llenar el UsuarioId aquí (asumiendo que viene de un servicio de autenticación)
-        // Por ahora, lo dejamos en 0 si no se ha llenado antes, pero este valor debe venir del IAuthService.
         if (Empresa.UsuarioId == 0)
         {
-             // Podrías obtener el ID del usuario actual aquí si el IAuthService tiene un método sincrónico.
-             // Ejemplo: Empresa.UsuarioId = await EmpresaService.GetLoggedInUserId();
-             // Dejamos que el EmpresaService lo gestione, como está en su implementación.
+             // La lógica para obtener el ID del usuario actual debe ir aquí
         }
 
-        // 2. LLAMAR AL SERVICIO
         var success = await EmpresaService.CrearEmpresaAsync(Empresa);
 
         if (success)
         {
             IsSuccess = true;
             Message = "¡Empresa creada exitosamente! Redirigiendo...";
-
-            // 3. REDIRECCIÓN TRAS ÉXITO
             await Task.Delay(2000);
             NavigationManager.NavigateTo("/empresas");
         }
@@ -145,11 +181,9 @@
         {
             IsSuccess = false;
             Message = "Error al crear la empresa. Verifica los datos o revisa la consola para ver el error de la API.";
-            StateHasChanged(); // Forzar la actualización para mostrar el mensaje de error
+            StateHasChanged();
         }
 
         IsLoading = false;
-        // NO LLAMAMOS a StateHasChanged() si hubo éxito porque navegamos.
-        // Si falló, ya lo llamamos antes para mostrar el mensaje de error.
     }
 }

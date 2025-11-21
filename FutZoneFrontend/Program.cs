@@ -58,7 +58,7 @@ builder.Services.AddScoped<IPropietarioService, PropietarioService>();
 builder.Services.AddScoped<IDocumentosLegalesService, DocumentosLegalesService>();
 builder.Services.AddScoped<IPreferenciasService, PreferenciasService>();
 builder.Services.AddScoped<IAceptacionesService, AceptacionesService>();
-
+builder.Services.AddScoped<FutZoneFrontend.Services.EmpresaService>();
 // --- FIN DE LA CONFIGURACIÓN DE MÚLTIPLES HTTPCLIENTS ---
 
 
