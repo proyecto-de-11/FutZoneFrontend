@@ -1,92 +1,91 @@
-﻿using Microsoft.Extensions.Configuration;
-using System.Net.Http;
+﻿using FutZoneFrontend.DTOs;
 using System.Net.Http.Json;
-using System.Net.Http.Headers;
+using System.Text.Json;
+using System.Net.Http; // Necesario para HttpClient
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using FutZoneFrontend.Services.Models;
-using System;
 
 namespace FutZoneFrontend.Services
 {
-    public class EmpresaService
+    public class EmpresaService // No se usa IEmpresaService, solo la clase concreta
     {
         private readonly HttpClient _httpClient;
-        private readonly IAuthService _authService; // 1. Inyectamos IAuthService
-        private readonly string _apiBaseUrl;
+        private readonly IAuthService _authService; // Para obtener el ID del usuario
 
-        // Inyectamos HttpClient, IConfiguration y el IAuthService
-        public EmpresaService(HttpClient httpClient, IConfiguration configuration, IAuthService authService)
+        // Inyectamos el HttpClient (configurado como "ApiClient") y el AuthService
+        public EmpresaService(HttpClient httpClient, IAuthService authService)
         {
             _httpClient = httpClient;
-            _authService = authService; // Almacenamos la referencia
-            _apiBaseUrl = configuration["ApiBaseUrl"] ?? "http://localhost:8080"; // Usar un default si no se encuentra
+            _authService = authService;
         }
 
-        public async Task<bool> CrearEmpresaAsync(EmpresaModel model)
+        /// <summary>
+        /// Obtiene las organizaciones asociadas al usuario autenticado.
+        /// </summary>
+        /// <returns>Una lista de EmpresaDto o una lista vacía si falla o no hay empresas.</returns>
+        public async Task<List<EmpresaDto>> GetEmpresasDelUsuarioAsync()
         {
-            // 1. Obtener el ID de Usuario de la sesión de autenticación
+            // 1. Obtener el ID del usuario de la sesión
             var userId = await _authService.GetUserIdAsync();
-            var token = _authService.GetToken();
 
-            if (!userId.HasValue || string.IsNullOrEmpty(token))
+            if (!userId.HasValue || userId.Value <= 0)
             {
-                Console.WriteLine("⚠️ Acceso denegado: Usuario no autenticado o ID de usuario/Token no disponible.");
-                return false;
+                Console.WriteLine("[EmpresaService] Error: No se pudo obtener el ID del usuario autenticado.");
+                return new List<EmpresaDto>();
             }
 
-            // 2. Mapear y construir el Payload para la API
-            var payload = new EmpresaApiPayload // Asumo que este modelo existe en FutZoneFrontend.Services.Models
-            {
-                UsuarioId = userId.Value, // Usamos el ID de usuario de la sesión
-                Nombre = model.NombreEmpresa,
-                Tipo = model.TipoEmpresa,
-                Descripcion = model.DescripcionEmpresa,
-                Ubicacion = model.Ubicacion,
-                Contactos = model.Contactos,
-                Correo = model.Correo,
-                Imagen = model.ImagenUrl
-            };
-
-            // 3. Establecer el Token JWT en el encabezado para la autenticación
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-            // 4. Definir la URL completa de la API
-            var apiUrl = $"{_apiBaseUrl}/empresa";
-
-            Console.WriteLine($"\n========== CREAR EMPRESA (dotnet) ==========");
-            Console.WriteLine($"Usuario ID a enviar: {userId.Value}");
-            Console.WriteLine($"Endpoint: POST {apiUrl}");
-            Console.WriteLine($"Token usado: Bearer {token.Substring(0, 20)}..."); // Muestra solo una parte del token
-
-
+            // URL de la API: /empresa/{userId}
+            var url = $"empresa/{userId.Value}";
+            
             try
             {
-                // 5. Realizar la llamada HTTP POST
-                var response = await _httpClient.PostAsJsonAsync(apiUrl, payload);
+                var response = await _httpClient.GetAsync(url);
 
-                // 6. Verificar el código de respuesta
-                if (response.IsSuccessStatusCode)
+                if (!response.IsSuccessStatusCode)
                 {
-                    Console.WriteLine("✅ Empresa creada exitosamente.");
-                    return true;
+                    Console.WriteLine($"[EmpresaService] Error HTTP: {response.StatusCode} al consultar {url}");
+                    return new List<EmpresaDto>();
                 }
-                else
+
+                // Leer la respuesta completa
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                if (string.IsNullOrWhiteSpace(responseContent))
                 {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    Console.WriteLine($"❌ Error al crear empresa. Status: {response.StatusCode}. Contenido: {errorContent}");
-                    return false;
+                    return new List<EmpresaDto>();
                 }
+                
+                // 2. Deserialización Flexible (Manejo de Objeto Único vs. Lista)
+                var element = JsonSerializer.Deserialize<JsonElement>(responseContent);
+
+                if (element.ValueKind == JsonValueKind.Array)
+                {
+                    // Es un array: Deserializamos directamente a List<EmpresaDto>
+                    var empresas = JsonSerializer.Deserialize<List<EmpresaDto>>(responseContent, 
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    
+                    return empresas ?? new List<EmpresaDto>();
+                }
+                else if (element.ValueKind == JsonValueKind.Object)
+                {
+                    // Es un objeto único: Deserializamos a EmpresaDto y lo envolvemos en una lista
+                    var empresaUnica = JsonSerializer.Deserialize<EmpresaDto>(responseContent, 
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    
+                    if (empresaUnica != null)
+                    {
+                        Console.WriteLine($"[EmpresaService] Se encontró una empresa única: {empresaUnica.Nombre}");
+                        return new List<EmpresaDto> { empresaUnica };
+                    }
+                }
+                
+                Console.WriteLine("[EmpresaService] Advertencia: Respuesta JSON no reconocida.");
+                return new List<EmpresaDto>();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"⚠️ Excepción al llamar a la API: {ex.Message}");
-                return false;
-            }
-            finally
-            {
-                // Es buena práctica limpiar el encabezado si no se necesita para llamadas posteriores
-                // Aunque en Blazor/HttpClient esto a menudo se maneja mejor en un DelegatingHandler global.
-                _httpClient.DefaultRequestHeaders.Authorization = null;
+                Console.WriteLine($"[EmpresaService] Excepción al obtener empresas: {ex.Message}");
+                return new List<EmpresaDto>();
             }
         }
     }

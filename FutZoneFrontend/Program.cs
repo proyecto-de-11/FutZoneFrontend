@@ -58,7 +58,19 @@ builder.Services.AddScoped<IPropietarioService, PropietarioService>();
 builder.Services.AddScoped<IDocumentosLegalesService, DocumentosLegalesService>();
 builder.Services.AddScoped<IPreferenciasService, PreferenciasService>();
 builder.Services.AddScoped<IAceptacionesService, AceptacionesService>();
-builder.Services.AddScoped<FutZoneFrontend.Services.EmpresaService>();
+// Registrar EmpresaService, inyectando el cliente nombrado "ApiClient" y IAuthService
+builder.Services.AddScoped<FutZoneFrontend.Services.EmpresaService>(sp =>
+{
+    var clientFactory = sp.GetRequiredService<IHttpClientFactory>();
+    // Obtenemos el cliente configurado para la API de Empresas
+    var apiClient = clientFactory.CreateClient("ApiClient"); 
+    
+    // Obtenemos el servicio de autenticación para acceder al userId
+    var authService = sp.GetRequiredService<IAuthService>();
+
+    // Inyectamos ambos al constructor de EmpresaService
+    return new FutZoneFrontend.Services.EmpresaService(apiClient, authService);
+});
 // --- FIN DE LA CONFIGURACIÓN DE MÚLTIPLES HTTPCLIENTS ---
 
 

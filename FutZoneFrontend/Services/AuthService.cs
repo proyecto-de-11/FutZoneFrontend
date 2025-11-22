@@ -28,10 +28,12 @@ namespace FutZoneFrontend.Services
         // Nuevos métodos para acceder a los datos de la sesión
         Task<int?> GetUserIdAsync();
         Task<string?> GetRoleAsync();
+        Task EnsureAuthDataLoadedAsync();
     }
 
     public class AuthService : IAuthService
     {
+        private bool _isInitialized = false;
         private readonly HttpClient _httpClient;
         private readonly Blazored.LocalStorage.ILocalStorageService _localStorage;
 
@@ -48,8 +50,6 @@ namespace FutZoneFrontend.Services
             _httpClient = httpClient;
             _localStorage = localStorage;
 
-            // Iniciamos la tarea para cargar todos los datos (Token, ID, Rol)
-            _ = InitializeAuthDataAsync();
         }
 
         // ===================================
@@ -57,12 +57,16 @@ namespace FutZoneFrontend.Services
         // ===================================
         private async Task InitializeAuthDataAsync()
         {
-            try
-            {
-                _token = await _localStorage.GetItemAsync<string>(TokenKey);
-                // Cargar ID y Rol
-                _userId = await _localStorage.GetItemAsync<int?>(UserIdKey);
-                _role = await _localStorage.GetItemAsync<string>(RoleKey);
+            if (_isInitialized) return; 
+        
+        try
+        {
+            // La carga de LocalStorage DEBE ocurrir aquí, en un contexto async (como OnInitializedAsync de la vista)
+            _token = await _localStorage.GetItemAsync<string>(TokenKey);
+            _userId = await _localStorage.GetItemAsync<int?>(UserIdKey);
+            _role = await _localStorage.GetItemAsync<string>(RoleKey);
+            
+            _isInitialized = true;
 
                 Console.WriteLine($"[AuthService - INIT] Estado de autenticación cargado.");
                 Console.WriteLine($"[AuthService - INIT] Token: {!string.IsNullOrEmpty(_token)} | User ID: {_userId} | Rol: {_role}");
@@ -264,6 +268,15 @@ namespace FutZoneFrontend.Services
             // Devolvemos el valor almacenado en memoria (_role)
             return Task.FromResult(_role);
         }
+        public Task EnsureAuthDataLoadedAsync()
+    {
+        // Llamamos a la inicialización para forzar la carga si no se ha hecho
+        if (!_isInitialized)
+        {
+            return InitializeAuthDataAsync();
+        }
+        return Task.CompletedTask;
+    }
 
         // ===================================
         // 5. MÉTODOS DE ALMACENAMIENTO (Setters/Clear)

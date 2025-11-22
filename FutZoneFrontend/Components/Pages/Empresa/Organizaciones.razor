@@ -1,0 +1,98 @@
+@page "/organizaciones"
+@using FutZoneFrontend.DTOs
+@using FutZoneFrontend.Services
+@inject EmpresaService EmpresaService // El servicio que creamos
+@inject IAuthService AuthService // Para obtener el ID del usuario
+@inject NavigationManager NavigationManager // Para posible redirección si no hay ID
+
+<h3>Organizaciones Registradas</h3>
+
+@if (loading)
+{
+    <div class="alert alert-info">
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+        Cargando organizaciones del usuario...
+    </div>
+}
+else if (!userId.HasValue || userId.Value <= 0)
+{
+    <div class="alert alert-warning" role="alert">
+        ⚠️ **Acceso Denegado:** No se pudo obtener el ID del usuario. Por favor, <a href="/login">inicia sesión</a>.
+    </div>
+}
+else if (empresas == null || !empresas.Any())
+{
+    <div class="alert alert-secondary" role="alert">
+        ℹ️ No se encontraron organizaciones registradas para ti (ID de Usuario: @userId).
+    </div>
+}
+else
+{
+    <div class="row">
+        @foreach (var empresa in empresas)
+        {
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <img src="@empresa.Imagen" class="card-img-top" alt="Logo de @empresa.Nombre" style="height: 180px; object-fit: cover;">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title text-primary">@empresa.Nombre</h5>
+                        <p class="card-text mb-1">
+                            <strong>Tipo:</strong> @empresa.Tipo
+                        </p>
+                        <p class="card-text mb-2 text-muted small truncate-lines-2">
+                            @empresa.Descripcion
+                        </p>
+                        <ul class="list-unstyled small mt-auto">
+                            <li>📍 <strong>Ubicación:</strong> @empresa.Ubicacion</li>
+                            <li>📧 <strong>Contacto:</strong> @empresa.Correo</li>
+                        </ul>
+                        <div class="mt-2">
+                            <button class="btn btn-outline-info btn-sm">Ver Detalles</button>
+                        </div>
+                    </div>
+                    <div class="card-footer text-end">
+                        <small class="text-muted">ID Empresa: @empresa.ID</small>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<EmpresaDto> empresas = new(); // Lista para almacenar los DTOs
+    private bool loading = true;
+    private int? userId; // ID del usuario obtenido del AuthService
+
+    protected override async Task OnInitializedAsync()
+    {
+        // **PASO CLAVE:** Forzar la carga de datos de LocalStorage/Sesión solo cuando el circuito es interactivo.
+        // Esto resuelve el error de JavaScript Interop.
+        await AuthService.EnsureAuthDataLoadedAsync();
+
+        // 1. Obtener el ID del Usuario Autenticado (Ahora debería estar disponible)
+        userId = await AuthService.GetUserIdAsync(); 
+
+        if (userId.HasValue && userId.Value > 0)
+        {
+            try
+            {
+                // 2. Llamar al servicio para obtener las empresas. 
+                // El servicio maneja la llamada a la API y la deserialización flexible.
+                empresas = await EmpresaService.GetEmpresasDelUsuarioAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en la vista al cargar empresas: {ex.Message}");
+                // En un entorno real, aquí podrías mostrar un Toast/Notificación de error.
+                empresas = new List<EmpresaDto>(); 
+            }
+        }
+        else
+        {
+            // Mensaje de acceso denegado mostrado por la parte HTML del componente.
+        }
+        
+        loading = false;
+    }
+}
