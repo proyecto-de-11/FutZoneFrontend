@@ -42,8 +42,18 @@ namespace FutZoneFrontend.Services
         {
             try
             {
-                return await _httpClient.GetFromJsonAsync<List<TipoDeporte>>($"{BaseEndpoint}/lista") 
-                    ?? new List<TipoDeporte>();
+                // Intentar con /lista primero (endpoint actual)
+                try
+                {
+                    return await _httpClient.GetFromJsonAsync<List<TipoDeporte>>($"{BaseEndpoint}/lista") 
+                        ?? new List<TipoDeporte>();
+                }
+                catch
+                {
+                    // Si falla, intentar sin /lista
+                    return await _httpClient.GetFromJsonAsync<List<TipoDeporte>>($"{BaseEndpoint}") 
+                        ?? new List<TipoDeporte>();
+                }
             }
             catch (Exception ex)
             {

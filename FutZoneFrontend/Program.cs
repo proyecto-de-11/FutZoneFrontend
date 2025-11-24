@@ -19,13 +19,19 @@ builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStat
 builder.Services.AddScoped<HttpClient>(sp =>
 {
     var baseAddress = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:8080";
-    return new HttpClient { BaseAddress = new Uri(baseAddress) };
+    var httpClient = new HttpClient { BaseAddress = new Uri(baseAddress) };
+    httpClient.Timeout = TimeSpan.FromSeconds(600); // 10 minutos
+    return httpClient;
 });
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<IRolService, RolService>();
 builder.Services.AddScoped<ITipoDeporteService, TipoDeporteService>();
+builder.Services.AddScoped<IMembresiaService, MembresiaService>();
 builder.Services.AddScoped<IPropietarioService, PropietarioService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<ICanchasService, CanchasService>();
+builder.Services.AddScoped<IReservasService, ReservasService>();
 // Services stubs for endpoints that are referenced in API inventory
 builder.Services.AddScoped<IDocumentosLegalesService, DocumentosLegalesService>();
 builder.Services.AddScoped<IPreferenciasService, PreferenciasService>();

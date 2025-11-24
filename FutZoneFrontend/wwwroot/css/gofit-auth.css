@@ -13,7 +13,12 @@
 .gofit-bg, .gofit-reg-bg{
   background: linear-gradient(180deg,var(--gofit-grad-top) 0%, var(--gofit-grad-mid) 50%, var(--gofit-grad-bottom) 100%);
   min-height: 100vh;
-  padding-bottom: 40px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
 }
 
 /* Card containers */
@@ -81,8 +86,21 @@
 }
 
 /* Enhanced auth visuals: icons in inputs, glass effect, hero */
-.auth-container{ display:flex; align-items:center; justify-content:center; min-height:70vh; }
-.auth-panel{ width:100%; max-width:760px; margin: 3vh auto; border-radius:14px; overflow:hidden; }
+.auth-container{ 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  width: 100%;
+  min-height: 100vh;
+}
+.auth-panel{ 
+  width: 100%; 
+  max-width: 760px; 
+  border-radius: 14px; 
+  overflow: hidden;
+  margin: 0;
+  padding: 20px;
+}
 .auth-hero-centered{ text-align:center; padding:2.2rem 1rem 1rem 1rem; }
 .auth-hero-centered .bi{ font-size:48px; color:#fff; background:rgba(255,255,255,0.08); padding:18px; border-radius:50%; box-shadow:0 8px 22px rgba(11,107,155,0.12); }
 .auth-hero-centered h2{ margin-top:0.7rem; color:#fff; font-weight:700; letter-spacing:0.2px; }
