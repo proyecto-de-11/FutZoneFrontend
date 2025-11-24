@@ -5,7 +5,11 @@
 @inject IAuthService AuthService // Para obtener el ID del usuario
 @inject NavigationManager NavigationManager // Para posible redirección si no hay ID
 
-<h3>Organizaciones Registradas</h3>
+<h3>Organizaciones Registradas 🏢</h3>
+<button class="btn btn-success mb-3" @onclick='() => NavigationManager.NavigateTo("/empresas/crear")'>
+    ➕ Registrar Nueva Organización
+</button>
+<hr />
 
 @if (loading)
 {

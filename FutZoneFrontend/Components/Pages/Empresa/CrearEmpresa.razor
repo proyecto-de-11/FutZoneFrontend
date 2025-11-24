@@ -1,0 +1,120 @@
+﻿@page "/empresas/crear"
+@using FutZoneFrontend.DTOs
+@using FutZoneFrontend.Services
+@inject EmpresaService EmpresaService
+@inject NavigationManager NavigationManager
+
+<h3>Crear Nueva Empresa 📝</h3>
+<hr />
+
+<EditForm Model="@empresaModel" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group mb-3">
+                <label for="nombre">Nombre:</label>
+                <InputText id="nombre" @bind-Value="empresaModel.Nombre" class="form-control" />
+                <ValidationMessage For="@(() => empresaModel.Nombre)" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="tipo">Tipo:</label>
+                <InputText id="tipo" @bind-Value="empresaModel.Tipo" class="form-control" />
+                <ValidationMessage For="@(() => empresaModel.Tipo)" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="ubicacion">Ubicación:</label>
+                <InputText id="ubicacion" @bind-Value="empresaModel.Ubicacion" class="form-control" />
+                <ValidationMessage For="@(() => empresaModel.Ubicacion)" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="contactos">Contactos (Teléfono/WhatsApp):</label>
+                <!-- CORREGIDO: Usar Contactos (PascalCase) -->
+                <InputText id="contactos" @bind-Value="empresaModel.Contactos" class="form-control" />
+                <ValidationMessage For="@(() => empresaModel.Contactos)" />
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group mb-3">
+                <label for="descripcion">Descripción:</label>
+                <InputTextArea id="descripcion" @bind-Value="empresaModel.Descripcion" class="form-control" rows="3" />
+                <ValidationMessage For="@(() => empresaModel.Descripcion)" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="correo">Correo Electrónico:</label>
+                <InputText id="correo" @bind-Value="empresaModel.Correo" class="form-control" />
+                <ValidationMessage For="@(() => empresaModel.Correo)" />
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="imagen">URL del Logo:</label>
+                <!-- CORREGIDO: Usar Imagen (PascalCase) -->
+                <InputText id="imagen" @bind-Value="empresaModel.Imagen" class="form-control" />
+                <ValidationMessage For="@(() => empresaModel.Imagen)" />
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        @if (!string.IsNullOrEmpty(mensaje))
+        {
+            <div class="@(esExito ? "alert alert-success" : "alert alert-danger")" role="alert">
+                @mensaje
+            </div>
+        }
+
+        <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+            @if (isSubmitting)
+            {
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span>Guardando...</span>
+            }
+            else
+            {
+                <span>Guardar Empresa</span>
+            }
+        </button>
+        <button type="button" class="btn btn-secondary" @onclick="GoBack">Cancelar</button>
+    </div>
+</EditForm>
+
+@code {
+    private EmpresaCreationDto empresaModel = new EmpresaCreationDto();
+    private string mensaje = string.Empty;
+    private bool esExito = false;
+    private bool isSubmitting = false;
+
+    private void GoBack()
+    {
+        // CORREGIDO: Redirige a la lista de organizaciones
+        NavigationManager.NavigateTo("/organizaciones");
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        isSubmitting = true;
+        mensaje = string.Empty;
+
+        // Llamamos al servicio y capturamos la tupla de respuesta
+        var (empresaId, msg, success) = await EmpresaService.CreateEmpresaAsync(empresaModel);
+
+        esExito = success;
+        mensaje = msg;
+
+        if (success)
+        {
+            // Opcional: Redirigir al usuario después de 2 segundos de éxito
+            Console.WriteLine($"Empresa {empresaId} creada, redirigiendo...");
+            await Task.Delay(2000);
+            // CORREGIDO: Redirige a la lista de organizaciones
+            NavigationManager.NavigateTo("/organizaciones");
+        }
+
+        isSubmitting = false;
+    }
+}
