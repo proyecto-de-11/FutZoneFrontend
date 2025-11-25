@@ -16,26 +16,69 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
 
 // Add HttpClient and Auth Service
-builder.Services.AddScoped<HttpClient>(sp =>
+var apiBaseUrl = builder.Configuration["ApiBaseUrl"];
+if (string.IsNullOrEmpty(apiBaseUrl))
 {
-    var baseAddress = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:8080";
-    var httpClient = new HttpClient { BaseAddress = new Uri(baseAddress) };
-    httpClient.Timeout = TimeSpan.FromSeconds(600); // 10 minutos
-    return httpClient;
+    throw new InvalidOperationException("ApiBaseUrl configuration is missing. Please ensure appsettings.json or appsettings.{Environment}.json contains ApiBaseUrl configuration.");
+}
+
+builder.Services.AddHttpClient<IAuthService, AuthService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600); // 10 minutos
 });
-builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
-builder.Services.AddScoped<IRolService, RolService>();
-builder.Services.AddScoped<ITipoDeporteService, TipoDeporteService>();
-builder.Services.AddScoped<IMembresiaService, MembresiaService>();
-builder.Services.AddScoped<IPropietarioService, PropietarioService>();
-builder.Services.AddScoped<IDashboardService, DashboardService>();
-builder.Services.AddScoped<ICanchasService, CanchasService>();
-builder.Services.AddScoped<IReservasService, ReservasService>();
+builder.Services.AddHttpClient<IRolService, RolService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600);
+});
+builder.Services.AddHttpClient<ITipoDeporteService, TipoDeporteService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600);
+});
+builder.Services.AddHttpClient<IMembresiaService, MembresiaService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600);
+});
+builder.Services.AddHttpClient<IPropietarioService, PropietarioService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600);
+});
+builder.Services.AddHttpClient<IDashboardService, DashboardService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600);
+});
+builder.Services.AddHttpClient<ICanchasService, CanchasService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600);
+});
+builder.Services.AddHttpClient<IReservasService, ReservasService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600);
+});
 // Services stubs for endpoints that are referenced in API inventory
-builder.Services.AddScoped<IDocumentosLegalesService, DocumentosLegalesService>();
-builder.Services.AddScoped<IPreferenciasService, PreferenciasService>();
-builder.Services.AddScoped<IAceptacionesService, AceptacionesService>();
+builder.Services.AddHttpClient<IDocumentosLegalesService, DocumentosLegalesService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600);
+});
+builder.Services.AddHttpClient<IPreferenciasService, PreferenciasService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600);
+});
+builder.Services.AddHttpClient<IAceptacionesService, AceptacionesService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600);
+});
 
 var app = builder.Build();
 
