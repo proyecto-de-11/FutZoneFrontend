@@ -18,7 +18,9 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
 
-<<<<<<< HEAD
+// Add Blazored LocalStorage
+builder.Services.AddBlazoredLocalStorage();
+
 // Add HttpClient and Auth Service
 var apiBaseUrl = builder.Configuration["ApiBaseUrl"];
 if (string.IsNullOrEmpty(apiBaseUrl))
@@ -26,12 +28,14 @@ if (string.IsNullOrEmpty(apiBaseUrl))
     throw new InvalidOperationException("ApiBaseUrl configuration is missing. Please ensure appsettings.json or appsettings.{Environment}.json contains ApiBaseUrl configuration.");
 }
 
-builder.Services.AddHttpClient<IAuthService, AuthService>(client =>
+// Register AuthService with HttpClient factory and Blazored LocalStorage
+builder.Services.AddHttpClient<AuthService>(client =>
 {
     client.BaseAddress = new Uri(apiBaseUrl);
     client.Timeout = TimeSpan.FromSeconds(600); // 10 minutos
 });
-builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
+builder.Services.AddScoped<IAuthService>(sp => sp.GetRequiredService<AuthService>());
+builder.Services.AddScoped<FutZoneFrontend.Services.ILocalStorageService, LocalStorageService>();
 builder.Services.AddHttpClient<IRolService, RolService>(client =>
 {
     client.BaseAddress = new Uri(apiBaseUrl);
@@ -83,63 +87,11 @@ builder.Services.AddHttpClient<IAceptacionesService, AceptacionesService>(client
     client.BaseAddress = new Uri(apiBaseUrl);
     client.Timeout = TimeSpan.FromSeconds(600);
 });
-=======
-// --- INICIO DE LA CONFIGURACIÓN DE MÚLTIPLES HTTPCLIENTS ---
-
-// 1. Registro del Cliente para Autenticación (Login/Register)
-builder.Services.AddHttpClient("AuthClient", client =>
+builder.Services.AddHttpClient<EmpresaService>(client =>
 {
-    // Esto asegura que la URL base se toma de la configuración.
-    client.BaseAddress = new Uri(builder.Configuration["AutenticacionUrl"] ?? throw new InvalidOperationException("ERROR: La clave 'AutenticacionUrl' no está configurada."));
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600);
 });
-
-// 2. Registro del Cliente para la API Principal (Empresa/Publicidad)
-builder.Services.AddHttpClient("ApiClient", client =>
-{
-    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? throw new InvalidOperationException("ERROR: La clave 'ApiBaseUrl' no está configurada."));
-});
-
-// Registrar Blazored Local Storage
-builder.Services.AddBlazoredLocalStorage(); 
-
-// Registrar AuthService, inyectando el cliente nombrado "AuthClient"
-// Usamos un delegado para obtener el cliente configurado de IHttpClientFactory
-builder.Services.AddScoped<IAuthService, AuthService>(sp =>
-{
-    var clientFactory = sp.GetRequiredService<IHttpClientFactory>();
-    var authClient = clientFactory.CreateClient("AuthClient");
-    
-    // CORRECCIÓN AMBIGÜEDAD (CS0104): Usamos el nombre completamente cualificado 
-    // para asegurar que obtenemos la interfaz de Blazored.LocalStorage.
-    var localStorage = sp.GetRequiredService<Blazored.LocalStorage.ILocalStorageService>();
-    
-    // Inyectamos el HttpClient configurado al constructor de AuthService
-    return new AuthService(authClient, localStorage);
-});
-
-// Servicios restantes
-builder.Services.AddScoped<IRolService, RolService>();
-builder.Services.AddScoped<ITipoDeporteService, TipoDeporteService>();
-builder.Services.AddScoped<IPropietarioService, PropietarioService>();
-builder.Services.AddScoped<IDocumentosLegalesService, DocumentosLegalesService>();
-builder.Services.AddScoped<IPreferenciasService, PreferenciasService>();
-builder.Services.AddScoped<IAceptacionesService, AceptacionesService>();
-// Registrar EmpresaService, inyectando el cliente nombrado "ApiClient" y IAuthService
-builder.Services.AddScoped<FutZoneFrontend.Services.EmpresaService>(sp =>
-{
-    var clientFactory = sp.GetRequiredService<IHttpClientFactory>();
-    // Obtenemos el cliente configurado para la API de Empresas
-    var apiClient = clientFactory.CreateClient("ApiClient"); 
-    
-    // Obtenemos el servicio de autenticación para acceder al userId
-    var authService = sp.GetRequiredService<IAuthService>();
-
-    // Inyectamos ambos al constructor de EmpresaService
-    return new FutZoneFrontend.Services.EmpresaService(apiClient, authService);
-});
-// --- FIN DE LA CONFIGURACIÓN DE MÚLTIPLES HTTPCLIENTS ---
-
->>>>>>> origin/dev
 
 var app = builder.Build();
 
