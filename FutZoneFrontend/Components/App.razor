@@ -15,7 +15,11 @@
     <link rel="stylesheet" href="css/roles.css" />
     <link rel="stylesheet" href="css/empresas.css" />
     <link rel="stylesheet" href="FutZoneFrontend.styles.css" />
+    <link rel="stylesheet" href="css/crearEmpresa.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
+    <!-- En el <head> -->
+<link href='https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css' rel='stylesheet' />
+
     <HeadOutlet @rendermode="InteractiveServer" />
 </head>
 
@@ -23,6 +27,21 @@
     <CascadingAuthenticationState>
         <Routes @rendermode="InteractiveServer" />
     </CascadingAuthenticationState>
+    <!-- *** COMIENZO DE SCRIPTS DE JAVASCRIPT: TODOS DEBEN IR AQUÍ *** -->
+    
+    <!-- PASO 1: Mapbox JS -->
+    <script src='https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js'></script>
+    
+    <!-- PASO 2: Definición del Token -->
+    <script type="text/javascript">
+        // Confirma que este token sea correcto y no haya expirado
+        mapboxgl.accessToken = 'pk.eyJ1IjoiYnJheWFuMTMyNCIsImEiOiJjbWhta2dsNjcwYnZpMm1wcDZlMmxleTdhIn0.GGPWAa5KVeeJxZJ5Q-OYBw'; 
+    </script>
+    
+    <!-- PASO 3: Tu Script Personalizado -->
+    <script src="js/Geolocalizacion.js"></script>
+    
+    <!-- PASO 4: Script de Blazor (siempre al final) -->
     <script src="_framework/blazor.web.js"></script>
 </body>
 
