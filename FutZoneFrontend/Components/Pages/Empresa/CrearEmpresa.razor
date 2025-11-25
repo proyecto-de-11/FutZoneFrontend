@@ -15,46 +15,44 @@
         <div class="col-md-6">
             <div class="form-group mb-3">
                 <label for="nombre">Nombre:</label>
-                <InputText id="nombre" @bind-Value="empresaModel.Nombre" class="form-control" />
+                <InputText id="nombre" @bind-Value="empresaModel.Nombre" class="form-control" placeholder="Escribe el nombre de la empresa" />
                 <ValidationMessage For="@(() => empresaModel.Nombre)" />
             </div>
 
             <div class="form-group mb-3">
                 <label for="tipo">Tipo:</label>
-                <InputText id="tipo" @bind-Value="empresaModel.Tipo" class="form-control" />
+                <InputText id="tipo" @bind-Value="empresaModel.Tipo" class="form-control" placeholder="Ej: Canchas Sintéticas, Gimnasio, etc." />
                 <ValidationMessage For="@(() => empresaModel.Tipo)" />
             </div>
 
             <div class="form-group mb-3">
                 <label for="ubicacion">Ubicación:</label>
-                <InputText id="ubicacion" @bind-Value="empresaModel.Ubicacion" class="form-control" />
+                <InputText id="ubicacion" @bind-Value="empresaModel.Ubicacion" class="form-control" placeholder="Dirección completa o ciudad" />
                 <ValidationMessage For="@(() => empresaModel.Ubicacion)" />
             </div>
 
             <div class="form-group mb-3">
                 <label for="contactos">Contactos (Teléfono/WhatsApp):</label>
-                <!-- CORREGIDO: Usar Contactos (PascalCase) -->
-                <InputText id="contactos" @bind-Value="empresaModel.Contactos" class="form-control" />
+                <InputText id="contactos" @bind-Value="empresaModel.Contactos" class="form-control" placeholder="Ej: +503 7777-8888" />
                 <ValidationMessage For="@(() => empresaModel.Contactos)" />
             </div>
         </div>
         <div class="col-md-6">
             <div class="form-group mb-3">
                 <label for="descripcion">Descripción:</label>
-                <InputTextArea id="descripcion" @bind-Value="empresaModel.Descripcion" class="form-control" rows="3" />
+                <InputTextArea id="descripcion" @bind-Value="empresaModel.Descripcion" class="form-control" rows="3" placeholder="Describe brevemente la empresa y sus servicios" />
                 <ValidationMessage For="@(() => empresaModel.Descripcion)" />
             </div>
 
             <div class="form-group mb-3">
                 <label for="correo">Correo Electrónico:</label>
-                <InputText id="correo" @bind-Value="empresaModel.Correo" class="form-control" />
+                <InputText id="correo" @bind-Value="empresaModel.Correo" class="form-control" placeholder="ejemplo@empresa.com" />
                 <ValidationMessage For="@(() => empresaModel.Correo)" />
             </div>
 
             <div class="form-group mb-3">
                 <label for="imagen">URL del Logo:</label>
-                <!-- CORREGIDO: Usar Imagen (PascalCase) -->
-                <InputText id="imagen" @bind-Value="empresaModel.Imagen" class="form-control" />
+                <InputText id="imagen" @bind-Value="empresaModel.Imagen" class="form-control" placeholder="Copia aquí la URL de tu logo o banner" />
                 <ValidationMessage For="@(() => empresaModel.Imagen)" />
             </div>
         </div>
@@ -83,6 +81,23 @@
     </div>
 </EditForm>
 
+<style>
+    /* Estilos para el color del texto del placeholder en los campos oscuros */
+    .form-control::placeholder { /* Estándar */
+        color: white !important;
+        opacity: 0.8; /* Ajusta la opacidad si es necesario */
+    }
+
+    .form-control:-ms-input-placeholder { /* Para IE 10+ */
+        color: white !important;
+    }
+
+    .form-control::-ms-input-placeholder { /* Para Edge */
+        color: white !important;
+    }
+</style>
+
+
 @code {
     private EmpresaCreationDto empresaModel = new EmpresaCreationDto();
     private string mensaje = string.Empty;
@@ -91,7 +106,6 @@
 
     private void GoBack()
     {
-        // CORREGIDO: Redirige a la lista de organizaciones
         NavigationManager.NavigateTo("/organizaciones");
     }
 
@@ -100,7 +114,6 @@
         isSubmitting = true;
         mensaje = string.Empty;
 
-        // Llamamos al servicio y capturamos la tupla de respuesta
         var (empresaId, msg, success) = await EmpresaService.CreateEmpresaAsync(empresaModel);
 
         esExito = success;
@@ -108,10 +121,8 @@
 
         if (success)
         {
-            // Opcional: Redirigir al usuario después de 2 segundos de éxito
             Console.WriteLine($"Empresa {empresaId} creada, redirigiendo...");
             await Task.Delay(2000);
-            // CORREGIDO: Redirige a la lista de organizaciones
             NavigationManager.NavigateTo("/organizaciones");
         }
 

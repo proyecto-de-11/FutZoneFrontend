@@ -5,63 +5,163 @@
 @inject IAuthService AuthService // Para obtener el ID del usuario
 @inject NavigationManager NavigationManager // Para posible redirección si no hay ID
 
-<h3>Organizaciones Registradas 🏢</h3>
-<button class="btn btn-success mb-3" @onclick='() => NavigationManager.NavigateTo("/empresas/crear")'>
-    ➕ Registrar Nueva Organización
-</button>
-<hr />
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>Organizaciones Registradas 🏢</h3>
+        <button class="btn btn-success btn-lg shadow-sm" @onclick='() => NavigationManager.NavigateTo("/empresas/crear")'>
+            <i class="bi bi-plus-circle-fill"></i> Registrar Nueva Organización
+        </button>
+    </div>
+    <hr />
 
-@if (loading)
-{
-    <div class="alert alert-info">
-        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-        Cargando organizaciones del usuario...
-    </div>
-}
-else if (!userId.HasValue || userId.Value <= 0)
-{
-    <div class="alert alert-warning" role="alert">
-        ⚠️ **Acceso Denegado:** No se pudo obtener el ID del usuario. Por favor, <a href="/login">inicia sesión</a>.
-    </div>
-}
-else if (empresas == null || !empresas.Any())
-{
-    <div class="alert alert-secondary" role="alert">
-        ℹ️ No se encontraron organizaciones registradas para ti (ID de Usuario: @userId).
-    </div>
-}
-else
-{
-    <div class="row">
-        @foreach (var empresa in empresas)
-        {
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="card h-100 shadow-sm">
-                    <img src="@empresa.Imagen" class="card-img-top" alt="Logo de @empresa.Nombre" style="height: 180px; object-fit: cover;">
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title text-primary">@empresa.Nombre</h5>
-                        <p class="card-text mb-1">
-                            <strong>Tipo:</strong> @empresa.Tipo
-                        </p>
-                        <p class="card-text mb-2 text-muted small truncate-lines-2">
-                            @empresa.Descripcion
-                        </p>
-                        <ul class="list-unstyled small mt-auto">
-                            <li>📍 <strong>Ubicación:</strong> @empresa.Ubicacion</li>
-                            <li>📧 <strong>Contacto:</strong> @empresa.Correo</li>
-                        </ul>
-                        <div class="mt-2">
-                            <button class="btn btn-outline-info btn-sm">Ver Detalles</button>
+    @if (loading)
+    {
+        <div class="alert alert-info" role="alert">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Cargando organizaciones del usuario...
+        </div>
+    }
+    else if (!userId.HasValue || userId.Value <= 0)
+    {
+        <div class="alert alert-danger" role="alert">
+            ⚠️ **Acceso Denegado:** No se pudo obtener el ID del usuario. Por favor, <a href="/login">inicia sesión</a>.
+        </div>
+    }
+    else if (empresas == null || !empresas.Any())
+    {
+        <div class="alert alert-secondary" role="alert">
+            <i class="bi bi-info-circle-fill"></i> No se encontraron organizaciones registradas para ti (ID de Usuario: @userId).
+            <p class="mt-2 mb-0">Comienza a gestionar creando una nueva organización.</p>
+        </div>
+    }
+
+    else
+    {
+        <div class="row">
+            @foreach (var empresa in empresas)
+            {
+                <div class="col-lg-6 col-xl-4 mb-4">
+                    <div class="organizacion-card h-100">
+                        <div class="organizacion-header p-0">
+                            <img src="@(string.IsNullOrWhiteSpace(empresa.Imagen) ? "/images/default-org-bg.jpg" : empresa.Imagen)"
+                                 class="organizacion-img-top"
+                                 alt="Logo o imagen de @empresa.Nombre"
+                                 loading="lazy">
+
+                            <div class="organizacion-overlay">
+                                <h4 class="text-white fw-bold mb-0">@empresa.Nombre</h4>
+                                <span class="badge bg-primary bg-opacity-75 mt-1">@empresa.Tipo</span>
+                            </div>
+                        </div>
+
+                        <div class="organizacion-details p-4 d-flex flex-column">
+                            <p class="text-muted small mb-3 flex-grow-1">
+                                @(empresa.Descripcion?.Length > 100 ? $"{empresa.Descripcion.Substring(0, 100)}..." : empresa.Descripcion)
+                            </p>
+
+                            <div class="detail-row mb-2">
+                                <span class="detail-label"><i class="bi bi-geo-alt-fill text-info"></i> Ubicación:</span>
+                                <span class="detail-value text-dark">@empresa.Ubicacion</span>
+                            </div>
+                            <div class="detail-row mb-3">
+                                <span class="detail-label"><i class="bi bi-envelope-fill text-info"></i> Contacto:</span>
+                                <span class="detail-value text-dark small">@empresa.Correo</span>
+                            </div>
+
+                            <div class="mt-auto d-grid gap-2">
+                                <button class="btn btn-outline-primary fw-bold"
+                                        @onclick='() => NavigationManager.NavigateTo($"/empresas/{empresa.ID}")'>
+                                    <i class="bi bi-eye-fill"></i> Ver detalles
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="organizacion-footer text-end p-2 border-top">
+                            <small class="text-muted">ID: @empresa.ID</small>
                         </div>
                     </div>
-                    <div class="card-footer text-end">
-                        <small class="text-muted">ID Empresa: @empresa.ID</small>
-                    </div>
                 </div>
-            </div>
+            }
+        </div>
+    }
+</div>
+
+<style>
+    /* Estilos para la tarjeta de la Organización */
+    .organizacion-card {
+        border-radius: 12px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        background-color: #fff;
+        /* ESTILO APLICADO PARA EL BORDE SUPERIOR VERDE Y SUTILEZA */
+        border: 1px solid #dee2e6; /* Borde general más sutil */
+        border-top: 4px solid #198754; /* Borde superior verde */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05); /* Sombra muy sutil */
+    }
+
+        .organizacion-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); /* Sombra un poco más pronunciada en hover */
         }
-    </div>
-}
+
+    .organizacion-header {
+        position: relative;
+        height: 180px; /* Altura de la imagen */
+    }
+
+    .organizacion-img-top {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: brightness(0.7); /* Oscurecer un poco la imagen de fondo */
+    }
+
+    .organizacion-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 1rem;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0));
+    }
+
+    .organizacion-details {
+        padding: 1.5rem;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px dashed #eee;
+        padding-bottom: 5px;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #495057;
+        display: flex;
+        align-items: center;
+    }
+
+    .detail-row i {
+        margin-right: 5px;
+        font-size: 1.1em;
+    }
+
+    .organizacion-footer {
+        background-color: #f8f9fa;
+    }
+
+    /* Opcional: Para manejar mejor las descripciones largas */
+    .truncate-lines-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>
 
 @code {
     private List<EmpresaDto> empresas = new(); // Lista para almacenar los DTOs
@@ -71,32 +171,25 @@ else
     protected override async Task OnInitializedAsync()
     {
         // **PASO CLAVE:** Forzar la carga de datos de LocalStorage/Sesión solo cuando el circuito es interactivo.
-        // Esto resuelve el error de JavaScript Interop.
         await AuthService.EnsureAuthDataLoadedAsync();
 
-        // 1. Obtener el ID del Usuario Autenticado (Ahora debería estar disponible)
-        userId = await AuthService.GetUserIdAsync(); 
+        // 1. Obtener el ID del Usuario Autenticado
+        userId = await AuthService.GetUserIdAsync();
 
         if (userId.HasValue && userId.Value > 0)
         {
             try
             {
-                // 2. Llamar al servicio para obtener las empresas. 
-                // El servicio maneja la llamada a la API y la deserialización flexible.
+                // 2. Llamar al servicio para obtener las empresas.
                 empresas = await EmpresaService.GetEmpresasDelUsuarioAsync();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error en la vista al cargar empresas: {ex.Message}");
-                // En un entorno real, aquí podrías mostrar un Toast/Notificación de error.
-                empresas = new List<EmpresaDto>(); 
+                empresas = new List<EmpresaDto>();
             }
         }
-        else
-        {
-            // Mensaje de acceso denegado mostrado por la parte HTML del componente.
-        }
-        
+
         loading = false;
     }
 }
