@@ -1,5 +1,9 @@
 @page "/reservas-canchas"
 @using System.Collections.Generic
+@using FutZoneFrontend.Services
+@using FutZoneFrontend.Services.Models
+@inject ICanchasService CanchasService
+@inject IReservasService ReservasService
 
 <style>
     body { background: linear-gradient(120deg,#186c4a 80%,#f7f6ec); }
@@ -21,6 +25,37 @@
     <h2><i class="bi bi-calendar-event"></i> Reservas de Canchas</h2>
     <small>Agenda tu partido fácilmente</small>
   </div>
+
+  <!-- Alerta de Error -->
+  @if (!string.IsNullOrEmpty(ErrorMessage))
+  {
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <strong>Error:</strong> @ErrorMessage
+      <button type="button" class="btn-close" @onclick="() => ErrorMessage = null"></button>
+    </div>
+  }
+
+  <!-- Estado de Cargando -->
+  @if (IsLoading)
+  {
+    <div class="alert alert-info" role="alert">
+      <div class="spinner-border spinner-border-sm" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <strong>Cargando canchas disponibles...</strong>
+    </div>
+  }
+
+  <!-- Alerta de Éxito -->
+  @if (!string.IsNullOrEmpty(SuccessMessage))
+  {
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <i class="bi bi-check-circle-fill"></i>
+      <strong>Éxito:</strong> @SuccessMessage
+      <button type="button" class="btn-close" @onclick="() => SuccessMessage = null"></button>
+    </div>
+  }
 
   <div class="card card-reserva shadow mb-3">
     <div class="card-header bg-dark text-white">
@@ -102,50 +137,119 @@
 
     private string SelectedCancha = "";
     private DateTime? FechaHoraObj = null;
+    private bool IsLoading = true;
+    private string ErrorMessage = string.Empty;
+    private string SuccessMessage = string.Empty;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        // Inicializar canchas disponibles
-        Canchas = new List<CanchaModel>
+        try
         {
-            new CanchaModel { Id = 1, Nombre = "Cancha 1", Tipo = "Sintética" },
-            new CanchaModel { Id = 2, Nombre = "Cancha 2", Tipo = "Pasto natural" },
-            new CanchaModel { Id = 3, Nombre = "Cancha 3", Tipo = "Sintética" }
-        };
+            IsLoading = true;
+            await CargarCanchas();
+            await CargarProximasReservas();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error al cargar: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
 
-        // Inicializar próximas reservas de ejemplo
-        ProximasReservas = new List<ReservaModel>
+    private async Task CargarCanchas()
+    {
+        try
         {
-            new ReservaModel { Id = 1, NombreCancha = "Cancha 1", Fecha = "18/11", Hora = "19:00", Estado = "Confirmada" },
-            new ReservaModel { Id = 2, NombreCancha = "Cancha 2", Fecha = "20/11", Hora = "21:00", Estado = "Pendiente" }
-        };
+            var canchasResult = await CanchasService.GetAllCanchasAsync();
+            if (canchasResult != null && canchasResult.Count > 0)
+            {
+                Canchas = canchasResult
+                    .Select(c => new CanchaModel
+                    {
+                        Id = c.Id,
+                        Nombre = c.Nombre,
+                        Tipo = c.TipoSuperficie ?? "Desconocido"
+                    })
+                    .ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error cargando canchas: {ex.Message}";
+        }
+    }
+
+    private async Task CargarProximasReservas()
+    {
+        try
+        {
+            var reservasResult = await ReservasService.GetAllReservasAsync();
+            if (reservasResult != null && reservasResult.Count > 0)
+            {
+                ProximasReservas = reservasResult
+                    .Where(r => r.FechaInicio.HasValue && r.FechaInicio > DateTime.Now)
+                    .OrderBy(r => r.FechaInicio)
+                    .Take(10)
+                    .Select(r => new ReservaModel
+                    {
+                        Id = r.Id,
+                        NombreCancha = $"Cancha {r.CanchaId}",
+                        Fecha = r.FechaInicio?.ToString("dd/MM") ?? "N/A",
+                        Hora = r.FechaInicio?.ToString("HH:mm") ?? "N/A",
+                        Estado = r.Estado ?? "Pendiente"
+                    })
+                    .ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error cargando reservas: {ex.Message}";
+        }
     }
 
     private async Task HandleReserva()
     {
-        if (!string.IsNullOrEmpty(SelectedCancha) && FechaHoraObj.HasValue)
+        if (string.IsNullOrEmpty(SelectedCancha) || !FechaHoraObj.HasValue)
         {
-            var cancha = Canchas.FirstOrDefault(c => c.Id.ToString() == SelectedCancha);
-            if (cancha != null)
-            {
-                var fechaObj = FechaHoraObj.Value;
-                ProximasReservas.Add(new ReservaModel
-                {
-                    Id = ProximasReservas.Count + 1,
-                    NombreCancha = cancha.Nombre,
-                    Fecha = fechaObj.ToString("dd/MM"),
-                    Hora = fechaObj.ToString("HH:mm"),
-                    Estado = "Pendiente"
-                });
-
-                // Limpiar formulario
-                SelectedCancha = "";
-                FechaHoraObj = null;
-
-                StateHasChanged();
-            }
+            ErrorMessage = "Por favor, selecciona una cancha y una fecha/hora";
+            return;
         }
 
-        await Task.CompletedTask;
+        try
+        {
+            var reserva = new CreateReservaDto
+            {
+                CanchaId = int.Parse(SelectedCancha),
+                UsuarioSolicitanteId = 1, // TODO: Obtener del usuario autenticado
+                FechaReserva = FechaHoraObj.Value.ToString("yyyy-MM-dd"),
+                HoraInicio = FechaHoraObj.Value.ToString("HH:mm:ss"),
+                HoraFin = FechaHoraObj.Value.AddHours(1).ToString("HH:mm:ss"),
+                DuracionHoras = 1,
+                MontoTotal = 50, // TODO: Obtener del precio de la cancha
+                MensajeSolicitud = string.Empty
+            };
+
+            var resultado = await ReservasService.CreateReservaAsync(reserva);
+            if (resultado != null)
+            {
+                SuccessMessage = $"Reserva creada exitosamente";
+                SelectedCancha = "";
+                FechaHoraObj = null;
+                await CargarProximasReservas();
+                StateHasChanged();
+            }
+            else
+            {
+                ErrorMessage = "Error al crear la reserva";
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error: {ex.Message}";
+        }
     }
 }
+    }

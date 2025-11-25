@@ -1,5 +1,8 @@
 @page "/admin/roles"
 @using System.Collections.Generic
+@using FutZoneFrontend.Services
+@using FutZoneFrontend.Services.Models
+@inject IRolService RolService
 
 <PageTitle>Gestión de Roles - FutZone</PageTitle>
 
@@ -270,8 +273,33 @@
 </div>
 
 @code {
+    private List<Rol> _roles = new();
+    private bool _cargando = true;
+    private string? _mensajeError = null;
+
     protected override async Task OnInitializedAsync()
     {
-        await Task.CompletedTask;
+        await CargarRoles();
+    }
+
+    private async Task CargarRoles()
+    {
+        try
+        {
+            _cargando = true;
+            _mensajeError = null;
+            
+            var roles = await RolService.GetAllRolesAsync();
+            _roles = roles ?? new();
+        }
+        catch (Exception ex)
+        {
+            _mensajeError = $"Error al cargar roles: {ex.Message}";
+            _roles = new();
+        }
+        finally
+        {
+            _cargando = false;
+        }
     }
 }

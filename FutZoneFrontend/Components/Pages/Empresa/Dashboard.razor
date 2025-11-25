@@ -1,5 +1,9 @@
 @page "/propietario/dashboard"
 @using System.Collections.Generic
+@using FutZoneFrontend.Services
+@using FutZoneFrontend.Services.Models
+@inject ICanchasService CanchasService
+@inject IReservasService ReservasService
 
 <PageTitle>Dashboard Propietario - FutZone</PageTitle>
 
@@ -28,6 +32,25 @@
     <div class="dashboard-content">
         <div class="container-fluid">
 
+            <!-- Estados de Carga -->
+            @if (_cargando)
+            {
+                <div class="alert alert-info d-flex align-items-center" role="alert">
+                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <span>Cargando datos del dashboard...</span>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(_mensajeError))
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i> <strong>Error:</strong> @_mensajeError
+                    <button type="button" class="btn-close" @onclick="() => _mensajeError = null"></button>
+                </div>
+            }
+
             <!-- KPIs Principales -->
             <div class="row mb-4">
                 <div class="col-md-3 mb-3">
@@ -35,7 +58,7 @@
                         <div class="kpi-icon">💰</div>
                         <div class="kpi-body">
                             <h6>Ingresos Este Mes</h6>
-                            <h2>$2,450.50</h2>
+                            <h2>$@_ingresosMes.ToString("F2")</h2>
                             <small>↑ 15% vs mes anterior</small>
                         </div>
                     </div>
@@ -46,7 +69,7 @@
                         <div class="kpi-icon">📅</div>
                         <div class="kpi-body">
                             <h6>Reservas Pendientes</h6>
-                            <h2>8</h2>
+                            <h2>@_reservasPendientes</h2>
                             <small>⚠️ Requieren acción</small>
                         </div>
                     </div>
@@ -57,7 +80,7 @@
                         <div class="kpi-icon">📊</div>
                         <div class="kpi-body">
                             <h6>Ocupación Promedio</h6>
-                            <h2>78%</h2>
+                            <h2>@_ocupacionPromedio%</h2>
                             <small>↑ 5% vs mes anterior</small>
                         </div>
                     </div>
@@ -68,7 +91,7 @@
                         <div class="kpi-icon">👥</div>
                         <div class="kpi-body">
                             <h6>Clientes Activos</h6>
-                            <h2>45</h2>
+                            <h2>@_clientesActivos</h2>
                             <small>➕ 5 nuevos esta semana</small>
                         </div>
                     </div>
@@ -82,68 +105,36 @@
             </div>
 
             <div class="canchas-grid">
-                <div class="cancha-card">
-                    <div class="cancha-header">
-                        <h5>Cancha Sintética - A</h5>
-                        <span class="badge bg-success">Activa</span>
-                    </div>
-                    <div class="cancha-body">
-                        <div class="cancha-stat">
-                            <span class="cancha-stat-label">Hoy</span>
-                            <span class="cancha-stat-value">3 reservas</span>
+                @if (_canchas == null || _canchas.Count == 0)
+                {
+                    <div class="alert alert-info">No hay canchas registradas.</div>
+                }
+                else
+                {
+                    @foreach (var cancha in _canchas)
+                    {
+                        <div class="cancha-card">
+                            <div class="cancha-header">
+                                <h5>@cancha.Nombre</h5>
+                                <span class="badge @(cancha.Activa ? "bg-success" : "bg-secondary")">@(cancha.Activa ? "Activa" : "Inactiva")</span>
+                            </div>
+                            <div class="cancha-body">
+                                <div class="cancha-stat">
+                                    <span class="cancha-stat-label">Hoy</span>
+                                    <span class="cancha-stat-value">@_reservasPorCancha.GetValueOrDefault(cancha.Id, 0) reservas</span>
+                                </div>
+                                <div class="cancha-stat">
+                                    <span class="cancha-stat-label">Ocupación</span>
+                                    <span class="cancha-stat-value">@_ocupacionPorCancha.GetValueOrDefault(cancha.Id, 0)%</span>
+                                </div>
+                                <div class="cancha-stat">
+                                    <span class="cancha-stat-label">Tarifa</span>
+                                    <span class="cancha-stat-value">$@cancha.PrecioHora/hr</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="cancha-stat">
-                            <span class="cancha-stat-label">Ocupación</span>
-                            <span class="cancha-stat-value">85%</span>
-                        </div>
-                        <div class="cancha-stat">
-                            <span class="cancha-stat-label">Tarifa</span>
-                            <span class="cancha-stat-value">$50/hr</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="cancha-card">
-                    <div class="cancha-header">
-                        <h5>Cancha Pasto - B</h5>
-                        <span class="badge bg-success">Activa</span>
-                    </div>
-                    <div class="cancha-body">
-                        <div class="cancha-stat">
-                            <span class="cancha-stat-label">Hoy</span>
-                            <span class="cancha-stat-value">2 reservas</span>
-                        </div>
-                        <div class="cancha-stat">
-                            <span class="cancha-stat-label">Ocupación</span>
-                            <span class="cancha-stat-value">65%</span>
-                        </div>
-                        <div class="cancha-stat">
-                            <span class="cancha-stat-label">Tarifa</span>
-                            <span class="cancha-stat-value">$45/hr</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="cancha-card">
-                    <div class="cancha-header">
-                        <h5>Cancha Techada - C</h5>
-                        <span class="badge bg-secondary">Mantenimiento</span>
-                    </div>
-                    <div class="cancha-body">
-                        <div class="cancha-stat">
-                            <span class="cancha-stat-label">Hoy</span>
-                            <span class="cancha-stat-value">0 reservas</span>
-                        </div>
-                        <div class="cancha-stat">
-                            <span class="cancha-stat-label">Ocupación</span>
-                            <span class="cancha-stat-value">0%</span>
-                        </div>
-                        <div class="cancha-stat">
-                            <span class="cancha-stat-label">Tarifa</span>
-                            <span class="cancha-stat-value">$60/hr</span>
-                        </div>
-                    </div>
-                </div>
+                    }
+                }
             </div>
 
             <!-- Reservas Recientes -->
@@ -153,39 +144,34 @@
             </div>
 
             <div class="reservas-list">
-                <div class="reserva-item">
-                    <div class="reserva-info">
-                        <div class="reserva-cancha">Cancha Sintética - A</div>
-                        <div class="reserva-detalles">Hoy, 14:00 - 15:00 | Cliente: Juan Martínez</div>
-                    </div>
-                    <div>
-                        <span class="reserva-status pendiente">Pendiente</span>
-                        <button class="btn btn-sm btn-success me-2">Aceptar</button>
-                        <button class="btn btn-sm btn-danger">Rechazar</button>
-                    </div>
-                </div>
-
-                <div class="reserva-item">
-                    <div class="reserva-info">
-                        <div class="reserva-cancha">Cancha Pasto - B</div>
-                        <div class="reserva-detalles">Mañana, 18:00 - 19:00 | Cliente: Carlos López</div>
-                    </div>
-                    <div>
-                        <span class="reserva-status confirmada">Confirmada</span>
-                        <button class="btn btn-sm btn-secondary disabled">Gestionar</button>
-                    </div>
-                </div>
-
-                <div class="reserva-item">
-                    <div class="reserva-info">
-                        <div class="reserva-cancha">Cancha Sintética - A</div>
-                        <div class="reserva-detalles">Sábado, 19:00 - 20:00 | Cliente: Roberto García</div>
-                    </div>
-                    <div>
-                        <span class="reserva-status confirmada">Confirmada</span>
-                        <button class="btn btn-sm btn-secondary disabled">Gestionar</button>
-                    </div>
-                </div>
+                @if (_reservas == null || _reservas.Count == 0)
+                {
+                    <div class="alert alert-info">No hay reservas recientes.</div>
+                }
+                else
+                {
+                    @foreach (var reserva in _reservas.Take(5))
+                    {
+                        <div class="reserva-item">
+                            <div class="reserva-info">
+                                <div class="reserva-cancha">Cancha @reserva.CanchaId</div>
+                                <div class="reserva-detalles">@(reserva.FechaInicio?.ToString("dddd, HH:mm") ?? "N/A") - @(reserva.FechaFin?.ToString("HH:mm") ?? "N/A")</div>
+                            </div>
+                            <div>
+                                <span class="reserva-status @(reserva.Estado?.ToLower() == "pendiente" ? "pendiente" : "confirmada")">@reserva.Estado</span>
+                                @if (reserva.Estado?.ToLower() == "pendiente")
+                                {
+                                    <button class="btn btn-sm btn-success me-2" @onclick="() => AprobarReserva(reserva.Id)">Aceptar</button>
+                                    <button class="btn btn-sm btn-danger">Rechazar</button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-sm btn-secondary disabled">Gestionar</button>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
             </div>
 
             <!-- Acciones Rápidas -->
@@ -231,47 +217,29 @@
                         <tr>
                             <th>Fecha</th>
                             <th>Concepto</th>
-                            <th>Cliente</th>
                             <th>Monto</th>
                             <th>Estado</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>15 Nov, 2024</td>
-                            <td>Reserva Cancha A</td>
-                            <td>Juan Martínez</td>
-                            <td class="transaction-amount">+$50.00</td>
-                            <td><span class="transaction-status completada">Completada</span></td>
-                        </tr>
-                        <tr>
-                            <td>14 Nov, 2024</td>
-                            <td>Comisión Plataforma</td>
-                            <td>FutZone</td>
-                            <td class="transaction-amount negative">-$5.00</td>
-                            <td><span class="transaction-status completada">Completada</span></td>
-                        </tr>
-                        <tr>
-                            <td>13 Nov, 2024</td>
-                            <td>Reserva Cancha B</td>
-                            <td>Carlos López</td>
-                            <td class="transaction-amount">+$45.00</td>
-                            <td><span class="transaction-status completada">Completada</span></td>
-                        </tr>
-                        <tr>
-                            <td>12 Nov, 2024</td>
-                            <td>Reserva Cancha A</td>
-                            <td>María García</td>
-                            <td class="transaction-amount">+$50.00</td>
-                            <td><span class="transaction-status pendiente">Pendiente</span></td>
-                        </tr>
-                        <tr>
-                            <td>11 Nov, 2024</td>
-                            <td>Reserva Cancha A</td>
-                            <td>Roberto Fernández</td>
-                            <td class="transaction-amount">+$50.00</td>
-                            <td><span class="transaction-status completada">Completada</span></td>
-                        </tr>
+                        @if (_transacciones == null || _transacciones.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">No hay transacciones</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var trans in _transacciones.Take(5))
+                            {
+                                <tr>
+                                    <td>@trans["fecha"]</td>
+                                    <td>@trans["concepto"]</td>
+                                    <td class="transaction-amount @(trans["monto"].ToString().StartsWith("-") ? "negative" : "")">@trans["monto"]</td>
+                                    <td><span class="transaction-status completada">@trans["estado"]</span></td>
+                                </tr>
+                            }
+                        }
                     </tbody>
                 </table>
             </div>
@@ -279,41 +247,28 @@
             <!-- Resumen Mensual -->
             <div class="section-header">
                 <h3>Resumen Mensual</h3>
+                <small class="text-muted">Análisis financiero de @DateTime.Now.ToString("MMMM yyyy", new System.Globalization.CultureInfo("es-ES"))</small>
             </div>
 
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="resumen-card">
-                        <h5 class="mb-3">Ingresos Brutos</h5>
-                        <div class="resumen-item">
-                            <span class="resumen-label">Reservas</span>
-                            <span class="resumen-valor">$2,500.00</span>
-                        </div>
-                        <div class="resumen-item">
-                            <span class="resumen-label">Otros servicios</span>
-                            <span class="resumen-valor">$150.00</span>
-                        </div>
-                        <div class="resumen-item">
-                            <span class="resumen-label"><strong>Total Bruto</strong></span>
-                            <span class="resumen-valor"><strong>$2,650.00</strong></span>
+            <div class="row summary-cards">
+                <div class="col-md-6 summary-item">
+                    <div class="summary-box">
+                        <h5>Ingresos Brutos</h5>
+                        <div class="summary-detail">
+                            <div>Reservas: <span class="amount">@((_ingresosMes * 0.95m).ToString("C"))</span></div>
+                            <div>Otros servicios: <span class="amount">@((_ingresosMes * 0.05m).ToString("C"))</span></div>
+                            <div class="total">Total Bruto: <span class="amount">@(_ingresosMes).ToString("C")</span></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-6">
-                    <div class="resumen-card">
-                        <h5 class="mb-3">Desagregación</h5>
-                        <div class="resumen-item">
-                            <span class="resumen-label">Comisión FutZone (5%)</span>
-                            <span class="resumen-valor negative" style="color: #ef4444;">-$132.50</span>
-                        </div>
-                        <div class="resumen-item">
-                            <span class="resumen-label">Impuestos (3%)</span>
-                            <span class="resumen-valor negative" style="color: #ef4444;">-$79.50</span>
-                        </div>
-                        <div class="resumen-item">
-                            <span class="resumen-label"><strong>Ingreso Neto</strong></span>
-                            <span class="resumen-valor"><strong style="color: #10b981;">$2,438.00</strong></span>
+                <div class="col-md-6 summary-item">
+                    <div class="summary-box">
+                        <h5>Desagregación</h5>
+                        <div class="summary-detail">
+                            <div>Comisión FutZone (5%): <span class="amount negative">-@((_ingresosMes * 0.05m).ToString("C"))</span></div>
+                            <div>Impuestos (3%): <span class="amount negative">-@((_ingresosMes * 0.03m).ToString("C"))</span></div>
+                            <div class="total">Ingreso Neto: <span class="amount success">@((_ingresosMes * 0.92m).ToString("C"))</span></div>
                         </div>
                     </div>
                 </div>
@@ -324,9 +279,136 @@
 </div>
 
 @code {
+    private bool _cargando = true;
+    private string _mensajeError = string.Empty;
+    
+    private decimal _ingresosMes = 0;
+    private int _reservasPendientes = 0;
+    private int _ocupacionPromedio = 0;
+    private int _clientesActivos = 0;
+    
+    private List<Cancha> _canchas = new();
+    private List<ReservaDto> _reservas = new();
+    private Dictionary<int, int> _reservasPorCancha = new();
+    private Dictionary<int, int> _ocupacionPorCancha = new();
+    private List<Dictionary<string, object>> _transacciones = new();
+    
     protected override async Task OnInitializedAsync()
     {
-        // Aquí irían llamadas a la API para obtener datos reales
-        await Task.CompletedTask;
+        await CargarDatos();
+    }
+    
+    private async Task CargarDatos()
+    {
+        try
+        {
+            _cargando = true;
+            _mensajeError = string.Empty;
+            
+            // Cargar canchas
+            _canchas = await CanchasService.GetAllCanchasAsync() ?? new();
+            
+            // Cargar reservas
+            _reservas = await ReservasService.GetAllReservasAsync() ?? new();
+            
+            // Calcular métricas
+            CalcularMetricas();
+            
+            // Generar transacciones a partir de reservas
+            GenerarTransacciones();
+        }
+        catch (Exception ex)
+        {
+            _mensajeError = $"Error al cargar datos: {ex.Message}";
+        }
+        finally
+        {
+            _cargando = false;
+        }
+    }
+    
+    private void CalcularMetricas()
+    {
+        // Ingresos del mes (suma de precios de reservas confirmadas)
+        _ingresosMes = _reservas
+            .Where(r => r.Estado?.ToLower() == "confirmada" || r.Estado?.ToLower() == "completada")
+            .Sum(r => r.PrecioTotal ?? 0);
+        
+        // Reservas pendientes
+        _reservasPendientes = _reservas
+            .Count(r => r.Estado?.ToLower() == "pendiente");
+        
+        // Ocupación promedio (porcentaje de horas reservadas)
+        if (_canchas.Count > 0)
+        {
+            _ocupacionPromedio = _canchas.Count > 0 
+                ? (int)(_reservas.Count / (decimal)(_canchas.Count * 24) * 100)
+                : 0;
+            _ocupacionPromedio = Math.Min(_ocupacionPromedio, 100);
+        }
+        
+        // Clientes activos (usuarios únicos con reservas)
+        _clientesActivos = _reservas
+            .Select(r => r.UsuarioId)
+            .Distinct()
+            .Count();
+        
+        // Reservas por cancha
+        _reservasPorCancha = _reservas
+            .GroupBy(r => r.CanchaId)
+            .ToDictionary(g => g.Key, g => g.Count());
+        
+        // Ocupación por cancha
+        _ocupacionPorCancha = new();
+        foreach (var cancha in _canchas)
+        {
+            var reservasCancha = _reservas.Count(r => r.CanchaId == cancha.Id);
+            var ocupacion = reservasCancha > 0 
+                ? (int)(reservasCancha / (decimal)24 * 100)
+                : 0;
+            _ocupacionPorCancha[cancha.Id] = Math.Min(ocupacion, 100);
+        }
+    }
+    
+    private void GenerarTransacciones()
+    {
+        _transacciones.Clear();
+        
+        // Generar transacciones a partir de reservas confirmadas
+        foreach (var reserva in _reservas.Where(r => r.Estado?.ToLower() == "confirmada" || r.Estado?.ToLower() == "completada").OrderByDescending(r => r.FechaInicio).Take(5))
+        {
+            _transacciones.Add(new Dictionary<string, object>
+            {
+                { "fecha", reserva.FechaInicio?.ToString("dd MMM, yyyy", new System.Globalization.CultureInfo("es-ES")) ?? "N/A" },
+                { "concepto", $"Reserva Cancha #{reserva.CanchaId}" },
+                { "monto", $"+${(reserva.PrecioTotal ?? 0):F2}" },
+                { "estado", "Completada" }
+            });
+        }
+        
+        // Si no hay suficientes transacciones, agregar datos de ejemplo
+        if (_transacciones.Count == 0)
+        {
+            _transacciones.Add(new Dictionary<string, object>
+            {
+                { "fecha", DateTime.Now.ToString("dd MMM, yyyy", new System.Globalization.CultureInfo("es-ES")) },
+                { "concepto", "Sin transacciones" },
+                { "monto", "$0.00" },
+                { "estado", "Pendiente" }
+            });
+        }
+    }
+    
+    private async Task AprobarReserva(int reservaId)
+    {
+        try
+        {
+            await ReservasService.ProcessReservaAsync(reservaId);
+            await CargarDatos();
+        }
+        catch (Exception ex)
+        {
+            _mensajeError = $"Error al aprobar reserva: {ex.Message}";
+        }
     }
 }

@@ -5,6 +5,8 @@
 @using FutZoneFrontend.Services
 @using FutZoneFrontend.Services.Models
 @inject IPropietarioService PropietarioService
+@inject ICanchasService CanchasService
+@inject IReservasService ReservasService
 
 <div class="misreservas-container">
     <!-- HEADER CON GRADIENTE -->
@@ -14,6 +16,27 @@
             <p class="subtitle">Visualiza, acepta o rechaza las reservas de tus canchas</p>
         </div>
     </div>
+
+    <!-- Alerta de Error -->
+    @if (!string.IsNullOrEmpty(ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <strong>Error:</strong> @ErrorMessage
+            <button type="button" class="btn-close" @onclick="() => ErrorMessage = null"></button>
+        </div>
+    }
+
+    <!-- Estado de Cargando -->
+    @if (IsLoading)
+    {
+        <div class="alert alert-info" role="alert">
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <strong>Cargando reservas...</strong>
+        </div>
+    }
 
     <!-- SECCIÓN PRINCIPAL -->
     <div class="container-fluid mt-5">
@@ -225,7 +248,7 @@
 
 @code {
     // MODELO DE DATOS
-    public class Reserva
+    public class ReservaViewModel
     {
         public int Id { get; set; }
         public int CanchaId { get; set; }
@@ -247,16 +270,16 @@
         public string FechaRespuesta { get; set; } = string.Empty;
     }
 
-    public class Cancha
+    public class CanchaViewModel
     {
         public int Id { get; set; }
         public string Nombre { get; set; } = string.Empty;
     }
 
     // PROPIEDADES
-    private List<Reserva> _reservas = new();
-    private List<Reserva> _reservasFiltradas = new();
-    private List<Cancha> _canchas = new();
+    private List<ReservaViewModel> _reservas = new();
+    private List<ReservaViewModel> _reservasFiltradas = new();
+    private List<CanchaViewModel> _canchas = new();
     private List<UsuarioMembresia> _membresias = new();
     private string _filtroEstado = string.Empty;
     private int _filtroCancha = 0;
@@ -270,6 +293,25 @@
         try
         {
             IsLoading = true;
+            await CargarDatos();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error al cargar datos: {ex.Message}";
+            Console.WriteLine($"Excepción: {ex}");
+        }
+        finally
+        {
+            IsLoading = false;
+            AplicarFiltros();
+        }
+    }
+
+    // MÉTODOS DE CARGA
+    private async Task CargarDatos()
+    {
+        try
+        {
             // Cargar membresías del usuario
             var membresiasResponse = await PropietarioService.GetMisMembresiasAsync();
             if (membresiasResponse.Success)
@@ -277,140 +319,49 @@
                 _membresias = membresiasResponse.Data;
                 Console.WriteLine($"Membresías cargadas: {_membresias.Count}");
             }
+
+            // Cargar canchas
+            var canchasResult = await CanchasService.GetAllCanchasAsync();
+            if (canchasResult != null && canchasResult.Count > 0)
+            {
+                _canchas = canchasResult
+                    .Select(c => new CanchaViewModel { Id = c.Id, Nombre = c.Nombre })
+                    .ToList();
+            }
+
+            // Cargar reservas
+            var reservasResult = await ReservasService.GetAllReservasAsync();
+            if (reservasResult != null && reservasResult.Count > 0)
+            {
+                _reservas = reservasResult
+                    .Select(r => new ReservaViewModel
+                    {
+                        Id = r.Id,
+                        CanchaId = r.CanchaId,
+                        CanchaNombre = _canchas.FirstOrDefault(c => c.Id == r.CanchaId)?.Nombre ?? "Desconocida",
+                        NombreCliente = $"Cliente {r.UsuarioId}",
+                        EmailCliente = "email@ejemplo.com",
+                        TelefonoCliente = "+34 000 000 000",
+                        Fecha = r.FechaInicio?.Date ?? DateTime.Now,
+                        HoraInicio = r.FechaInicio?.TimeOfDay.ToString(@"hh\:mm") ?? "00:00",
+                        HoraFin = r.FechaFin?.TimeOfDay.ToString(@"hh\:mm") ?? "00:00",
+                        Duracion = r.FechaFin.HasValue && r.FechaInicio.HasValue ? (int)(r.FechaFin.Value - r.FechaInicio.Value).TotalHours : 0,
+                        CantidadJugadores = 0,
+                        PrecioHora = r.PrecioTotal ?? r.MontoTotal,
+                        Descuento = 0,
+                        PrecioTotal = r.PrecioTotal ?? r.MontoTotal,
+                        NotasCliente = r.Observaciones ?? string.Empty,
+                        Estado = r.Estado ?? "Pendiente",
+                        FechaSolicitud = r.FechaInicio ?? DateTime.Now,
+                        FechaRespuesta = string.Empty
+                    })
+                    .ToList();
+            }
         }
         catch (Exception ex)
         {
-            ErrorMessage = $"Error al cargar membresías: {ex.Message}";
-            Console.WriteLine($"Excepción: {ex}");
+            ErrorMessage = $"Error cargando datos: {ex.Message}";
         }
-        finally
-        {
-            IsLoading = false;
-            CargarDatos();
-            AplicarFiltros();
-        }
-    }
-
-    // MÉTODOS DE CARGA
-    private void CargarDatos()
-    {
-        // Cargar canchas
-        _canchas = new List<Cancha>
-        {
-            new Cancha { Id = 1, Nombre = "Cancha Principal" },
-            new Cancha { Id = 2, Nombre = "Cancha Secundaria" },
-            new Cancha { Id = 3, Nombre = "Cancha Entrenamiento" }
-        };
-
-        // Cargar reservas de ejemplo
-        _reservas = new List<Reserva>
-        {
-            new Reserva
-            {
-                Id = 1,
-                CanchaId = 1,
-                CanchaNombre = "Cancha Principal",
-                NombreCliente = "Juan García López",
-                EmailCliente = "juan.garcia@email.com",
-                TelefonoCliente = "+34 612 345 678",
-                Fecha = DateTime.Now.AddDays(2),
-                HoraInicio = "18:00",
-                HoraFin = "20:00",
-                Duracion = 2,
-                CantidadJugadores = 22,
-                PrecioHora = 50,
-                Descuento = 0,
-                PrecioTotal = 100,
-                NotasCliente = "Necesitamos la cancha con balón incluido. Gracias.",
-                Estado = "Pendiente",
-                FechaSolicitud = DateTime.Now,
-                FechaRespuesta = string.Empty
-            },
-            new Reserva
-            {
-                Id = 2,
-                CanchaId = 1,
-                CanchaNombre = "Cancha Principal",
-                NombreCliente = "Carlos Martínez Ruiz",
-                EmailCliente = "carlos.martinez@email.com",
-                TelefonoCliente = "+34 623 456 789",
-                Fecha = DateTime.Now.AddDays(5),
-                HoraInicio = "19:00",
-                HoraFin = "21:00",
-                Duracion = 2,
-                CantidadJugadores = 18,
-                PrecioHora = 50,
-                Descuento = 5,
-                PrecioTotal = 95,
-                NotasCliente = string.Empty,
-                Estado = "Aprobada",
-                FechaSolicitud = DateTime.Now.AddDays(-2),
-                FechaRespuesta = "Aprobada el " + DateTime.Now.AddDays(-2).ToString("dd/MM/yyyy HH:mm")
-            },
-            new Reserva
-            {
-                Id = 3,
-                CanchaId = 2,
-                CanchaNombre = "Cancha Secundaria",
-                NombreCliente = "Ana López González",
-                EmailCliente = "ana.lopez@email.com",
-                TelefonoCliente = "+34 634 567 890",
-                Fecha = DateTime.Now.AddDays(-1),
-                HoraInicio = "20:00",
-                HoraFin = "22:00",
-                Duracion = 2,
-                CantidadJugadores = 16,
-                PrecioHora = 35,
-                Descuento = 0,
-                PrecioTotal = 70,
-                NotasCliente = "¿Hay estacionamiento disponible?",
-                Estado = "Rechazada",
-                FechaSolicitud = DateTime.Now.AddDays(-3),
-                FechaRespuesta = "Rechazada el " + DateTime.Now.AddDays(-3).ToString("dd/MM/yyyy HH:mm")
-            },
-            new Reserva
-            {
-                Id = 4,
-                CanchaId = 2,
-                CanchaNombre = "Cancha Secundaria",
-                NombreCliente = "David Sánchez Torres",
-                EmailCliente = "david.sanchez@email.com",
-                TelefonoCliente = "+34 645 678 901",
-                Fecha = DateTime.Now.AddDays(7),
-                HoraInicio = "17:00",
-                HoraFin = "19:00",
-                Duracion = 2,
-                CantidadJugadores = 14,
-                PrecioHora = 35,
-                Descuento = 7,
-                PrecioTotal = 63,
-                NotasCliente = "Torneo local. Necesitamos iluminación extra si es posible.",
-                Estado = "Pendiente",
-                FechaSolicitud = DateTime.Now.AddDays(-1),
-                FechaRespuesta = string.Empty
-            },
-            new Reserva
-            {
-                Id = 5,
-                CanchaId = 3,
-                CanchaNombre = "Cancha Entrenamiento",
-                NombreCliente = "Miguel Rodríguez Pérez",
-                EmailCliente = "miguel.rodriguez@email.com",
-                TelefonoCliente = "+34 656 789 012",
-                Fecha = DateTime.Now.AddDays(10),
-                HoraInicio = "16:00",
-                HoraFin = "18:00",
-                Duracion = 2,
-                CantidadJugadores = 12,
-                PrecioHora = 25,
-                Descuento = 0,
-                PrecioTotal = 50,
-                NotasCliente = string.Empty,
-                Estado = "Aprobada",
-                FechaSolicitud = DateTime.Now.AddDays(-5),
-                FechaRespuesta = "Aprobada el " + DateTime.Now.AddDays(-5).ToString("dd/MM/yyyy HH:mm")
-            }
-        };
     }
 
     // MÉTODOS DE FILTRADO
@@ -457,25 +408,57 @@
     }
 
     // MÉTODOS DE ACCIÓN
-    private void AprobarReserva(int id)
+    private async Task AprobarReserva(int id)
     {
-        var reserva = _reservas.FirstOrDefault(r => r.Id == id);
-        if (reserva != null)
+        try
         {
-            reserva.Estado = "Aprobada";
-            reserva.FechaRespuesta = "Aprobada el " + DateTime.Now.ToString("dd/MM/yyyy HH:mm");
-            AplicarFiltros();
+            var reserva = _reservas.FirstOrDefault(r => r.Id == id);
+            if (reserva != null)
+            {
+                var resultado = await ReservasService.ProcessReservaAsync(id);
+                if (resultado)
+                {
+                    reserva.Estado = "Aprobada";
+                    reserva.FechaRespuesta = "Aprobada el " + DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+                    AplicarFiltros();
+                    StateHasChanged();
+                }
+                else
+                {
+                    ErrorMessage = "Error al aprobar la reserva";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error: {ex.Message}";
         }
     }
 
-    private void RechazarReserva(int id)
+    private async Task RechazarReserva(int id)
     {
-        var reserva = _reservas.FirstOrDefault(r => r.Id == id);
-        if (reserva != null)
+        try
         {
-            reserva.Estado = "Rechazada";
-            reserva.FechaRespuesta = "Rechazada el " + DateTime.Now.ToString("dd/MM/yyyy HH:mm");
-            AplicarFiltros();
+            var reserva = _reservas.FirstOrDefault(r => r.Id == id);
+            if (reserva != null)
+            {
+                var resultado = await ReservasService.ProcessReservaAsync(id);
+                if (resultado)
+                {
+                    reserva.Estado = "Rechazada";
+                    reserva.FechaRespuesta = "Rechazada el " + DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+                    AplicarFiltros();
+                    StateHasChanged();
+                }
+                else
+                {
+                    ErrorMessage = "Error al rechazar la reserva";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error: {ex.Message}";
         }
     }
 

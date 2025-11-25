@@ -1,5 +1,6 @@
 @page "/register"
-@layout Layout.EmptyLayout
+@layout EmptyLayout
+@using FutZoneFrontend.Components.Layout
 @using FutZoneFrontend.Services
 @using FutZoneFrontend.Services.Models
 @inject IAuthService AuthService
@@ -9,90 +10,75 @@
 
 <link href="css/gofit-auth.css" rel="stylesheet" />
 
-    <div class="gofit-reg-bg">
-        <div class="auth-container">
-            <div class="auth-panel">
-                <div class="card gofit-reg-card">
-                    <div class="gofit-hero auth-hero-centered">
-                        <i class="bi bi-person-plus"></i>
-                        <h2>Crear Cuenta</h2>
-                        <div class="small muted-note">Regístrate para reservar canchas y unirte a torneos</div>
-                    </div>
-                    <div class="card-body">
-                        @if (!string.IsNullOrEmpty(ErrorMessage))
-                        {
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                @ErrorMessage
-                                <button type="button" class="btn-close" @onclick="() => ErrorMessage = string.Empty"></button>
-                            </div>
-                        }
-
-                        @if (!string.IsNullOrEmpty(SuccessMessage))
-                        {
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                @SuccessMessage
-                                <button type="button" class="btn-close" @onclick="() => SuccessMessage = string.Empty"></button>
-                            </div>
-                        }
-
-                        <form @onsubmit="HandleRegister">
-                            <div class="row">
-                                <div class="col-md-6 mb-3 input-with-icon">
-                                    <i class="bi bi-person-fill input-icon"></i>
-                                    <input type="text" class="form-control form-control-lg glass-input" id="firstName" placeholder="Nombre"
-                                           @bind="RegisterModel.FirstName" required disabled="@IsLoading">
-                                </div>
-                                <div class="col-md-6 mb-3 input-with-icon">
-                                    <i class="bi bi-person-badge-fill input-icon"></i>
-                                    <input type="text" class="form-control form-control-lg glass-input" id="lastName" placeholder="Apellidos"
-                                           @bind="RegisterModel.LastName" required disabled="@IsLoading">
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                    <div class="col-md-12 mb-3 input-with-icon">
-                                        <i class="bi bi-envelope-fill input-icon"></i>
-                                        <input type="email" class="form-control form-control-lg glass-input" id="email" placeholder="Correo electrónico"
-                                               @bind="RegisterModel.Email" required disabled="@IsLoading">
-                                    </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3 input-with-icon">
-                                    <i class="bi bi-lock-fill input-icon"></i>
-                                    <input type="password" class="form-control form-control-lg glass-input" id="password" placeholder="Contraseña"
-                                           @bind="RegisterModel.Password" required disabled="@IsLoading">
-                                </div>
-                                <div class="col-md-6 mb-3 input-with-icon">
-                                    <i class="bi bi-shield-lock-fill input-icon"></i>
-                                    <input type="password" class="form-control form-control-lg glass-input" id="confirmPassword" placeholder="Confirmar contraseña"
-                                           @bind="RegisterModel.ConfirmPassword" required disabled="@IsLoading">
-                                </div>
-                            </div>
-
-                            <div class="d-grid gap-2">
-                                <button type="submit" class="primary-white-button btn-lg" disabled="@IsLoading">
-                                    @if (IsLoading)
-                                    {
-                                        <span class="spinner-border spinner-border-sm me-2" style="border-width:2px"></span>
-                                        <span>Creando cuenta...</span>
-                                    }
-                                    else
-                                    {
-                                        <span>Registrarse</span>
-                                    }
-                                </button>
-                            </div>
-                        </form>
-
-                        <div class="text-center mt-3">
-                            <small class="auth-help">¿Ya tienes una cuenta? <a href="/">Inicia Sesión</a></small>
+<div class="gofit-reg-bg">
+    <div class="auth-container">
+        <div class="auth-panel">
+            <div class="card gofit-reg-card">
+                <div class="gofit-hero auth-hero-centered">
+                    <i class="bi bi-person-plus"></i>
+                    <h2>Crear Cuenta</h2>
+                    <div class="small muted-note">Regístrate para reservar canchas y unirte a torneos</div>
+                </div>
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(ErrorMessage))
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @ErrorMessage
+                            <button type="button" class="btn-close" @onclick="() => ErrorMessage = string.Empty"></button>
                         </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(SuccessMessage))
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @SuccessMessage
+                            <button type="button" class="btn-close" @onclick="() => SuccessMessage = string.Empty"></button>
+                        </div>
+                    }
+
+                    <form @onsubmit="HandleRegister">
+                        <div class="mb-3 input-with-icon">
+                            <i class="bi bi-envelope-fill input-icon"></i>
+                            <input type="email" class="form-control form-control-lg glass-input" id="email" placeholder="Correo electrónico"
+                                   @bind="RegisterModel.Email" required disabled="@IsLoading">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3 input-with-icon">
+                                <i class="bi bi-lock-fill input-icon"></i>
+                                <input type="password" class="form-control form-control-lg glass-input" id="password" placeholder="Contraseña"
+                                       @bind="RegisterModel.Password" required disabled="@IsLoading">
+                            </div>
+                            <div class="col-md-6 mb-3 input-with-icon">
+                                <i class="bi bi-shield-lock-fill input-icon"></i>
+                                <input type="password" class="form-control form-control-lg glass-input" id="confirmPassword" placeholder="Confirmar contraseña"
+                                       @bind="RegisterModel.ConfirmPassword" required disabled="@IsLoading">
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="primary-white-button btn-lg" disabled="@IsLoading">
+                                @if (IsLoading)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-2" style="border-width:2px"></span>
+                                    <span>Creando cuenta...</span>
+                                }
+                                else
+                                {
+                                    <span>Registrarse</span>
+                                }
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        <small class="auth-help">¿Ya tienes una cuenta? <a href="/">Inicia Sesión</a></small>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
 @code {
     private RegisterRequest RegisterModel = new();
@@ -103,9 +89,7 @@
     private async Task HandleRegister()
     {
         // Validaciones
-        if (string.IsNullOrEmpty(RegisterModel.FirstName) || 
-            string.IsNullOrEmpty(RegisterModel.LastName) || 
-            string.IsNullOrEmpty(RegisterModel.Email) || 
+        if (string.IsNullOrEmpty(RegisterModel.Email) || 
             string.IsNullOrEmpty(RegisterModel.Password))
         {
             ErrorMessage = "Por favor completa todos los campos requeridos";
@@ -135,7 +119,7 @@
             if (response.Success)
             {
                 SuccessMessage = "¡Registro exitoso! Redirigiendo...";
-                await Task.Delay(2000); // Esperar 2 segundos antes de redirigir
+                await Task.Delay(2000);
                 NavigationManager.NavigateTo("/home", forceLoad: true);
             }
             else
@@ -153,4 +137,3 @@
         }
     }
 }
-
