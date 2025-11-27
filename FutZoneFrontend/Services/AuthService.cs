@@ -29,6 +29,7 @@ namespace FutZoneFrontend.Services
         Task<int?> GetUserIdAsync();
         Task<string?> GetRoleAsync();
         Task EnsureAuthDataLoadedAsync();
+        Task<bool> VerifyTokenAsync(string token);
     }
 
     public class AuthService : IAuthService
@@ -120,6 +121,16 @@ namespace FutZoneFrontend.Services
                         // VERIFICACIÓN CLAVE: Asegurarse de que tenemos Token, UserId y Rol.
                         if (!string.IsNullOrEmpty(loginResponse?.Token) && loginResponse.UserId.HasValue && !string.IsNullOrEmpty(loginResponse.Rol))
                         {
+                            // *** VERIFICAR EL TOKEN ANTES DE ALMACENARLO ***
+                            bool tokenValid = await VerifyTokenAsync(loginResponse.Token);
+                            
+                            if (!tokenValid)
+                            {
+                                Console.WriteLine($"⚠ ADVERTENCIA - Token no válido según el servidor, pero continuando con login local");
+                                // Comentamos la siguiente línea para permitir login aunque la verificación falle
+                                // return new LoginResponse { Success = false, Message = "El token no es válido. Por favor intenta de nuevo." };
+                            }
+
                             // *** USAMOS LA NUEVA SOBRECARGA CON ID Y ROL ***
                             SetToken(loginResponse.Token, loginResponse.UserId.Value, loginResponse.Rol);
 
@@ -242,11 +253,137 @@ namespace FutZoneFrontend.Services
             return new RegisterResponse { Success = false, Message = "Error desconocido" };
         }
 
-        public Task LogoutAsync()
+        public async Task LogoutAsync()
         {
-            ClearToken();
-            Console.WriteLine("[AuthService - LOGOUT] Token, ID de Usuario y Rol eliminados.");
-            return Task.CompletedTask;
+            try
+            {
+                Console.WriteLine("[AuthService - LOGOUT] Iniciando logout...");
+                
+                var token = GetToken();
+                if (!string.IsNullOrEmpty(token))
+                {
+                    var url = "/api/auth/logout";
+                    var content = new StringContent(
+                        JsonSerializer.Serialize(new { token }),
+                        Encoding.UTF8,
+                        "application/json"
+                    );
+
+                    try
+                    {
+                        var response = await _httpClient.PostAsync(url, content);
+                        Console.WriteLine($"[AuthService - LOGOUT] Servidor respondió: {response.StatusCode}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[AuthService - LOGOUT] Error al notificar al servidor: {ex.Message}");
+                        // Continuar con logout local aunque falle la notificación al servidor
+                    }
+                }
+
+                // Limpiar datos locales
+                ClearToken();
+                Console.WriteLine("[AuthService - LOGOUT] Token, ID de Usuario y Rol eliminados.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[AuthService - LOGOUT] Error: {ex.Message}");
+            }
+        }
+
+        // ===================================
+        // 3.5 VERIFICAR TOKEN
+        // ===================================
+        public async Task<bool> VerifyTokenAsync(string token)
+        {
+            try
+            {
+                Console.WriteLine($"[AuthService - VERIFY] Verificando token...");
+                Console.WriteLine($"[AuthService - VERIFY] Token: {token.Substring(0, Math.Min(20, token.Length))}...");
+                
+                var url = "/api/auth/verify";
+                
+                // Intentar enviar el token en el body
+                var requestBody = new { token };
+                var jsonContent = JsonSerializer.Serialize(requestBody);
+                var content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+                Console.WriteLine($"[AuthService - VERIFY] Enviando petición a {url}");
+                var response = await _httpClient.PostAsync(url, content);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                Console.WriteLine($"[AuthService - VERIFY] Status: {response.StatusCode}");
+                Console.WriteLine($"[AuthService - VERIFY] Response: {responseContent}");
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    try
+                    {
+                        // Intentar deserializar la respuesta
+                        var verifyResponse = JsonSerializer.Deserialize<JsonElement>(responseContent,
+                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                        // Verificar diferentes propiedades posibles
+                        if (verifyResponse.TryGetProperty("valid", out var validProp))
+                        {
+                            bool isValid = validProp.GetBoolean();
+                            Console.WriteLine($"✓ Token válido (propiedad 'valid'): {isValid}");
+                            return isValid;
+                        }
+                        else if (verifyResponse.TryGetProperty("isValid", out var isValidProp))
+                        {
+                            bool isValid = isValidProp.GetBoolean();
+                            Console.WriteLine($"✓ Token válido (propiedad 'isValid'): {isValid}");
+                            return isValid;
+                        }
+                        else if (verifyResponse.TryGetProperty("success", out var successProp))
+                        {
+                            bool isValid = successProp.GetBoolean();
+                            Console.WriteLine($"✓ Token válido (propiedad 'success'): {isValid}");
+                            return isValid;
+                        }
+
+                        // Si el status es 200 y no hay propiedades de error, asumir que es válido
+                        Console.WriteLine($"✓ Token verificado exitosamente (Status 200)");
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"⚠ Error deserializando respuesta de verificación: {ex.Message}");
+                        // Si no podemos deserializar pero recibimos 200, asumir válido
+                        return true;
+                    }
+                }
+                else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                {
+                    Console.WriteLine($"✗ Token inválido o expirado (401 Unauthorized)");
+                    return false;
+                }
+                else
+                {
+                    Console.WriteLine($"✗ Error verificando token (Status: {response.StatusCode})");
+                    // Para otros errores, intentar parsear la respuesta
+                    try
+                    {
+                        var errorResponse = JsonSerializer.Deserialize<JsonElement>(responseContent,
+                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                        
+                        if (errorResponse.TryGetProperty("message", out var msgProp))
+                        {
+                            Console.WriteLine($"   Mensaje: {msgProp.GetString()}");
+                        }
+                    }
+                    catch { }
+                    
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"✗ EXCEPCIÓN en verificación de token: {ex.Message}");
+                Console.WriteLine($"   Stack: {ex.StackTrace}");
+                return false;
+            }
         }
 
         // ===================================

@@ -2,8 +2,12 @@
 @rendermode InteractiveServer
 @using FutZoneFrontend.Services
 @using FutZoneFrontend.Services.Models
+@using FutZoneFrontend.DTOs
 @using Microsoft.AspNetCore.Components.Forms
 @inject ICanchasService CanchasService
+@inject IEmpresaService EmpresaService
+@inject IAuthService AuthService
+@inject ITipoDeporteService TipoDeporteService
 
 <div class="container-fluid py-4">
     <!-- Header con Gradiente -->
@@ -236,7 +240,44 @@
             </div>
             <div class="modal-body">
                 <form>
-                    <!-- Nombre de Cancha -->
+                    <!-- Selector de Empresa -->
+                    <div class="mb-3">
+                        <label for="empresa" class="form-label fw-bold">Empresa</label>
+                        <select class="form-select" id="empresa" @bind="_empresaSeleccionada" required>
+                            <option value="0">-- Selecciona una empresa --</option>
+                            @foreach (var empresa in _empresasDisponibles)
+                            {
+                                <option value="@empresa.ID">@empresa.Nombre</option>
+                            }
+                        </select>
+                        @if (_empresaSeleccionada <= 0)
+                        {
+                            <small class="text-danger">Debes seleccionar una empresa</small>
+                        }
+                    </div>
+
+                    <!-- Selector de Tipo de Deporte -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label for="tipoDeporte" class="form-label fw-bold">Tipo de Deporte</label>
+                            <button type="button" class="btn btn-sm btn-outline-primary" @onclick="AbrirModalCrearDeporte">
+                                <i class="bi bi-plus-circle"></i> Agregar Deporte
+                            </button>
+                        </div>
+                        <select class="form-select" id="tipoDeporte" @bind="_tipoDeporteSeleccionado" required>
+                            <option value="0">-- Selecciona un tipo de deporte --</option>
+                            @foreach (var deporte in _tiposDeporte)
+                            {
+                                <option value="@deporte.Id">@deporte.Nombre</option>
+                            }
+                        </select>
+                        @if (_tipoDeporteSeleccionado <= 0)
+                        {
+                            <small class="text-danger">Debes seleccionar un tipo de deporte</small>
+                        }
+                    </div>
+
+                    <!-- Nombre de la Cancha -->
                     <div class="mb-3">
                         <label for="nombre" class="form-label fw-bold">Nombre de la Cancha</label>
                         <input type="text" class="form-control" id="nombre" 
@@ -545,8 +586,52 @@
     </div>
 </div>
 
+<!-- Modal Crear Tipo de Deporte -->
+<div class="modal @(_mostrarModalDeporte ? "show d-block" : "")" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-gradient-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle"></i> Tipos de Deporte Disponibles
+                </h5>
+                <button type="button" class="btn-close btn-close-white" @onclick="CerrarModalDeporte"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Nota: Si el deporte que buscas no está disponible, contacta al administrador para que lo agregue al sistema.</p>
+                
+                <div class="list-group">
+                    @foreach (var deporte in _tiposDeporte)
+                    {
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">@deporte.Nombre</h6>
+                                @if (!string.IsNullOrEmpty(deporte.Descripcion))
+                                {
+                                    <small class="text-muted">@deporte.Descripcion</small>
+                                }
+                            </div>
+                            <span class="badge bg-primary">ID: @deporte.Id</span>
+                        </div>
+                    }
+                    @if (!_tiposDeporte.Any())
+                    {
+                        <div class="alert alert-warning">
+                            No hay tipos de deporte disponibles. Por favor, contacta al administrador.
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="CerrarModalDeporte">
+                    <i class="bi bi-x-circle"></i> Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Backdrop Modal -->
-@if (_mostrarModalCancha || _mostrarConfirmEliminar)
+@if (_mostrarModalCancha || _mostrarConfirmEliminar || _mostrarModalDeporte)
 {
     <div class="modal-backdrop fade show"></div>
 }
@@ -601,10 +686,66 @@
     private bool _cargando = true;
     private string? _mensajeError = null;
     private string? _imagenPreview = null;
+    
+    // Empresas
+    private List<EmpresaDto> _empresasDisponibles = new();
+    private int _empresaSeleccionada = 0;
+    
+    // Tipos de Deporte
+    private List<TipoDeporte> _tiposDeporte = new();
+    private int _tipoDeporteSeleccionado = 0;
+    
+    // Modal Crear Tipo de Deporte
+    private bool _mostrarModalDeporte = false;
 
     protected override async Task OnInitializedAsync()
     {
+        // Asegurar que los datos de autenticación están cargados
+        await AuthService.EnsureAuthDataLoadedAsync();
+        
+        await CargarTiposDeporte();
+        await CargarEmpresas();
         await CargarCanchas();
+    }
+
+    private async Task CargarTiposDeporte()
+    {
+        try
+        {
+            Console.WriteLine("[MisCanchas] Iniciando carga de tipos de deporte...");
+            _tiposDeporte = await TipoDeporteService.GetAllTiposDeporteAsync();
+            Console.WriteLine($"[MisCanchas] Tipos de deporte cargados: {_tiposDeporte.Count}");
+            
+            foreach (var deporte in _tiposDeporte)
+            {
+                Console.WriteLine($"  - {deporte.Nombre} (ID: {deporte.Id})");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[MisCanchas] Error al cargar tipos de deporte: {ex.Message}");
+            _mensajeError = $"Error al cargar tipos de deporte: {ex.Message}";
+        }
+    }
+
+    private async Task CargarEmpresas()
+    {
+        try
+        {
+            Console.WriteLine("[MisCanchas] Iniciando carga de empresas...");
+            _empresasDisponibles = await EmpresaService.GetEmpresasDelUsuarioAsync();
+            Console.WriteLine($"[MisCanchas] Empresas cargadas: {_empresasDisponibles.Count}");
+            
+            foreach (var empresa in _empresasDisponibles)
+            {
+                Console.WriteLine($"  - {empresa.Nombre} (ID: {empresa.ID})");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[MisCanchas] Error al cargar empresas: {ex.Message}");
+            _mensajeError = $"Error al cargar empresas: {ex.Message}";
+        }
     }
 
     private async Task CargarCanchas()
@@ -671,6 +812,8 @@
     private void AbrirModalCrearCancha()
     {
         _editandoCancha = null;
+        _empresaSeleccionada = 0;
+        _tipoDeporteSeleccionado = 0;
         _formCancha = new CanchaViewModel 
         { 
             DiasDisponibles = new List<string>(),
@@ -718,6 +861,18 @@
             return;
         }
 
+        if (_empresaSeleccionada <= 0)
+        {
+            _mensajeError = "Debes seleccionar una empresa";
+            return;
+        }
+
+        if (_tipoDeporteSeleccionado <= 0)
+        {
+            _mensajeError = "Debes seleccionar un tipo de deporte";
+            return;
+        }
+
         try
         {
             if (_editandoCancha != null)
@@ -726,6 +881,8 @@
                 var canchaSvc = new FutZoneFrontend.Services.Models.Cancha
                 {
                     Id = _formCancha.Id,
+                    EmpresaId = _empresaSeleccionada,
+                    TipoDeporteId = _tipoDeporteSeleccionado,
                     Nombre = _formCancha.Nombre,
                     Ubicacion = _formCancha.Ubicacion,
                     Dimensiones = _formCancha.Dimensiones,
@@ -765,6 +922,8 @@
                 // Crear nueva cancha
                 var canchaSvc = new FutZoneFrontend.Services.Models.Cancha
                 {
+                    EmpresaId = _empresaSeleccionada,
+                    TipoDeporteId = _tipoDeporteSeleccionado,
                     Nombre = _formCancha.Nombre,
                     Ubicacion = _formCancha.Ubicacion,
                     Dimensiones = _formCancha.Dimensiones,
@@ -985,5 +1144,15 @@
         {
             _mensajeError = $"Error al cargar la imagen: {ex.Message}";
         }
+    }
+
+    private void AbrirModalCrearDeporte()
+    {
+        _mostrarModalDeporte = true;
+    }
+
+    private void CerrarModalDeporte()
+    {
+        _mostrarModalDeporte = false;
     }
 }

@@ -55,20 +55,17 @@ namespace FutZoneFrontend.Services
         [JsonPropertyName("equipo_id")]
         public int? EquipoId { get; set; }
 
-        [JsonPropertyName("usuario_id")]
-        public int? UsuarioId { get; set; }
-
         [JsonPropertyName("usuario_solicitante_id")]
         public int? UsuarioSolicitanteId { get; set; }
 
+        [JsonPropertyName("usuario_id")]
+        public int? UsuarioId { get; set; }
+
+        [JsonPropertyName("partido_id")]
+        public int? PartidoId { get; set; }
+
         [JsonPropertyName("fecha_reserva")]
-        public string? FechaReserva { get; set; }
-
-        [JsonPropertyName("fecha_inicio")]
-        public DateTime? FechaInicio { get; set; }
-
-        [JsonPropertyName("fecha_fin")]
-        public DateTime? FechaFin { get; set; }
+        public DateTime? FechaReserva { get; set; }
 
         [JsonPropertyName("hora_inicio")]
         public string? HoraInicio { get; set; }
@@ -77,10 +74,10 @@ namespace FutZoneFrontend.Services
         public string? HoraFin { get; set; }
 
         [JsonPropertyName("duracion_horas")]
-        public decimal DuracionHoras { get; set; }
+        public string? DuracionHoras { get; set; }
 
         [JsonPropertyName("monto_total")]
-        public decimal MontoTotal { get; set; }
+        public string? MontoTotal { get; set; }
 
         [JsonPropertyName("precio_total")]
         public decimal? PrecioTotal { get; set; }
@@ -93,12 +90,21 @@ namespace FutZoneFrontend.Services
 
         [JsonPropertyName("mensaje_solicitud")]
         public string? MensajeSolicitud { get; set; }
+
+        [JsonPropertyName("fecha_creacion")]
+        public DateTime? FechaCreacion { get; set; }
+
+        [JsonPropertyName("fecha_actualizacion")]
+        public DateTime? FechaActualizacion { get; set; }
+
+        // Propiedades derivadas para compatibilidad
+        public DateTime? FechaInicio => FechaReserva;
+        public DateTime? FechaFin => FechaReserva;
     }
 
     public class ReservasService : IReservasService
     {
         private readonly HttpClient _httpClient;
-        private const string BaseUrl = "https://apicanchasyreservas.onrender.com";
         private const string BaseEndpoint = "/api/reservas";
 
         public ReservasService(HttpClient httpClient)
@@ -110,14 +116,37 @@ namespace FutZoneFrontend.Services
         {
             try
             {
-                var url = $"{BaseUrl}{BaseEndpoint}";
-                Console.WriteLine($"Obteniendo reservas de: {url}");
+                var url = BaseEndpoint;
+                Console.WriteLine($"[ReservasService] Obteniendo reservas de: {_httpClient.BaseAddress}{url}");
                 var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                return await _httpClient.GetFromJsonAsync<List<ReservaDto>>(url, options) ?? new List<ReservaDto>();
+                
+                var response = await _httpClient.GetAsync(url);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"[ReservasService] ❌ Error HTTP: {response.StatusCode}");
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"[ReservasService] Error content: {errorContent}");
+                    return new List<ReservaDto>();
+                }
+                
+                var content = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[ReservasService] Response length: {content.Length}");
+                
+                var result = System.Text.Json.JsonSerializer.Deserialize<List<ReservaDto>>(content, options) ?? new List<ReservaDto>();
+                Console.WriteLine($"[ReservasService] ✅ Reservas desserializadas: {result.Count}");
+                
+                foreach (var reserva in result)
+                {
+                    Console.WriteLine($"[ReservasService]   - Reserva ID: {reserva.Id}, Cancha: {reserva.CanchaId}, Estado: {reserva.Estado}");
+                }
+                
+                return result;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error getting all reservas: {ex.Message}");
+                Console.WriteLine($"[ReservasService] ❌ Error getting all reservas: {ex.Message}");
+                Console.WriteLine($"[ReservasService] Stack trace: {ex.StackTrace}");
                 return new List<ReservaDto>();
             }
         }
@@ -126,7 +155,7 @@ namespace FutZoneFrontend.Services
         {
             try
             {
-                var url = $"{BaseUrl}{BaseEndpoint}/{id}";
+                var url = $"{BaseEndpoint}/{id}";
                 var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                 return await _httpClient.GetFromJsonAsync<ReservaDto>(url, options);
             }
@@ -141,20 +170,31 @@ namespace FutZoneFrontend.Services
         {
             try
             {
-                var url = $"{BaseUrl}{BaseEndpoint}";
-                Console.WriteLine($"Creando reserva en: {url}");
+                var url = BaseEndpoint;
+                Console.WriteLine($"[ReservasService] Creando reserva en: {_httpClient.BaseAddress}{url}");
+                Console.WriteLine($"[ReservasService] Payload: {System.Text.Json.JsonSerializer.Serialize(reserva)}");
+                
                 var response = await _httpClient.PostAsJsonAsync(url, reserva);
+                
+                Console.WriteLine($"[ReservasService] Response Status: {response.StatusCode}");
+                var content = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[ReservasService] Response Body: {content}");
+                
                 if (response.IsSuccessStatusCode)
                 {
                     var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                    return await response.Content.ReadFromJsonAsync<ReservaDto>(options);
+                    return System.Text.Json.JsonSerializer.Deserialize<ReservaDto>(content, options);
                 }
-                Console.WriteLine($"Error al crear: {response.StatusCode} - {response.ReasonPhrase}");
+                else
+                {
+                    Console.WriteLine($"[ReservasService] ❌ Error al crear: {response.StatusCode} - {response.ReasonPhrase}");
+                }
                 return null;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error creating reserva: {ex.Message}");
+                Console.WriteLine($"[ReservasService] ❌ Exception creating reserva: {ex.Message}");
+                Console.WriteLine($"[ReservasService] Stack trace: {ex.StackTrace}");
                 return null;
             }
         }
@@ -163,7 +203,7 @@ namespace FutZoneFrontend.Services
         {
             try
             {
-                var url = $"{BaseUrl}/api/solicitudes/{solicitudId}/process";
+                var url = $"/api/solicitudes/{solicitudId}/process";
                 var response = await _httpClient.PutAsync(url, null);
                 return response.IsSuccessStatusCode;
             }
@@ -178,7 +218,7 @@ namespace FutZoneFrontend.Services
         {
             try
             {
-                var url = $"{BaseUrl}/api/solicitudes/{id}";
+                var url = $"/api/solicitudes/{id}";
                 var response = await _httpClient.DeleteAsync(url);
                 return response.IsSuccessStatusCode;
             }
@@ -193,7 +233,7 @@ namespace FutZoneFrontend.Services
         {
             try
             {
-                var url = $"{BaseUrl}{BaseEndpoint}/{id}";
+                var url = $"{BaseEndpoint}/{id}";
                 var response = await _httpClient.DeleteAsync(url);
                 return response.IsSuccessStatusCode;
             }

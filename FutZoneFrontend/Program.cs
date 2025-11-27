@@ -66,9 +66,17 @@ builder.Services.AddHttpClient<ICanchasService, CanchasService>(client =>
     client.BaseAddress = new Uri(apiBaseUrl);
     client.Timeout = TimeSpan.FromSeconds(600);
 });
+
+// ReservasService usa la API de CanchasYReservas
+var canchasYReservasBaseUrl = builder.Configuration["ApiEndpoints:CanchasYReservas:BaseUrl"];
+if (string.IsNullOrEmpty(canchasYReservasBaseUrl))
+{
+    throw new InvalidOperationException("CanchasYReservas BaseUrl configuration is missing.");
+}
+
 builder.Services.AddHttpClient<IReservasService, ReservasService>(client =>
 {
-    client.BaseAddress = new Uri(apiBaseUrl);
+    client.BaseAddress = new Uri(canchasYReservasBaseUrl);
     client.Timeout = TimeSpan.FromSeconds(600);
 });
 // Services stubs for endpoints that are referenced in API inventory
@@ -87,9 +95,17 @@ builder.Services.AddHttpClient<IAceptacionesService, AceptacionesService>(client
     client.BaseAddress = new Uri(apiBaseUrl);
     client.Timeout = TimeSpan.FromSeconds(600);
 });
-builder.Services.AddHttpClient<EmpresaService>(client =>
+
+// EmpresaService usa la API de EmpresaPublicidad
+var empresaApiBaseUrl = builder.Configuration["ApiEndpoints:EmpresaPublicidad:BaseUrl"];
+if (string.IsNullOrEmpty(empresaApiBaseUrl))
 {
-    client.BaseAddress = new Uri(apiBaseUrl);
+    throw new InvalidOperationException("EmpresaPublicidad BaseUrl configuration is missing.");
+}
+
+builder.Services.AddHttpClient<IEmpresaService, EmpresaService>(client =>
+{
+    client.BaseAddress = new Uri(empresaApiBaseUrl);
     client.Timeout = TimeSpan.FromSeconds(600);
 });
 

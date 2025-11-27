@@ -292,18 +292,21 @@
     {
         try
         {
+            Console.WriteLine("[MisReservas] ========== INICIO OnInitializedAsync ==========");
             IsLoading = true;
             await CargarDatos();
         }
         catch (Exception ex)
         {
             ErrorMessage = $"Error al cargar datos: {ex.Message}";
-            Console.WriteLine($"Excepción: {ex}");
+            Console.WriteLine($"[MisReservas] ❌ EXCEPCIÓN EN OnInitializedAsync: {ex.Message}");
+            Console.WriteLine($"[MisReservas] Stack: {ex.StackTrace}");
         }
         finally
         {
             IsLoading = false;
             AplicarFiltros();
+            Console.WriteLine("[MisReservas] ========== FIN OnInitializedAsync ==========");
         }
     }
 
@@ -312,12 +315,14 @@
     {
         try
         {
+            Console.WriteLine("[MisReservas] Iniciando carga de datos...");
+            
             // Cargar membresías del usuario
             var membresiasResponse = await PropietarioService.GetMisMembresiasAsync();
             if (membresiasResponse.Success)
             {
                 _membresias = membresiasResponse.Data;
-                Console.WriteLine($"Membresías cargadas: {_membresias.Count}");
+                Console.WriteLine($"[MisReservas] Membresías cargadas: {_membresias.Count}");
             }
 
             // Cargar canchas
@@ -327,39 +332,51 @@
                 _canchas = canchasResult
                     .Select(c => new CanchaViewModel { Id = c.Id, Nombre = c.Nombre })
                     .ToList();
+                Console.WriteLine($"[MisReservas] Canchas cargadas: {_canchas.Count}");
             }
 
-            // Cargar reservas
-            var reservasResult = await ReservasService.GetAllReservasAsync();
-            if (reservasResult != null && reservasResult.Count > 0)
+            // Cargar TODAS las reservas (sin filtrar)
+            var todasLasReservas = await ReservasService.GetAllReservasAsync();
+            Console.WriteLine($"[MisReservas] Total de reservas cargadas: {todasLasReservas?.Count ?? 0}");
+
+            if (todasLasReservas != null && todasLasReservas.Count > 0)
             {
-                _reservas = reservasResult
+                _reservas = todasLasReservas
                     .Select(r => new ReservaViewModel
                     {
                         Id = r.Id,
                         CanchaId = r.CanchaId,
-                        CanchaNombre = _canchas.FirstOrDefault(c => c.Id == r.CanchaId)?.Nombre ?? "Desconocida",
-                        NombreCliente = $"Cliente {r.UsuarioId}",
+                        CanchaNombre = _canchas.FirstOrDefault(c => c.Id == r.CanchaId)?.Nombre ?? $"Cancha {r.CanchaId}",
+                        NombreCliente = $"Cliente {r.UsuarioSolicitanteId ?? r.UsuarioId ?? 0}",
                         EmailCliente = "email@ejemplo.com",
                         TelefonoCliente = "+34 000 000 000",
-                        Fecha = r.FechaInicio?.Date ?? DateTime.Now,
-                        HoraInicio = r.FechaInicio?.TimeOfDay.ToString(@"hh\:mm") ?? "00:00",
-                        HoraFin = r.FechaFin?.TimeOfDay.ToString(@"hh\:mm") ?? "00:00",
-                        Duracion = r.FechaFin.HasValue && r.FechaInicio.HasValue ? (int)(r.FechaFin.Value - r.FechaInicio.Value).TotalHours : 0,
+                        Fecha = r.FechaReserva?.Date ?? DateTime.Now,
+                        HoraInicio = r.HoraInicio ?? "00:00",
+                        HoraFin = r.HoraFin ?? "00:00",
+                        Duracion = int.TryParse(r.DuracionHoras, out var d) ? d : 0,
                         CantidadJugadores = 0,
-                        PrecioHora = r.PrecioTotal ?? r.MontoTotal,
+                        PrecioHora = decimal.TryParse(r.MontoTotal, out var m) ? m : 0,
                         Descuento = 0,
-                        PrecioTotal = r.PrecioTotal ?? r.MontoTotal,
-                        NotasCliente = r.Observaciones ?? string.Empty,
+                        PrecioTotal = decimal.TryParse(r.MontoTotal, out var mt) ? mt : (r.PrecioTotal ?? 0),
+                        NotasCliente = r.Observaciones ?? r.MensajeSolicitud ?? string.Empty,
                         Estado = r.Estado ?? "Pendiente",
-                        FechaSolicitud = r.FechaInicio ?? DateTime.Now,
+                        FechaSolicitud = r.FechaCreacion ?? DateTime.Now,
                         FechaRespuesta = string.Empty
                     })
                     .ToList();
+                
+                Console.WriteLine($"[MisReservas] Reservas mapeadas: {_reservas.Count}");
+            }
+            else
+            {
+                Console.WriteLine("[MisReservas] No hay reservas en el sistema");
+                _reservas = new List<ReservaViewModel>();
             }
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"[MisReservas] Error cargando datos: {ex.Message}");
+            Console.WriteLine($"[MisReservas] Stack trace: {ex.StackTrace}");
             ErrorMessage = $"Error cargando datos: {ex.Message}";
         }
     }
