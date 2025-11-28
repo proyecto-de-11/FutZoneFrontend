@@ -1,7 +1,9 @@
 @page "/admin/dashboard"
 @using FutZoneFrontend.Services
 @using FutZoneFrontend.Services.Models
+@using System.Net.Http.Json
 @inject IDashboardService DashboardService
+@inject HttpClient HttpClient
 
 <PageTitle>Dashboard de Publicidad - FutZone</PageTitle>
 
@@ -234,6 +236,8 @@
 
 @code {
     private HttpClient _publicidadHttpClient = null!;
+    private bool _cargando = false;
+    private string _mensajeError = string.Empty;
     private int _empresasActivas;
     private int _publicacionesTotales;
 
@@ -246,7 +250,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _publicidadHttpClient = HttpClientFactory.CreateClient("Publicidad");
+        _publicidadHttpClient = HttpClient;
         await CargarDatos();
     }
 

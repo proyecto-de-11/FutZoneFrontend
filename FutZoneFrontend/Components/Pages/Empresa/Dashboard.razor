@@ -17,9 +17,6 @@
                 </div>
                 <div class="col-auto">
                     <div class="header-actions">
-                        <button class="btn btn-light me-2" title="Actualizar datos" @onclick="ActualizarAsync">
-                            <i class="bi bi-arrow-clockwise"></i> Actualizar
-                        </button>
                         <a class="btn btn-outline-light" href="/empresa/crear">Crear Empresa</a>
                     </div>
                 </div>
@@ -45,53 +42,52 @@
             {
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <i class="bi bi-exclamation-triangle"></i> <strong>Error:</strong> @_mensajeError
-                    <button type="button" class="btn-close" @onclick="() => _mensajeError = null"></button>
+                    <button type="button" class="btn-close" @onclick="() => _mensajeError = string.Empty"></button>
                 </div>
             }
 
             <!-- KPIs Principales -->
             <div class="row mb-4">
                 <div class="col-md-3 mb-3">
-                    <div class="kpi-card kpi-ingresos">
+                    <div class="kpi-card">
                         <div class="kpi-icon">💰</div>
                         <div class="kpi-body">
                             <h6>Ingresos Este Mes</h6>
                             <h2>$@_ingresosMes.ToString("F2")</h2>
-                            <small>↑ 15% vs mes anterior</small>
                         </div>
                     </div>
-                    <p class="mt-3">Cargando datos del dashboard...</p>
                 </div>
 
                 <div class="col-md-3 mb-3">
-                    <div class="kpi-card kpi-reservas">
+                    <div class="kpi-card">
                         <div class="kpi-icon">📅</div>
                         <div class="kpi-body">
                             <h6>Reservas Pendientes</h6>
                             <h2>@_reservasPendientes</h2>
-                            <small>⚠️ Requieren acción</small>
                         </div>
                     </div>
+                </div>
 
                 <div class="col-md-3 mb-3">
-                    <div class="kpi-card kpi-ocupacion">
+                    <div class="kpi-card">
                         <div class="kpi-icon">📊</div>
                         <div class="kpi-body">
                             <h6>Ocupación Promedio</h6>
                             <h2>@_ocupacionPromedio%</h2>
-                            <small>↑ 5% vs mes anterior</small>
                         </div>
                     </div>
+                </div>
 
                 <div class="col-md-3 mb-3">
-                    <div class="kpi-card kpi-clientes">
+                    <div class="kpi-card">
                         <div class="kpi-icon">👥</div>
                         <div class="kpi-body">
                             <h6>Clientes Activos</h6>
                             <h2>@_clientesActivos</h2>
-                            <small>➕ 5 nuevos esta semana</small>
                         </div>
                     </div>
+                </div>
+            </div>
 
             <!-- Mis Canchas -->
             <div class="section-header">
@@ -131,185 +127,78 @@
                     }
                 }
             </div>
+        </div>
+    </div>
+</div>
 
 <style>
-.propietario-dashboard {
-    background-color: #f4f7f6;
-}
+    .propietario-dashboard {
+        background-color: #f4f7f6;
+    }
 
-            <div class="reservas-list">
-                @if (_reservas == null || _reservas.Count == 0)
-                {
-                    <div class="alert alert-info">No hay reservas recientes.</div>
-                }
-                else
-                {
-                    @foreach (var reserva in _reservas.Take(5))
-                    {
-                        <div class="reserva-item">
-                            <div class="reserva-info">
-                                <div class="reserva-cancha">Cancha @reserva.CanchaId</div>
-                                <div class="reserva-detalles">@(reserva.FechaInicio?.ToString("dddd, HH:mm") ?? "N/A") - @(reserva.FechaFin?.ToString("HH:mm") ?? "N/A")</div>
-                            </div>
-                            <div>
-                                <span class="reserva-status @(reserva.Estado?.ToLower() == "pendiente" ? "pendiente" : "confirmada")">@reserva.Estado</span>
-                                @if (reserva.Estado?.ToLower() == "pendiente")
-                                {
-                                    <button class="btn btn-sm btn-success me-2" @onclick="() => AprobarReserva(reserva.Id)">Aceptar</button>
-                                    <button class="btn btn-sm btn-danger">Rechazar</button>
-                                }
-                                else
-                                {
-                                    <button class="btn btn-sm btn-secondary disabled">Gestionar</button>
-                                }
-                            </div>
-                        </div>
-                    }
-                }
-            </div>
+    .kpi-card {
+        background-color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
 
-.kpi-card {
-    background-color: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    transition: transform 0.2s, box-shadow 0.2s;
-}
+    .kpi-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
 
-.kpi-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-}
+    .kpi-icon {
+        font-size: 2.5rem;
+    }
 
-.kpi-icon {
-    font-size: 2.5rem;
-}
+    .section-header h3 {
+        font-weight: 600;
+    }
 
-            <div class="transactions-table">
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Concepto</th>
-                            <th>Monto</th>
-                            <th>Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (_transacciones == null || _transacciones.Count == 0)
-                        {
-                            <tr>
-                                <td colspan="4" class="text-center text-muted">No hay transacciones</td>
-                            </tr>
-                        }
-                        else
-                        {
-                            @foreach (var trans in _transacciones.Take(5))
-                            {
-                                <tr>
-                                    <td>@trans["fecha"]</td>
-                                    <td>@trans["concepto"]</td>
-                                    <td class="transaction-amount @(trans["monto"].ToString().StartsWith("-") ? "negative" : "")">@trans["monto"]</td>
-                                    <td><span class="transaction-status completada">@trans["estado"]</span></td>
-                                </tr>
-                            }
-                        }
-                    </tbody>
-                </table>
-            </div>
+    .canchas-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
 
-            <!-- Resumen Mensual -->
-            <div class="section-header">
-                <h3>Resumen Mensual</h3>
-                <small class="text-muted">Análisis financiero de @DateTime.Now.ToString("MMMM yyyy", new System.Globalization.CultureInfo("es-ES"))</small>
-            </div>
+    .cancha-card {
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
 
-            <div class="row summary-cards">
-                <div class="col-md-6 summary-item">
-                    <div class="summary-box">
-                        <h5>Ingresos Brutos</h5>
-                        <div class="summary-detail">
-                            <div>Reservas: <span class="amount">@((_ingresosMes * 0.95m).ToString("C"))</span></div>
-                            <div>Otros servicios: <span class="amount">@((_ingresosMes * 0.05m).ToString("C"))</span></div>
-                            <div class="total">Total Bruto: <span class="amount">@(_ingresosMes).ToString("C")</span></div>
-                        </div>
-                    </div>
-                </div>
+    .cancha-header {
+        padding: 1rem 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #dee2e6;
+    }
 
-                <div class="col-md-6 summary-item">
-                    <div class="summary-box">
-                        <h5>Desagregación</h5>
-                        <div class="summary-detail">
-                            <div>Comisión FutZone (5%): <span class="amount negative">-@((_ingresosMes * 0.05m).ToString("C"))</span></div>
-                            <div>Impuestos (3%): <span class="amount negative">-@((_ingresosMes * 0.03m).ToString("C"))</span></div>
-                            <div class="total">Ingreso Neto: <span class="amount success">@((_ingresosMes * 0.92m).ToString("C"))</span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    .cancha-header h5 {
+        margin: 0;
+        font-weight: 600;
+    }
 
-.section-header h3 {
-    font-weight: 600;
-}
+    .cancha-body {
+        padding: 1.25rem;
+    }
 
-.canchas-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.5rem;
-}
+    .cancha-stat {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
 
-.cancha-card {
-    background-color: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    overflow: hidden;
-}
-
-.cancha-header {
-    padding: 1rem 1.25rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.cancha-header h5 {
-    margin: 0;
-    font-weight: 600;
-}
-
-.cancha-body {
-    padding: 1.25rem;
-}
-
-.cancha-stat {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-}
-
-.cancha-stat-label {
-    color: #6c757d;
-}
-
-.reservas-list .reserva-item {
-    background-color: white;
-    border-radius: 8px;
-    padding: 1rem 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-
-.reserva-status.pendiente { color: #ffc107; }
-.reserva-status.aceptada { color: #28a745; }
-.reserva-status.rechazada { color: #dc3545; }
-
+    .cancha-stat-label {
+        color: #6c757d;
+    }
 </style>
 
 @code {
@@ -325,7 +214,6 @@
     private List<ReservaDto> _reservas = new();
     private Dictionary<int, int> _reservasPorCancha = new();
     private Dictionary<int, int> _ocupacionPorCancha = new();
-    private List<Dictionary<string, object>> _transacciones = new();
     
     protected override async Task OnInitializedAsync()
     {
@@ -347,9 +235,6 @@
             
             // Calcular métricas
             CalcularMetricas();
-            
-            // Generar transacciones a partir de reservas
-            GenerarTransacciones();
         }
         catch (Exception ex)
         {
@@ -403,46 +288,5 @@
             _ocupacionPorCancha[cancha.Id] = Math.Min(ocupacion, 100);
         }
     }
-    
-    private void GenerarTransacciones()
-    {
-        _transacciones.Clear();
-        
-        // Generar transacciones a partir de reservas confirmadas
-        foreach (var reserva in _reservas.Where(r => r.Estado?.ToLower() == "confirmada" || r.Estado?.ToLower() == "completada").OrderByDescending(r => r.FechaInicio).Take(5))
-        {
-            _transacciones.Add(new Dictionary<string, object>
-            {
-                { "fecha", reserva.FechaInicio?.ToString("dd MMM, yyyy", new System.Globalization.CultureInfo("es-ES")) ?? "N/A" },
-                { "concepto", $"Reserva Cancha #{reserva.CanchaId}" },
-                { "monto", $"+${(reserva.PrecioTotal ?? 0):F2}" },
-                { "estado", "Completada" }
-            });
-        }
-        
-        // Si no hay suficientes transacciones, agregar datos de ejemplo
-        if (_transacciones.Count == 0)
-        {
-            _transacciones.Add(new Dictionary<string, object>
-            {
-                { "fecha", DateTime.Now.ToString("dd MMM, yyyy", new System.Globalization.CultureInfo("es-ES")) },
-                { "concepto", "Sin transacciones" },
-                { "monto", "$0.00" },
-                { "estado", "Pendiente" }
-            });
-        }
-    }
-    
-    private async Task AprobarReserva(int reservaId)
-    {
-        try
-        {
-            await ReservasService.ProcessReservaAsync(reservaId);
-            await CargarDatos();
-        }
-        catch (Exception ex)
-        {
-            _mensajeError = $"Error al aprobar reserva: {ex.Message}";
-        }
-    }
 }
+

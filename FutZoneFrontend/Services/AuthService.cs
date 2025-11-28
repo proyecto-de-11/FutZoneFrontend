@@ -48,9 +48,8 @@ namespace FutZoneFrontend.Services
 
         public AuthService(HttpClient httpClient, Blazored.LocalStorage.ILocalStorageService localStorage)
         {
-            _httpClient = httpClientFactory.CreateClient("Auth");
+            _httpClient = httpClient;
             _localStorage = localStorage;
-
         }
 
         // ===================================
@@ -113,8 +112,7 @@ namespace FutZoneFrontend.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                    if (loginResponse != null && !string.IsNullOrEmpty(loginResponse.Token))
+                    try
                     {
                         var loginResponse = JsonSerializer.Deserialize<LoginResponse>(responseContent,
                             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -128,8 +126,6 @@ namespace FutZoneFrontend.Services
                             if (!tokenValid)
                             {
                                 Console.WriteLine($"⚠ ADVERTENCIA - Token no válido según el servidor, pero continuando con login local");
-                                // Comentamos la siguiente línea para permitir login aunque la verificación falle
-                                // return new LoginResponse { Success = false, Message = "El token no es válido. Por favor intenta de nuevo." };
                             }
 
                             // *** USAMOS LA NUEVA SOBRECARGA CON ID Y ROL ***
@@ -157,7 +153,6 @@ namespace FutZoneFrontend.Services
                             Message = $"Error procesando respuesta: {ex.Message}"
                         };
                     }
-                    return new LoginResponse { Success = false, Message = "No se recibió token" };
                 }
                 else
                 {
