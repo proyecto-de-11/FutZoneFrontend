@@ -17,10 +17,14 @@ namespace FutZoneFrontend.Services
     public class PropietarioService : IPropietarioService
     {
         private readonly HttpClient _httpClient;
+        private readonly ITipoDeporteService _tipoDeporteService;
+        private readonly IMembresiaService _membresiaService;
 
-        public PropietarioService(HttpClient httpClient)
+        public PropietarioService(HttpClient httpClient, ITipoDeporteService tipoDeporteService, IMembresiaService membresiaService)
         {
             _httpClient = httpClient;
+            _tipoDeporteService = tipoDeporteService;
+            _membresiaService = membresiaService;
         }
 
         public async Task<PerfilResponse> GetPerfilAsync(int id)
@@ -141,25 +145,13 @@ namespace FutZoneFrontend.Services
             try
             {
                 Console.WriteLine("Obteniendo tipos de deporte");
-                var response = await _httpClient.GetAsync("/api/tiposdeporte/lista");
-                var content = await response.Content.ReadAsStringAsync();
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var deportes = JsonSerializer.Deserialize<List<TipoDeporte>>(content, 
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
-                    
-                    return new TipoDeporteResponse 
-                    { 
-                        Success = true, 
-                        Data = deportes 
-                    };
-                }
-
+                var deportes = await _tipoDeporteService.GetAllTiposDeporteAsync();
+                
                 return new TipoDeporteResponse 
                 { 
-                    Success = false, 
-                    Message = "Error al obtener tipos de deporte" 
+                    Success = deportes.Count > 0, 
+                    Data = deportes,
+                    Message = deportes.Count > 0 ? "Tipos de deporte obtenidos" : "No hay tipos de deporte disponibles"
                 };
             }
             catch (Exception ex)
@@ -168,7 +160,7 @@ namespace FutZoneFrontend.Services
                 return new TipoDeporteResponse 
                 { 
                     Success = false, 
-                    Message = ex.Message 
+                    Message = $"Error al obtener tipos de deporte: {ex.Message}" 
                 };
             }
         }
@@ -178,25 +170,13 @@ namespace FutZoneFrontend.Services
             try
             {
                 Console.WriteLine("Obteniendo membresías");
-                var response = await _httpClient.GetAsync("/api/membresias/lista");
-                var content = await response.Content.ReadAsStringAsync();
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var membresias = JsonSerializer.Deserialize<List<Membresia>>(content, 
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
-                    
-                    return new MembresiaResponse 
-                    { 
-                        Success = true, 
-                        Data = membresias 
-                    };
-                }
-
+                var membresias = await _membresiaService.GetAllMembresiasAsync();
+                
                 return new MembresiaResponse 
                 { 
-                    Success = false, 
-                    Message = "Error al obtener membresías" 
+                    Success = membresias.Count > 0, 
+                    Data = membresias,
+                    Message = membresias.Count > 0 ? "Membresías obtenidas" : "No hay membresías disponibles"
                 };
             }
             catch (Exception ex)
@@ -205,7 +185,7 @@ namespace FutZoneFrontend.Services
                 return new MembresiaResponse 
                 { 
                     Success = false, 
-                    Message = ex.Message 
+                    Message = $"Error al obtener membresías: {ex.Message}" 
                 };
             }
         }

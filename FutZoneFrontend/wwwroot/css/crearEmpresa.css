@@ -1,0 +1,96 @@
+/* Colores clave de FutZone */
+:root {
+    --color-principal-oscuro: #319B86; /* Verde Teal Oscuro */
+    --color-principal-claro: #40c9ae;  /* Verde Teal Medio/Botón */
+    --color-fondo-tarjeta: #FFFFFF;
+    --color-texto-oscuro: #333333;
+    --color-texto-claro: #FFFFFF;
+}
+
+/* Estilo del Contenedor Principal */
+.form-container {
+    max-width: 600px;
+    margin: 40px auto;
+    background-color: var(--color-fondo-tarjeta);
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* Estilo del Header (Barra Verde Superior) */
+.header-futzone {
+    background-color: var(--color-principal-oscuro);
+    color: var(--color-texto-claro);
+    padding: 20px;
+}
+
+.header-futzone h2 {
+    margin: 0;
+    font-weight: 600;
+}
+
+/* Estilos de los Grupos de Formulario */
+form {
+    padding: 30px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group-inline {
+    display: flex;
+    gap: 20px;
+}
+
+.form-group-inline .form-group {
+    flex: 1;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--color-texto-oscuro);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="url"],
+textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-sizing: border-box; /* Incluye padding y borde en el ancho total */
+    transition: border-color 0.3s;
+}
+
+input:focus,
+textarea:focus {
+    border-color: var(--color-principal-claro); /* Borde verde al enfocar */
+    outline: none;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Estilo del Botón Principal */
+.btn-primary-futzone {
+    background-color: var(--color-principal-claro);
+    color: var(--color-texto-claro);
+    border: none;
+    padding: 12px 25px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+    width: 100%;
+}
+
+.btn-primary-futzone:hover {
+    background-color: #37b79c; /* Un poco más oscuro en hover */
+}

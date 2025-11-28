@@ -1,5 +1,10 @@
 @page "/reservas-canchas"
 @using System.Collections.Generic
+@using FutZoneFrontend.Services
+@using FutZoneFrontend.Services.Models
+@inject ICanchasService CanchasService
+@inject IReservasService ReservasService
+@inject IAuthService AuthService
 
 <style>
     body { background: linear-gradient(120deg,#186c4a 80%,#f7f6ec); }
@@ -22,15 +27,47 @@
     <small>Agenda tu partido fácilmente</small>
   </div>
 
-  <div class="card card-reserva shadow mb-3">
+  <!-- Alerta de Error -->
+  @if (!string.IsNullOrEmpty(ErrorMessage))
+  {
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <strong>Error:</strong> @ErrorMessage
+      <button type="button" class="btn-close" @onclick="() => ErrorMessage = null"></button>
+    </div>
+  }
+
+  <!-- Estado de Cargando -->
+  @if (IsLoading)
+  {
+    <div class="alert alert-info" role="alert">
+      <div class="spinner-border spinner-border-sm" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <strong>Cargando canchas disponibles...</strong>
+    </div>
+  }
+
+  <!-- Alerta de Éxito -->
+  @if (!string.IsNullOrEmpty(SuccessMessage))
+  {
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <i class="bi bi-check-circle-fill"></i>
+      <strong>Éxito:</strong> @SuccessMessage
+      <button type="button" class="btn-close" @onclick="() => SuccessMessage = null"></button>
+    </div>
+  }
+
+    <div class="card card-reserva shadow mb-3">
     <div class="card-header bg-dark text-white">
       <i class="bi bi-check-circle"></i> Reserva tu cancha
     </div>
     <div class="card-body">
       <form @onsubmit="HandleReserva">
+        <!-- Cancha -->
         <div class="row mb-3">
-          <div class="col-lg-6 mb-2">
-            <label class="form-label">Cancha</label>
+          <div class="col-lg-8 mb-2">
+            <label class="form-label">Cancha *</label>
             <select class="form-select" @bind="SelectedCancha" required>
               <option value="">-- Selecciona una cancha --</option>
               @foreach (var cancha in Canchas)
@@ -39,22 +76,55 @@
               }
             </select>
           </div>
+        </div>
+
+        <!-- Fecha y horas - Usando datetime-local para simplicidad -->
+        <div class="row mb-3">
           <div class="col-lg-6 mb-2">
-            <label class="form-label">Fecha y hora</label>
-            <input type="datetime-local" class="form-control" @bind="FechaHoraObj" required>
+            <label class="form-label">Fecha y hora inicio *</label>
+            <input type="datetime-local" class="form-control" @bind="FechaHoraInicio" required>
+          </div>
+          <div class="col-lg-6 mb-2">
+            <label class="form-label">Duración (horas) *</label>
+            <input type="number" class="form-control" @bind="DuracionHoras" step="0.5" min="0.5" required>
           </div>
         </div>
-        <button type="submit" class="btn btn-success">
-          <i class="bi bi-calendar-plus"></i> Reservar ahora
+
+        <!-- Monto -->
+        <div class="row mb-3">
+          <div class="col-lg-6 mb-2">
+            <label class="form-label">Monto total ($) *</label>
+            <input type="number" class="form-control" @bind="MontoTotal" step="0.01" min="0" required>
+          </div>
+          <div class="col-lg-6 mb-2">
+            <label class="form-label">Equipo (opcional)</label>
+            <input type="number" class="form-control" @bind.after="EquipoId" placeholder="ID del equipo">
+          </div>
+        </div>
+
+        <!-- Mensaje -->
+        <div class="mb-3">
+          <label class="form-label">Mensaje de solicitud (opcional)</label>
+          <textarea class="form-control" @bind="MensajeSolicitud" rows="3" placeholder="Ej: Necesitamos esta cancha para nuestro partido de la liga."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-success" disabled="@IsSubmitting">
+          @if (IsSubmitting)
+          {
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            <span>Reservando...</span>
+          }
+          else
+          {
+            <i class="bi bi-calendar-plus"></i> <span>Reservar ahora</span>
+          }
         </button>
       </form>
     </div>
     <div class="card-footer text-muted">
       <i class="bi bi-info-circle"></i> Recuerda llegar 10 minutos antes de tu hora reservada.
     </div>
-  </div>
-
-  <!-- Histórico / próximas reservas -->
+  </div>  <!-- Histórico / próximas reservas -->
   <div class="card shadow">
     <div class="card-header bg-info text-dark">
       <i class="bi bi-clock-history"></i> Próximas reservas
@@ -101,51 +171,149 @@
     private List<ReservaModel> ProximasReservas = new();
 
     private string SelectedCancha = "";
-    private DateTime? FechaHoraObj = null;
+    private int? EquipoId;
+    private DateTime? FechaHoraInicio;
+    private decimal DuracionHoras = 1;
+    private decimal MontoTotal = 50;
+    private string MensajeSolicitud = string.Empty;
+    
+    private bool IsLoading = true;
+    private bool IsSubmitting = false;
+    private string ErrorMessage = string.Empty;
+    private string SuccessMessage = string.Empty;
+    private int UsuarioSolicitanteId = 0;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        // Inicializar canchas disponibles
-        Canchas = new List<CanchaModel>
+        try
         {
-            new CanchaModel { Id = 1, Nombre = "Cancha 1", Tipo = "Sintética" },
-            new CanchaModel { Id = 2, Nombre = "Cancha 2", Tipo = "Pasto natural" },
-            new CanchaModel { Id = 3, Nombre = "Cancha 3", Tipo = "Sintética" }
-        };
+            IsLoading = true;
+            // Obtener ID del usuario autenticado
+            UsuarioSolicitanteId = await AuthService.GetUserIdAsync() ?? 0;
+            await CargarCanchas();
+            await CargarProximasReservas();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error al cargar: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
 
-        // Inicializar próximas reservas de ejemplo
-        ProximasReservas = new List<ReservaModel>
+    private async Task CargarCanchas()
+    {
+        try
         {
-            new ReservaModel { Id = 1, NombreCancha = "Cancha 1", Fecha = "18/11", Hora = "19:00", Estado = "Confirmada" },
-            new ReservaModel { Id = 2, NombreCancha = "Cancha 2", Fecha = "20/11", Hora = "21:00", Estado = "Pendiente" }
-        };
+            var canchasResult = await CanchasService.GetAllCanchasAsync();
+            if (canchasResult != null && canchasResult.Count > 0)
+            {
+                Canchas = canchasResult
+                    .Select(c => new CanchaModel
+                    {
+                        Id = c.Id,
+                        Nombre = c.Nombre,
+                        Tipo = c.TipoSuperficie ?? "Desconocido"
+                    })
+                    .ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error cargando canchas: {ex.Message}";
+        }
+    }
+
+    private async Task CargarProximasReservas()
+    {
+        try
+        {
+            var reservasResult = await ReservasService.GetAllReservasAsync();
+            if (reservasResult != null && reservasResult.Count > 0)
+            {
+                ProximasReservas = reservasResult
+                    .Where(r => r.FechaReserva.HasValue && r.FechaReserva > DateTime.Now)
+                    .OrderBy(r => r.FechaReserva)
+                    .Take(10)
+                    .Select(r => new ReservaModel
+                    {
+                        Id = r.Id,
+                        NombreCancha = $"Cancha {r.CanchaId}",
+                        Fecha = r.FechaReserva?.ToString("dd/MM") ?? "N/A",
+                        Hora = r.HoraInicio ?? "N/A",
+                        Estado = r.Estado ?? "Pendiente"
+                    })
+                    .ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error cargando reservas: {ex.Message}";
+        }
     }
 
     private async Task HandleReserva()
     {
-        if (!string.IsNullOrEmpty(SelectedCancha) && FechaHoraObj.HasValue)
+        if (string.IsNullOrEmpty(SelectedCancha) || !FechaHoraInicio.HasValue)
         {
-            var cancha = Canchas.FirstOrDefault(c => c.Id.ToString() == SelectedCancha);
-            if (cancha != null)
-            {
-                var fechaObj = FechaHoraObj.Value;
-                ProximasReservas.Add(new ReservaModel
-                {
-                    Id = ProximasReservas.Count + 1,
-                    NombreCancha = cancha.Nombre,
-                    Fecha = fechaObj.ToString("dd/MM"),
-                    Hora = fechaObj.ToString("HH:mm"),
-                    Estado = "Pendiente"
-                });
-
-                // Limpiar formulario
-                SelectedCancha = "";
-                FechaHoraObj = null;
-
-                StateHasChanged();
-            }
+            ErrorMessage = "Por favor, completa los campos obligatorios (cancha, fecha y hora)";
+            return;
         }
 
-        await Task.CompletedTask;
+        try
+        {
+            IsSubmitting = true;
+            ErrorMessage = string.Empty;
+            SuccessMessage = string.Empty;
+
+            var fechaHora = FechaHoraInicio.Value;
+            var horaFin = fechaHora.AddHours((double)DuracionHoras);
+
+            var reserva = new CreateReservaDto
+            {
+                CanchaId = int.Parse(SelectedCancha),
+                EquipoId = EquipoId,
+                UsuarioSolicitanteId = UsuarioSolicitanteId,
+                FechaReserva = fechaHora.ToString("yyyy-MM-dd"),
+                HoraInicio = fechaHora.ToString("HH:mm:ss"),
+                HoraFin = horaFin.ToString("HH:mm:ss"),
+                DuracionHoras = DuracionHoras,
+                MontoTotal = MontoTotal,
+                MensajeSolicitud = MensajeSolicitud
+            };
+
+            Console.WriteLine($"[ReservasCanchas] Enviando reserva: Cancha={reserva.CanchaId}, Usuario={reserva.UsuarioSolicitanteId}, Fecha={reserva.FechaReserva}, HoraInicio={reserva.HoraInicio}, Duracion={reserva.DuracionHoras}");
+
+            var resultado = await ReservasService.CreateReservaAsync(reserva);
+            if (resultado != null)
+            {
+                SuccessMessage = "¡Reserva creada exitosamente! Espera la confirmación del propietario.";
+                // Limpiar formulario
+                SelectedCancha = "";
+                EquipoId = null;
+                FechaHoraInicio = null;
+                DuracionHoras = 1;
+                MontoTotal = 50;
+                MensajeSolicitud = string.Empty;
+                await CargarProximasReservas();
+                StateHasChanged();
+            }
+            else
+            {
+                ErrorMessage = "Error al crear la reserva. Intenta nuevamente.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ReservasCanchas] Error: {ex.Message}");
+            Console.WriteLine($"[ReservasCanchas] Stack: {ex.StackTrace}");
+            ErrorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            IsSubmitting = false;
+        }
     }
 }

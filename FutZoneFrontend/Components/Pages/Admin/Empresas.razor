@@ -1,5 +1,9 @@
 @page "/admin/empresas"
 @using System.Collections.Generic
+@using System.Net.Http
+@using FutZoneFrontend.Services
+@using FutZoneFrontend.DTOs
+@inject IJSRuntime JSRuntime
 
 <PageTitle>Gestión de Empresas - FutZone</PageTitle>
 
@@ -13,7 +17,7 @@
                     <small>Administra todas las empresas asociadas a FutZone</small>
                 </div>
                 <div class="col-auto">
-                    <button class="btn btn-light me-2" onclick="alert('Función disponible pronto')">
+                    <button class="btn btn-light me-2" @onclick="AbrirModalCrearEmpresa">
                         <i class="bi bi-plus-circle"></i> Nueva Empresa
                     </button>
                 </div>
@@ -25,303 +29,357 @@
     <div class="empresas-content">
         <div class="container-fluid">
 
+            <!-- Estados de Carga -->
+            @if (_cargando)
+            {
+                <div class="alert alert-info d-flex align-items-center" role="alert">
+                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <span>Cargando empresas...</span>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(_mensajeError))
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i> <strong>Error:</strong> @_mensajeError
+                    <button type="button" class="btn-close" @onclick="() => _mensajeError = null"></button>
+                </div>
+            }
+
             <!-- Stats Cards -->
             <div class="row mb-4">
-                <div class="col-md-3 mb-3">
+                <div class="col-md-4 mb-3">
                     <div class="stat-card">
                         <div class="stat-icon">📊</div>
                         <div class="stat-body">
                             <h6>Total Empresas</h6>
-                            <h3>28</h3>
-                            <small class="stat-trend">↑ 3 nuevas este mes</small>
+                            <h3>@_empresas.Count()</h3>
+                            <small class="stat-trend">Registradas en el sistema</small>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-3 mb-3">
+                <div class="col-md-4 mb-3">
                     <div class="stat-card">
                         <div class="stat-icon">✅</div>
                         <div class="stat-body">
                             <h6>Activas</h6>
-                            <h3>25</h3>
-                            <small class="stat-trend">89% del total</small>
+                            <h3>@_empresasActivas</h3>
+                            <small class="stat-trend">Operando actualmente</small>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-md-3 mb-3">
-                    <div class="stat-card">
-                        <div class="stat-icon">⏸️</div>
-                        <div class="stat-body">
-                            <h6>Suspendidas</h6>
-                            <h3>3</h3>
-                            <small class="stat-trend">Por revisar</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-md-3 mb-3">
+                <div class="col-md-4 mb-3">
                     <div class="stat-card">
                         <div class="stat-icon">🎟️</div>
                         <div class="stat-body">
-                            <h6>Total Canchas</h6>
-                            <h3>87</h3>
-                            <small class="stat-trend">3.1 por empresa</small>
+                            <h6>Total Registros</h6>
+                            <h3>@_empresas.Count()</h3>
+                            <small class="stat-trend">Empresas cargadas desde API</small>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Empresas Grid -->
-            <div class="empresas-grid">
-                <!-- Empresa 1 -->
-                <div class="empresa-card">
-                    <div class="empresa-header">
-                        <div class="empresa-logo">FC</div>
-                        <div class="empresa-info-top">
-                            <h4 class="empresa-nombre">FutCenter Pro</h4>
-                            <span class="empresa-status active">Activa</span>
-                        </div>
-                    </div>
-
-                    <div class="empresa-body">
-                        <div class="empresa-detail">
-                            <span class="detail-label">RUC:</span>
-                            <span class="detail-value">20456789012</span>
-                        </div>
-
-                        <div class="empresa-detail">
-                            <span class="detail-label">Dirección:</span>
-                            <span class="detail-value">Av. Principal 456, Lima</span>
-                        </div>
-
-                        <div class="empresa-detail">
-                            <span class="detail-label">Teléfono:</span>
-                            <span class="detail-value">+51 987 654 321</span>
-                        </div>
-
-                        <div class="empresa-detail">
-                            <span class="detail-label">Email:</span>
-                            <span class="detail-value">info@futcenter.pe</span>
-                        </div>
-
-                        <div class="empresa-metrics">
-                            <div class="metric">
-                                <span class="metric-value">8</span>
-                                <span class="metric-label">Canchas</span>
+            @if (!_cargando && _empresas.Count > 0)
+            {
+                <div class="empresas-grid">
+                    @foreach (var empresa in _empresas)
+                    {
+                        <div class="empresa-card">
+                            <div class="empresa-header">
+                                <div class="empresa-logo">@empresa.Nombre.Substring(0, 1)</div>
+                                <div class="empresa-info-top">
+                                    <h4 class="empresa-nombre">@empresa.Nombre</h4>
+                                    <span class="empresa-status active">
+                                        @empresa.Tipo
+                                    </span>
+                                </div>
                             </div>
-                            <div class="metric">
-                                <span class="metric-value">342</span>
-                                <span class="metric-label">Reservas</span>
-                            </div>
-                            <div class="metric">
-                                <span class="metric-value">S/8,450</span>
-                                <span class="metric-label">Ingresos</span>
-                            </div>
-                        </div>
 
-                        <div class="empresa-actions">
-                            <button class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-eye"></i> Ver
-                            </button>
-                            <button class="btn btn-sm btn-outline-warning">
-                                <i class="bi bi-pencil"></i> Editar
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger">
-                                <i class="bi bi-trash"></i> Eliminar
-                            </button>
+                            <div class="empresa-body">
+                                <div class="empresa-detail">
+                                    <span class="detail-label">Tipo:</span>
+                                    <span class="detail-value">@empresa.Tipo</span>
+                                </div>
+
+                                <div class="empresa-detail">
+                                    <span class="detail-label">Ubicación:</span>
+                                    <span class="detail-value">@(empresa.Ubicacion ?? "No especificada")</span>
+                                </div>
+
+                                <div class="empresa-detail">
+                                    <span class="detail-label">Contactos:</span>
+                                    <span class="detail-value">@(empresa.contactos ?? "No especificado")</span>
+                                </div>
+
+                                <div class="empresa-detail">
+                                    <span class="detail-label">Correo:</span>
+                                    <span class="detail-value">@(empresa.Correo ?? "No especificado")</span>
+                                </div>
+
+                                <div class="empresa-actions">
+                                    <button class="btn btn-sm btn-outline-warning" @onclick="() => AbrirModalEditar(empresa)">
+                                        <i class="bi bi-pencil"></i> Editar
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarEmpresa(empresa.ID)">
+                                        <i class="bi bi-trash"></i> Eliminar
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    }
                 </div>
-
-                <!-- Empresa 2 -->
-                <div class="empresa-card">
-                    <div class="empresa-header">
-                        <div class="empresa-logo">SF</div>
-                        <div class="empresa-info-top">
-                            <h4 class="empresa-nombre">Sports Fields</h4>
-                            <span class="empresa-status active">Activa</span>
-                        </div>
-                    </div>
-
-                    <div class="empresa-body">
-                        <div class="empresa-detail">
-                            <span class="detail-label">RUC:</span>
-                            <span class="detail-value">20567890123</span>
-                        </div>
-
-                        <div class="empresa-detail">
-                            <span class="detail-label">Dirección:</span>
-                            <span class="detail-value">Jr. Comercio 789, Lima</span>
-                        </div>
-
-                        <div class="empresa-detail">
-                            <span class="detail-label">Teléfono:</span>
-                            <span class="detail-value">+51 987 123 456</span>
-                        </div>
-
-                        <div class="empresa-detail">
-                            <span class="detail-label">Email:</span>
-                            <span class="detail-value">contact@sportsfields.pe</span>
-                        </div>
-
-                        <div class="empresa-metrics">
-                            <div class="metric">
-                                <span class="metric-value">5</span>
-                                <span class="metric-label">Canchas</span>
-                            </div>
-                            <div class="metric">
-                                <span class="metric-value">218</span>
-                                <span class="metric-label">Reservas</span>
-                            </div>
-                            <div class="metric">
-                                <span class="metric-value">S/5,200</span>
-                                <span class="metric-label">Ingresos</span>
-                            </div>
-                        </div>
-
-                        <div class="empresa-actions">
-                            <button class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-eye"></i> Ver
-                            </button>
-                            <button class="btn btn-sm btn-outline-warning">
-                                <i class="bi bi-pencil"></i> Editar
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger">
-                                <i class="bi bi-trash"></i> Eliminar
-                            </button>
-                        </div>
-                    </div>
+            }
+            else if (!_cargando && _empresas.Count == 0)
+            {
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-info-circle"></i> No hay empresas registradas en el sistema.
                 </div>
-
-                <!-- Empresa 3 -->
-                <div class="empresa-card">
-                    <div class="empresa-header">
-                        <div class="empresa-logo">PC</div>
-                        <div class="empresa-info-top">
-                            <h4 class="empresa-nombre">Play Complex</h4>
-                            <span class="empresa-status suspended">Suspendida</span>
-                        </div>
-                    </div>
-
-                    <div class="empresa-body">
-                        <div class="empresa-detail">
-                            <span class="detail-label">RUC:</span>
-                            <span class="detail-value">20678901234</span>
-                        </div>
-
-                        <div class="empresa-detail">
-                            <span class="detail-label">Dirección:</span>
-                            <span class="detail-value">Av. Universitaria 321, Lima</span>
-                        </div>
-
-                        <div class="empresa-detail">
-                            <span class="detail-label">Teléfono:</span>
-                            <span class="detail-value">+51 987 456 789</span>
-                        </div>
-
-                        <div class="empresa-detail">
-                            <span class="detail-label">Email:</span>
-                            <span class="detail-value">admin@playcomplex.pe</span>
-                        </div>
-
-                        <div class="empresa-metrics">
-                            <div class="metric">
-                                <span class="metric-value">6</span>
-                                <span class="metric-label">Canchas</span>
-                            </div>
-                            <div class="metric">
-                                <span class="metric-value">156</span>
-                                <span class="metric-label">Reservas</span>
-                            </div>
-                            <div class="metric">
-                                <span class="metric-value">S/3,900</span>
-                                <span class="metric-label">Ingresos</span>
-                            </div>
-                        </div>
-
-                        <div class="empresa-actions">
-                            <button class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-eye"></i> Ver
-                            </button>
-                            <button class="btn btn-sm btn-outline-warning">
-                                <i class="bi bi-pencil"></i> Editar
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger">
-                                <i class="bi bi-trash"></i> Eliminar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Empresa 4 -->
-                <div class="empresa-card">
-                    <div class="empresa-header">
-                        <div class="empresa-logo">AF</div>
-                        <div class="empresa-info-top">
-                            <h4 class="empresa-nombre">Arena Futsal</h4>
-                            <span class="empresa-status active">Activa</span>
-                        </div>
-                    </div>
-
-                    <div class="empresa-body">
-                        <div class="empresa-detail">
-                            <span class="detail-label">RUC:</span>
-                            <span class="detail-value">20789012345</span>
-                        </div>
-
-                        <div class="empresa-detail">
-                            <span class="detail-label">Dirección:</span>
-                            <span class="detail-value">Jr. Junín 654, Lima</span>
-                        </div>
-
-                        <div class="empresa-detail">
-                            <span class="detail-label">Teléfono:</span>
-                            <span class="detail-value">+51 987 321 654</span>
-                        </div>
-
-                        <div class="empresa-detail">
-                            <span class="detail-label">Email:</span>
-                            <span class="detail-value">ventas@arenafutsal.pe</span>
-                        </div>
-
-                        <div class="empresa-metrics">
-                            <div class="metric">
-                                <span class="metric-value">4</span>
-                                <span class="metric-label">Canchas</span>
-                            </div>
-                            <div class="metric">
-                                <span class="metric-value">289</span>
-                                <span class="metric-label">Reservas</span>
-                            </div>
-                            <div class="metric">
-                                <span class="metric-value">S/6,800</span>
-                                <span class="metric-label">Ingresos</span>
-                            </div>
-                        </div>
-
-                        <div class="empresa-actions">
-                            <button class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-eye"></i> Ver
-                            </button>
-                            <button class="btn btn-sm btn-outline-warning">
-                                <i class="bi bi-pencil"></i> Editar
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger">
-                                <i class="bi bi-trash"></i> Eliminar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            }
 
         </div>
     </div>
 </div>
 
+<!-- Modal Crear/Editar Empresa -->
+<div class="modal @(_mostrarModalEmpresa ? "show d-block" : "")" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-building"></i>
+                    @(_editandoEmpresa != null ? "Editar Empresa" : "Crear Nueva Empresa")
+                </h5>
+                <button type="button" class="btn-close btn-close-white" @onclick="CerrarModalEmpresa"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <!-- Nombre -->
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label fw-bold">Nombre de la Empresa</label>
+                        <input type="text" class="form-control" id="nombre" 
+                               placeholder="Ej. Cancha Central" 
+                               @bind="_formEmpresa.Nombre">
+                    </div>
+
+                    <!-- Tipo -->
+                    <div class="mb-3">
+                        <label for="tipo" class="form-label fw-bold">Tipo</label>
+                        <input type="text" class="form-control" id="tipo" 
+                               placeholder="Ej. Deportiva, Recreativa" 
+                               @bind="_formEmpresa.Tipo">
+                    </div>
+
+                    <!-- Descripción -->
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label fw-bold">Descripción</label>
+                        <textarea class="form-control" id="descripcion" rows="3"
+                                  placeholder="Describe los servicios de la empresa..."
+                                  @bind="_formEmpresa.Descripcion"></textarea>
+                    </div>
+
+                    <div class="row">
+                        <!-- Ubicación -->
+                        <div class="col-md-6 mb-3">
+                            <label for="ubicacion" class="form-label fw-bold">Ubicación</label>
+                            <input type="text" class="form-control" id="ubicacion" 
+                                   placeholder="Ej. Calle Principal 123" 
+                                   @bind="_formEmpresa.Ubicacion">
+                        </div>
+
+                        <!-- Contactos -->
+                        <div class="col-md-6 mb-3">
+                            <label for="contactos" class="form-label fw-bold">Contactos</label>
+                            <input type="tel" class="form-control" id="contactos" 
+                                   placeholder="Ej. +503 7777-7777" 
+                                   @bind="_formEmpresa.contactos">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Correo -->
+                        <div class="col-md-6 mb-3">
+                            <label for="correo" class="form-label fw-bold">Correo</label>
+                            <input type="email" class="form-control" id="correo" 
+                                   placeholder="Ej. contacto@empresa.com" 
+                                   @bind="_formEmpresa.Correo">
+                        </div>
+
+                        <!-- Imagen URL -->
+                        <div class="col-md-6 mb-3">
+                            <label for="imagen" class="form-label fw-bold">URL de Imagen</label>
+                            <input type="url" class="form-control" id="imagen" 
+                                   placeholder="Ej. https://ejemplo.com/logo.png" 
+                                   @bind="_formEmpresa.imagen">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="CerrarModalEmpresa">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-primary" @onclick="GuardarEmpresa">
+                    <i class="bi bi-check-circle"></i> @(_editandoEmpresa != null ? "Actualizar" : "Crear") Empresa
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backdrop Modal -->
+@if (_mostrarModalEmpresa)
+{
+    <div class="modal-backdrop fade show"></div>
+}
+
 @code {
+    private List<EmpresaDto> _empresas = new();
+    private int _empresasActivas = 0;
+    private bool _cargando = true;
+    private string? _mensajeError = null;
+    private bool _mostrarModalEmpresa = false;
+    private EmpresaDto? _editandoEmpresa = null;
+    private EmpresaDto _formEmpresa = new();
+
+    [Inject] private IEmpresaService EmpresaService { get; set; } = default!;
+
     protected override async Task OnInitializedAsync()
     {
-        await Task.CompletedTask;
+        await CargarEmpresas();
+    }
+
+    private async Task CargarEmpresas()
+    {
+        try
+        {
+            _cargando = true;
+            _mensajeError = null;
+
+            _empresas = await EmpresaService.GetAllEmpresasAsync();
+
+            // Calcular estadísticas
+            _empresasActivas = _empresas.Count;
+        }
+        catch (Exception ex)
+        {
+            _mensajeError = $"Error de conexión: {ex.Message}";
+        }
+        finally
+        {
+            _cargando = false;
+        }
+    }
+
+    private void AbrirModalCrearEmpresa()
+    {
+        _editandoEmpresa = null;
+        _formEmpresa = new EmpresaDto();
+        _mostrarModalEmpresa = true;
+    }
+
+    private void AbrirModalEditar(EmpresaDto empresa)
+    {
+        _editandoEmpresa = empresa;
+        _formEmpresa = new EmpresaDto
+        {
+            ID = empresa.ID,
+            usuario_id = empresa.usuario_id,
+            Nombre = empresa.Nombre,
+            Tipo = empresa.Tipo,
+            Descripcion = empresa.Descripcion,
+            Ubicacion = empresa.Ubicacion,
+            contactos = empresa.contactos,
+            Correo = empresa.Correo,
+            imagen = empresa.imagen
+        };
+        _mostrarModalEmpresa = true;
+    }
+
+    private void CerrarModalEmpresa()
+    {
+        _mostrarModalEmpresa = false;
+        _editandoEmpresa = null;
+        _formEmpresa = new();
+    }
+
+    private async Task GuardarEmpresa()
+    {
+        if (string.IsNullOrWhiteSpace(_formEmpresa.Nombre) || string.IsNullOrWhiteSpace(_formEmpresa.Tipo))
+        {
+            _mensajeError = "El nombre y tipo de la empresa son requeridos";
+            return;
+        }
+
+        try
+        {
+            bool resultado;
+            
+            if (_editandoEmpresa != null)
+            {
+                // Actualizar empresa existente
+                resultado = await EmpresaService.UpdateEmpresaAsync(_editandoEmpresa.ID, _formEmpresa);
+                
+                if (resultado)
+                {
+                    await CargarEmpresas();
+                    CerrarModalEmpresa();
+                }
+                else
+                {
+                    _mensajeError = "Error al actualizar la empresa";
+                }
+            }
+            else
+            {
+                // Crear nueva empresa
+                resultado = await EmpresaService.CreateEmpresaAsync(_formEmpresa);
+                
+                if (resultado)
+                {
+                    await CargarEmpresas();
+                    CerrarModalEmpresa();
+                }
+                else
+                {
+                    _mensajeError = "Error al crear la empresa";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _mensajeError = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task EliminarEmpresa(int id)
+    {
+        if (!await JSRuntime.InvokeAsync<bool>("confirm", "¿Estás seguro de que deseas eliminar esta empresa?"))
+        {
+            return;
+        }
+
+        try
+        {
+            var resultado = await EmpresaService.DeleteEmpresaAsync(id);
+            
+            if (resultado)
+            {
+                await CargarEmpresas();
+            }
+            else
+            {
+                _mensajeError = "Error al eliminar la empresa";
+            }
+        }
+        catch (Exception ex)
+        {
+            _mensajeError = $"Error: {ex.Message}";
+        }
     }
 }

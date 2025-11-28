@@ -2,6 +2,9 @@ using FutZoneFrontend.Components;
 using FutZoneFrontend.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Server;
+using Microsoft.Extensions.Configuration;
+using System.Net.Http; // Necesario para IHttpClientFactory
+using Blazored.LocalStorage; 
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,31 +18,96 @@ builder.Services.AddAuthorizationCore();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddScoped<AuthenticationStateProvider, ServerAuthenticationStateProvider>();
 
+// Add Blazored LocalStorage
+builder.Services.AddBlazoredLocalStorage();
+
 // Add HttpClient and Auth Service
-builder.Services.AddHttpClient("Auth", client =>
+var apiBaseUrl = builder.Configuration["ApiBaseUrl"];
+if (string.IsNullOrEmpty(apiBaseUrl))
 {
-    client.BaseAddress = new Uri(builder.Configuration["ApiUrls:Auth"]!);
+    throw new InvalidOperationException("ApiBaseUrl configuration is missing. Please ensure appsettings.json or appsettings.{Environment}.json contains ApiBaseUrl configuration.");
+}
+
+// Register AuthService with HttpClient factory and Blazored LocalStorage
+builder.Services.AddHttpClient<AuthService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600); // 10 minutos
 });
-builder.Services.AddHttpClient("Canchas", client =>
+builder.Services.AddScoped<IAuthService>(sp => sp.GetRequiredService<AuthService>());
+builder.Services.AddScoped<FutZoneFrontend.Services.ILocalStorageService, LocalStorageService>();
+builder.Services.AddHttpClient<IRolService, RolService>(client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["ApiUrls:Canchas"]!);
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600);
 });
-builder.Services.AddHttpClient("Publicidad", client =>
+builder.Services.AddHttpClient<ITipoDeporteService, TipoDeporteService>(client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["ApiUrls:Publicidad"]!);
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600);
+});
+builder.Services.AddHttpClient<IMembresiaService, MembresiaService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600);
+});
+builder.Services.AddHttpClient<IPropietarioService, PropietarioService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600);
+});
+builder.Services.AddHttpClient<IDashboardService, DashboardService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600);
+});
+builder.Services.AddHttpClient<ICanchasService, CanchasService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600);
 });
 
+// ReservasService usa la API de CanchasYReservas
+var canchasYReservasBaseUrl = builder.Configuration["ApiEndpoints:CanchasYReservas:BaseUrl"];
+if (string.IsNullOrEmpty(canchasYReservasBaseUrl))
+{
+    throw new InvalidOperationException("CanchasYReservas BaseUrl configuration is missing.");
+}
 
-
-builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
-builder.Services.AddScoped<IRolService, RolService>();
-builder.Services.AddScoped<ITipoDeporteService, TipoDeporteService>();
-builder.Services.AddScoped<IPropietarioService, PropietarioService>();
+builder.Services.AddHttpClient<IReservasService, ReservasService>(client =>
+{
+    client.BaseAddress = new Uri(canchasYReservasBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600);
+});
 // Services stubs for endpoints that are referenced in API inventory
-builder.Services.AddScoped<IDocumentosLegalesService, DocumentosLegalesService>();
-builder.Services.AddScoped<IPreferenciasService, PreferenciasService>();
-builder.Services.AddScoped<IAceptacionesService, AceptacionesService>();
+builder.Services.AddHttpClient<IDocumentosLegalesService, DocumentosLegalesService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600);
+});
+builder.Services.AddHttpClient<IPreferenciasService, PreferenciasService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600);
+});
+builder.Services.AddHttpClient<IAceptacionesService, AceptacionesService>(client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600);
+});
+
+// EmpresaService usa la API de EmpresaPublicidad
+var empresaApiBaseUrl = builder.Configuration["ApiEndpoints:EmpresaPublicidad:BaseUrl"];
+if (string.IsNullOrEmpty(empresaApiBaseUrl))
+{
+    throw new InvalidOperationException("EmpresaPublicidad BaseUrl configuration is missing.");
+}
+
+builder.Services.AddHttpClient<IEmpresaService, EmpresaService>(client =>
+{
+    client.BaseAddress = new Uri(empresaApiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(600);
+});
 
 var app = builder.Build();
 

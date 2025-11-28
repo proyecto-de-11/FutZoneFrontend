@@ -1,5 +1,7 @@
 @page "/admin/dashboard"
-@inject IHttpClientFactory HttpClientFactory
+@using FutZoneFrontend.Services
+@using FutZoneFrontend.Services.Models
+@inject IDashboardService DashboardService
 
 <PageTitle>Dashboard de Publicidad - FutZone</PageTitle>
 
@@ -23,6 +25,26 @@
     <!-- Contenido Principal -->
     <div class="admin-content">
         <div class="container-fluid">
+            
+            <!-- Estados de Carga -->
+            @if (_cargando)
+            {
+                <div class="alert alert-info d-flex align-items-center" role="alert">
+                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <span>Cargando datos del dashboard...</span>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(_mensajeError))
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i> <strong>Error:</strong> @_mensajeError
+                    <button type="button" class="btn-close" @onclick="() => _mensajeError = null"></button>
+                </div>
+            }
+
             <!-- Tarjetas de Resumen -->
             <div class="row mb-4">
                 <div class="col-md-6 mb-3">

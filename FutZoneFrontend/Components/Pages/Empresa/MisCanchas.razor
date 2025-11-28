@@ -1,5 +1,13 @@
 @page "/empresa/canchas"
 @rendermode InteractiveServer
+@using FutZoneFrontend.Services
+@using FutZoneFrontend.Services.Models
+@using FutZoneFrontend.DTOs
+@using Microsoft.AspNetCore.Components.Forms
+@inject ICanchasService CanchasService
+@inject IEmpresaService EmpresaService
+@inject IAuthService AuthService
+@inject ITipoDeporteService TipoDeporteService
 
 <div class="container-fluid py-4">
     <!-- Header con Gradiente -->
@@ -11,6 +19,27 @@
             <p class="text-white-50">Administra tus canchas, horarios y disponibilidad</p>
         </div>
     </div>
+
+    <!-- Alerta de Error -->
+    @if (!string.IsNullOrEmpty(_mensajeError))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <strong>Error:</strong> @_mensajeError
+            <button type="button" class="btn-close" @onclick="() => _mensajeError = null"></button>
+        </div>
+    }
+
+    <!-- Estado de Cargando -->
+    @if (_cargando)
+    {
+        <div class="alert alert-info" role="alert">
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <strong>Cargando canchas...</strong>
+        </div>
+    }
 
     <!-- Stats Cards -->
     <div class="row mb-4">
@@ -211,7 +240,44 @@
             </div>
             <div class="modal-body">
                 <form>
-                    <!-- Nombre de Cancha -->
+                    <!-- Selector de Empresa -->
+                    <div class="mb-3">
+                        <label for="empresa" class="form-label fw-bold">Empresa</label>
+                        <select class="form-select" id="empresa" @bind="_empresaSeleccionada" required>
+                            <option value="0">-- Selecciona una empresa --</option>
+                            @foreach (var empresa in _empresasDisponibles)
+                            {
+                                <option value="@empresa.ID">@empresa.Nombre</option>
+                            }
+                        </select>
+                        @if (_empresaSeleccionada <= 0)
+                        {
+                            <small class="text-danger">Debes seleccionar una empresa</small>
+                        }
+                    </div>
+
+                    <!-- Selector de Tipo de Deporte -->
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label for="tipoDeporte" class="form-label fw-bold">Tipo de Deporte</label>
+                            <button type="button" class="btn btn-sm btn-outline-primary" @onclick="AbrirModalCrearDeporte">
+                                <i class="bi bi-plus-circle"></i> Agregar Deporte
+                            </button>
+                        </div>
+                        <select class="form-select" id="tipoDeporte" @bind="_tipoDeporteSeleccionado" required>
+                            <option value="0">-- Selecciona un tipo de deporte --</option>
+                            @foreach (var deporte in _tiposDeporte)
+                            {
+                                <option value="@deporte.Id">@deporte.Nombre</option>
+                            }
+                        </select>
+                        @if (_tipoDeporteSeleccionado <= 0)
+                        {
+                            <small class="text-danger">Debes seleccionar un tipo de deporte</small>
+                        }
+                    </div>
+
+                    <!-- Nombre de la Cancha -->
                     <div class="mb-3">
                         <label for="nombre" class="form-label fw-bold">Nombre de la Cancha</label>
                         <input type="text" class="form-control" id="nombre" 
@@ -225,6 +291,24 @@
                         <input type="text" class="form-control" id="ubicacion" 
                                placeholder="Ej. Calle Principal 123" 
                                @bind="_formCancha.Ubicacion">
+                    </div>
+
+                    <div class="row">
+                        <!-- Ciudad -->
+                        <div class="col-md-6 mb-3">
+                            <label for="ciudad" class="form-label fw-bold">Ciudad</label>
+                            <input type="text" class="form-control" id="ciudad" 
+                                   placeholder="Ej. Buenos Aires" 
+                                   @bind="_formCancha.Ciudad">
+                        </div>
+
+                        <!-- País -->
+                        <div class="col-md-6 mb-3">
+                            <label for="pais" class="form-label fw-bold">País</label>
+                            <input type="text" class="form-control" id="pais" 
+                                   placeholder="Ej. Argentina" 
+                                   @bind="_formCancha.Pais">
+                        </div>
                     </div>
 
                     <div class="row">
@@ -264,12 +348,34 @@
                                    @bind="_formCancha.PrecioHora">
                         </div>
 
+                        <!-- Precio Fin de Semana -->
+                        <div class="col-md-6 mb-3">
+                            <label for="precioFinSemana" class="form-label fw-bold">Precio Fin de Semana ($)</label>
+                            <input type="number" class="form-control" id="precioFinSemana" 
+                                   placeholder="Ej. 60" 
+                                   @bind="_formCancha.PrecioHoraFinSemana">
+                        </div>
+                    </div>
+
+                    <div class="row">
                         <!-- Capacidad -->
                         <div class="col-md-6 mb-3">
                             <label for="capacidad" class="form-label fw-bold">Capacidad (Jugadores)</label>
                             <input type="number" class="form-control" id="capacidad" 
                                    placeholder="Ej. 22" 
                                    @bind="_formCancha.CapacidadJugadores">
+                        </div>
+
+                        <!-- Está Techada -->
+                        <div class="col-md-6 mb-3">
+                            <label for="techada" class="form-label fw-bold">Techada</label>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="techada" 
+                                       @bind="_formCancha.EstaTechada">
+                                <label class="form-check-label" for="techada">
+                                    La cancha está techada
+                                </label>
+                            </div>
                         </div>
                     </div>
 
@@ -288,6 +394,78 @@
                             <input type="text" class="form-control" id="cierre" 
                                    placeholder="HH:mm"
                                    @bind="_formCancha.HoraCierre">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Teléfono de Contacto -->
+                        <div class="col-md-6 mb-3">
+                            <label for="telefono" class="form-label fw-bold">Teléfono de Contacto</label>
+                            <input type="tel" class="form-control" id="telefono" 
+                                   placeholder="Ej. +54 11 23456789" 
+                                   @bind="_formCancha.TelefonoContacto">
+                        </div>
+
+                        <!-- Email de Contacto -->
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label fw-bold">Email de Contacto</label>
+                            <input type="email" class="form-control" id="email" 
+                                   placeholder="Ej. contacto@cancha.com" 
+                                   @bind="_formCancha.EmailContacto">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- Latitud -->
+                        <div class="col-md-6 mb-3">
+                            <label for="latitud" class="form-label fw-bold">Latitud</label>
+                            <input type="number" class="form-control" id="latitud" 
+                                   placeholder="-34.6037" step="0.0001"
+                                   @bind="_formCancha.CoordenadasLat">
+                        </div>
+
+                        <!-- Longitud -->
+                        <div class="col-md-6 mb-3">
+                            <label for="longitud" class="form-label fw-bold">Longitud</label>
+                            <input type="number" class="form-control" id="longitud" 
+                                   placeholder="-58.3816" step="0.0001"
+                                   @bind="_formCancha.CoordenadasLng">
+                        </div>
+                    </div>
+
+                    <!-- Servicios Adicionales -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Servicios Adicionales</label>
+                        <div class="servicios-selector">
+                            @foreach (var servicio in new[] { "Vestuarios", "Estacionamiento", "WiFi" })
+                            {
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="servicio_@servicio"
+                                           @onchange="@((ChangeEventArgs e) => CambiarServicio(servicio, (bool)e.Value!))"
+                                           checked="@(_formCancha.ServiciosAdicionales?.Contains(servicio) ?? false)">
+                                    <label class="form-check-label" for="servicio_@servicio">
+                                        @servicio
+                                    </label>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Características -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Características</label>
+                        <div class="caracteristicas-selector">
+                            @foreach (var caracteristica in new[] { "Césped Sintético", "Iluminación LED", "Techada" })
+                            {
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="caract_@caracteristica"
+                                           @onchange="@((ChangeEventArgs e) => CambiarCaracteristica(caracteristica, (bool)e.Value!))"
+                                           checked="@(_formCancha.Caracteristicas?.Contains(caracteristica) ?? false)">
+                                    <label class="form-check-label" for="caract_@caracteristica">
+                                        @caracteristica
+                                    </label>
+                                </div>
+                            }
                         </div>
                     </div>
 
@@ -331,6 +509,22 @@
                                 </div>
                             }
                         </div>
+                    </div>
+
+                    <!-- Imagen de la Cancha -->
+                    <div class="mb-3">
+                        <label for="imagen" class="form-label fw-bold">
+                            <i class="bi bi-image"></i> Imagen de la Cancha
+                        </label>
+                        <input type="file" class="form-control" id="imagen" 
+                               accept="image/*"
+                               @onchange="CargarImagen">
+                        @if (!string.IsNullOrEmpty(_imagenPreview))
+                        {
+                            <div class="mt-2">
+                                <img src="@_imagenPreview" alt="Preview" style="max-width: 200px; max-height: 200px; border-radius: 8px;">
+                            </div>
+                        }
                     </div>
 
                     <!-- Descripción -->
@@ -392,29 +586,85 @@
     </div>
 </div>
 
+<!-- Modal Crear Tipo de Deporte -->
+<div class="modal @(_mostrarModalDeporte ? "show d-block" : "")" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-gradient-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle"></i> Tipos de Deporte Disponibles
+                </h5>
+                <button type="button" class="btn-close btn-close-white" @onclick="CerrarModalDeporte"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">Nota: Si el deporte que buscas no está disponible, contacta al administrador para que lo agregue al sistema.</p>
+                
+                <div class="list-group">
+                    @foreach (var deporte in _tiposDeporte)
+                    {
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">@deporte.Nombre</h6>
+                                @if (!string.IsNullOrEmpty(deporte.Descripcion))
+                                {
+                                    <small class="text-muted">@deporte.Descripcion</small>
+                                }
+                            </div>
+                            <span class="badge bg-primary">ID: @deporte.Id</span>
+                        </div>
+                    }
+                    @if (!_tiposDeporte.Any())
+                    {
+                        <div class="alert alert-warning">
+                            No hay tipos de deporte disponibles. Por favor, contacta al administrador.
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="CerrarModalDeporte">
+                    <i class="bi bi-x-circle"></i> Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Backdrop Modal -->
-@if (_mostrarModalCancha || _mostrarConfirmEliminar)
+@if (_mostrarModalCancha || _mostrarConfirmEliminar || _mostrarModalDeporte)
 {
     <div class="modal-backdrop fade show"></div>
 }
 
 @code {
     // Clases de Datos
-    public class Cancha
+    public class CanchaViewModel
     {
         public int Id { get; set; }
         public string Nombre { get; set; } = "";
         public string Ubicacion { get; set; } = "";
         public string Dimensiones { get; set; } = "";
         public string TipoSuperficie { get; set; } = "";
+        public string Superficie { get; set; } = "";
         public decimal PrecioHora { get; set; }
+        public decimal PrecioHoraFinSemana { get; set; }
         public int CapacidadJugadores { get; set; }
         public string HoraApertura { get; set; } = "06:00";
         public string HoraCierre { get; set; } = "23:00";
         public List<string> DiasDisponibles { get; set; } = new();
         public List<HorarioDisponible> HorariosDisponibles { get; set; } = new();
         public bool Activa { get; set; } = true;
+        public string? EstaTechada { get; set; }
         public string Descripcion { get; set; } = "";
+        public decimal? CoordenadasLat { get; set; }
+        public decimal? CoordenadasLng { get; set; }
+        public List<string>? ServiciosAdicionales { get; set; } = new();
+        public List<string>? Caracteristicas { get; set; } = new();
+        public string? Imagen { get; set; }
+        public string? Ciudad { get; set; }
+        public string? Pais { get; set; }
+        public string? TelefonoContacto { get; set; }
+        public string? EmailContacto { get; set; }
     }
 
     public class HorarioDisponible
@@ -424,75 +674,121 @@
     }
 
     // Variables de Estado
-    private List<Cancha> _canchas = new();
-    private Cancha? _editandoCancha = null;
-    private Cancha _formCancha = new();
+    private List<CanchaViewModel> _canchas = new();
+    private CanchaViewModel? _editandoCancha = null;
+    private CanchaViewModel _formCancha = new();
     private bool _mostrarModalCancha = false;
     private bool _mostrarConfirmEliminar = false;
-    private Cancha? _canchaPorEliminar = null;
-    private int _reservasHoy = 3;
-    private int _horasLibres = 18;
-    private decimal _ingresosMes = 2500;
+    private CanchaViewModel? _canchaPorEliminar = null;
+    private int _reservasHoy = 0;
+    private int _horasLibres = 0;
+    private decimal _ingresosMes = 0;
+    private bool _cargando = true;
+    private string? _mensajeError = null;
+    private string? _imagenPreview = null;
+    
+    // Empresas
+    private List<EmpresaDto> _empresasDisponibles = new();
+    private int _empresaSeleccionada = 0;
+    
+    // Tipos de Deporte
+    private List<TipoDeporte> _tiposDeporte = new();
+    private int _tipoDeporteSeleccionado = 0;
+    
+    // Modal Crear Tipo de Deporte
+    private bool _mostrarModalDeporte = false;
 
-    protected override Task OnInitializedAsync()
+    protected override async Task OnInitializedAsync()
     {
-        CargarCanchas();
-        return Task.CompletedTask;
+        // Asegurar que los datos de autenticación están cargados
+        await AuthService.EnsureAuthDataLoadedAsync();
+        
+        await CargarTiposDeporte();
+        await CargarEmpresas();
+        await CargarCanchas();
     }
 
-    private void CargarCanchas()
+    private async Task CargarTiposDeporte()
     {
-        _canchas = new List<Cancha>
+        try
         {
-            new Cancha
+            Console.WriteLine("[MisCanchas] Iniciando carga de tipos de deporte...");
+            _tiposDeporte = await TipoDeporteService.GetAllTiposDeporteAsync();
+            Console.WriteLine($"[MisCanchas] Tipos de deporte cargados: {_tiposDeporte.Count}");
+            
+            foreach (var deporte in _tiposDeporte)
             {
-                Id = 1,
-                Nombre = "Cancha Principal",
-                Ubicacion = "Calle Principal 123",
-                Dimensiones = "8x44",
-                TipoSuperficie = "Pasto Sintético",
-                PrecioHora = 50,
-                CapacidadJugadores = 22,
-                HoraApertura = "06:00",
-                HoraCierre = "23:00",
-                DiasDisponibles = new List<string> { "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo" },
-                HorariosDisponibles = GenerarHorarios(),
-                Activa = true,
-                Descripcion = "Cancha profesional con iluminación LED"
-            },
-            new Cancha
-            {
-                Id = 2,
-                Nombre = "Cancha Secundaria",
-                Ubicacion = "Avenida 5 de Mayo 456",
-                Dimensiones = "6x36",
-                TipoSuperficie = "Cemento",
-                PrecioHora = 35,
-                CapacidadJugadores = 16,
-                HoraApertura = "08:00",
-                HoraCierre = "22:00",
-                DiasDisponibles = new List<string> { "Martes", "Miércoles", "Jueves", "Viernes", "Sábado" },
-                HorariosDisponibles = GenerarHorarios(new[] { "10:00", "14:00", "18:00" }),
-                Activa = true,
-                Descripcion = "Cancha deportiva estándar"
-            },
-            new Cancha
-            {
-                Id = 3,
-                Nombre = "Cancha Entrenamiento",
-                Ubicacion = "Parque Central",
-                Dimensiones = "5x25",
-                TipoSuperficie = "Pasto Natural",
-                PrecioHora = 25,
-                CapacidadJugadores = 12,
-                HoraApertura = "07:00",
-                HoraCierre = "20:00",
-                DiasDisponibles = new List<string> { "Lunes", "Miércoles", "Viernes", "Domingo" },
-                HorariosDisponibles = GenerarHorarios(new[] { "07:00", "17:00" }),
-                Activa = false,
-                Descripcion = "Cancha pequeña para entrenamientos"
+                Console.WriteLine($"  - {deporte.Nombre} (ID: {deporte.Id})");
             }
-        };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[MisCanchas] Error al cargar tipos de deporte: {ex.Message}");
+            _mensajeError = $"Error al cargar tipos de deporte: {ex.Message}";
+        }
+    }
+
+    private async Task CargarEmpresas()
+    {
+        try
+        {
+            Console.WriteLine("[MisCanchas] Iniciando carga de empresas...");
+            _empresasDisponibles = await EmpresaService.GetEmpresasDelUsuarioAsync();
+            Console.WriteLine($"[MisCanchas] Empresas cargadas: {_empresasDisponibles.Count}");
+            
+            foreach (var empresa in _empresasDisponibles)
+            {
+                Console.WriteLine($"  - {empresa.Nombre} (ID: {empresa.ID})");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[MisCanchas] Error al cargar empresas: {ex.Message}");
+            _mensajeError = $"Error al cargar empresas: {ex.Message}";
+        }
+    }
+
+    private async Task CargarCanchas()
+    {
+        try
+        {
+            _cargando = true;
+            _mensajeError = null;
+
+            Console.WriteLine("Cargando canchas desde API...");
+            var canchas = await CanchasService.GetAllCanchasAsync();
+            
+            _canchas = canchas.Select(c => new CanchaViewModel
+            {
+                Id = c.Id,
+                Nombre = c.Nombre,
+                Ubicacion = c.Ubicacion,
+                Dimensiones = c.Dimensiones,
+                TipoSuperficie = c.TipoSuperficie,
+                PrecioHora = c.PrecioHora,
+                CapacidadJugadores = c.CapacidadJugadores,
+                HoraApertura = c.HoraApertura,
+                HoraCierre = c.HoraCierre,
+                Activa = c.Activa,
+                Descripcion = c.Descripcion
+            }).ToList();
+
+            Console.WriteLine($"Canchas cargadas: {_canchas.Count}");
+
+            if (_canchas.Count == 0)
+            {
+                _mensajeError = "No hay canchas registradas. Crea una nueva cancha para comenzar.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _mensajeError = $"Error al cargar canchas: {ex.Message}";
+            Console.WriteLine($"Exception: {ex}");
+        }
+        finally
+        {
+            _cargando = false;
+        }
     }
 
     private List<HorarioDisponible> GenerarHorarios(string[]? horariosOcupados = null)
@@ -516,19 +812,22 @@
     private void AbrirModalCrearCancha()
     {
         _editandoCancha = null;
-        _formCancha = new Cancha 
+        _empresaSeleccionada = 0;
+        _tipoDeporteSeleccionado = 0;
+        _formCancha = new CanchaViewModel 
         { 
             DiasDisponibles = new List<string>(),
             HorariosDisponibles = GenerarHorarios(),
             Activa = true
         };
+        _imagenPreview = null;
         _mostrarModalCancha = true;
     }
 
-    private void AbrirModalEditar(Cancha cancha)
+    private void AbrirModalEditar(CanchaViewModel cancha)
     {
         _editandoCancha = cancha;
-        _formCancha = new Cancha
+        _formCancha = new CanchaViewModel
         {
             Id = cancha.Id,
             Nombre = cancha.Nombre,
@@ -551,53 +850,164 @@
     {
         _mostrarModalCancha = false;
         _editandoCancha = null;
+        _imagenPreview = null;
     }
 
-    private void GuardarCancha()
+    private async Task GuardarCancha()
     {
         if (string.IsNullOrWhiteSpace(_formCancha.Nombre))
         {
+            _mensajeError = "El nombre de la cancha es requerido";
             return;
         }
 
-        if (_editandoCancha != null)
+        if (_empresaSeleccionada <= 0)
         {
-            // Actualizar cancha existente
-            var index = _canchas.FindIndex(c => c.Id == _editandoCancha.Id);
-            if (index >= 0)
+            _mensajeError = "Debes seleccionar una empresa";
+            return;
+        }
+
+        if (_tipoDeporteSeleccionado <= 0)
+        {
+            _mensajeError = "Debes seleccionar un tipo de deporte";
+            return;
+        }
+
+        try
+        {
+            if (_editandoCancha != null)
             {
-                _canchas[index] = _formCancha;
+                // Actualizar cancha existente
+                var canchaSvc = new FutZoneFrontend.Services.Models.Cancha
+                {
+                    Id = _formCancha.Id,
+                    EmpresaId = _empresaSeleccionada,
+                    TipoDeporteId = _tipoDeporteSeleccionado,
+                    Nombre = _formCancha.Nombre,
+                    Ubicacion = _formCancha.Ubicacion,
+                    Dimensiones = _formCancha.Dimensiones,
+                    TipoSuperficie = _formCancha.TipoSuperficie,
+                    Superficie = _formCancha.Superficie,
+                    PrecioHora = _formCancha.PrecioHora,
+                    PrecioHoraFinSemana = _formCancha.PrecioHoraFinSemana,
+                    CapacidadJugadores = _formCancha.CapacidadJugadores,
+                    HoraApertura = _formCancha.HoraApertura,
+                    HoraCierre = _formCancha.HoraCierre,
+                    Activa = _formCancha.Activa,
+                    EstaTechada = _formCancha.EstaTechada,
+                    Descripcion = _formCancha.Descripcion,
+                    CoordenadasLat = _formCancha.CoordenadasLat,
+                    CoordenadasLng = _formCancha.CoordenadasLng,
+                    ServiciosAdicionales = _formCancha.ServiciosAdicionales,
+                    Imagen = _formCancha.Imagen,
+                    Ciudad = _formCancha.Ciudad,
+                    Pais = _formCancha.Pais,
+                    TelefonoContacto = _formCancha.TelefonoContacto,
+                    EmailContacto = _formCancha.EmailContacto,
+                    Caracteristicas = _formCancha.Caracteristicas
+                };
+                
+                var resultado = await CanchasService.UpdateCanchaAsync(_editandoCancha.Id, canchaSvc);
+                if (resultado)
+                {
+                    await CargarCanchas();
+                }
+                else
+                {
+                    _mensajeError = "Error al actualizar la cancha";
+                }
+            }
+            else
+            {
+                // Crear nueva cancha
+                var canchaSvc = new FutZoneFrontend.Services.Models.Cancha
+                {
+                    EmpresaId = _empresaSeleccionada,
+                    TipoDeporteId = _tipoDeporteSeleccionado,
+                    Nombre = _formCancha.Nombre,
+                    Ubicacion = _formCancha.Ubicacion,
+                    Dimensiones = _formCancha.Dimensiones,
+                    TipoSuperficie = _formCancha.TipoSuperficie,
+                    Superficie = _formCancha.Superficie,
+                    PrecioHora = _formCancha.PrecioHora,
+                    PrecioHoraFinSemana = _formCancha.PrecioHoraFinSemana,
+                    CapacidadJugadores = _formCancha.CapacidadJugadores,
+                    HoraApertura = _formCancha.HoraApertura,
+                    HoraCierre = _formCancha.HoraCierre,
+                    Activa = _formCancha.Activa,
+                    EstaTechada = _formCancha.EstaTechada,
+                    Descripcion = _formCancha.Descripcion,
+                    CoordenadasLat = _formCancha.CoordenadasLat,
+                    CoordenadasLng = _formCancha.CoordenadasLng,
+                    ServiciosAdicionales = _formCancha.ServiciosAdicionales,
+                    Imagen = _formCancha.Imagen,
+                    Ciudad = _formCancha.Ciudad,
+                    Pais = _formCancha.Pais,
+                    TelefonoContacto = _formCancha.TelefonoContacto,
+                    EmailContacto = _formCancha.EmailContacto,
+                    Caracteristicas = _formCancha.Caracteristicas
+                };
+                
+                var nuevaCancha = await CanchasService.CreateCanchaAsync(canchaSvc);
+                if (nuevaCancha != null)
+                {
+                    await CargarCanchas();
+                }
+                else
+                {
+                    _mensajeError = "Error al crear la cancha";
+                }
+            }
+            
+            CerrarModalCancha();
+        }
+        catch (Exception ex)
+        {
+            _mensajeError = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task DeshabilitarCancha(int id)
+    {
+        try
+        {
+            var resultado = await CanchasService.DisableCanchaAsync(id);
+            if (resultado)
+            {
+                await CargarCanchas();
+            }
+            else
+            {
+                _mensajeError = "Error al deshabilitar la cancha";
             }
         }
-        else
+        catch (Exception ex)
         {
-            // Crear nueva cancha
-            _formCancha.Id = _canchas.Count > 0 ? _canchas.Max(c => c.Id) + 1 : 1;
-            _canchas.Add(_formCancha);
+            _mensajeError = $"Error: {ex.Message}";
         }
-
-        CerrarModalCancha();
     }
 
-    private void DeshabilitarCancha(int id)
+    private async Task HabilitarCancha(int id)
     {
-        var cancha = _canchas.FirstOrDefault(c => c.Id == id);
-        if (cancha != null)
+        try
         {
-            cancha.Activa = false;
+            var resultado = await CanchasService.EnableCanchaAsync(id);
+            if (resultado)
+            {
+                await CargarCanchas();
+            }
+            else
+            {
+                _mensajeError = "Error al habilitar la cancha";
+            }
+        }
+        catch (Exception ex)
+        {
+            _mensajeError = $"Error: {ex.Message}";
         }
     }
 
-    private void HabilitarCancha(int id)
-    {
-        var cancha = _canchas.FirstOrDefault(c => c.Id == id);
-        if (cancha != null)
-        {
-            cancha.Activa = true;
-        }
-    }
-
-    private void ConfirmarEliminar(Cancha cancha)
+    private void ConfirmarEliminar(CanchaViewModel cancha)
     {
         _canchaPorEliminar = cancha;
         _mostrarConfirmEliminar = true;
@@ -609,11 +1019,26 @@
         _canchaPorEliminar = null;
     }
 
-    private void EliminarCancha()
+    private async Task EliminarCancha()
     {
         if (_canchaPorEliminar != null)
         {
-            _canchas.RemoveAll(c => c.Id == _canchaPorEliminar.Id);
+            try
+            {
+                var resultado = await CanchasService.DeleteCanchaAsync(_canchaPorEliminar.Id);
+                if (resultado)
+                {
+                    await CargarCanchas();
+                }
+                else
+                {
+                    _mensajeError = "Error al eliminar la cancha";
+                }
+            }
+            catch (Exception ex)
+            {
+                _mensajeError = $"Error: {ex.Message}";
+            }
         }
         CancelarEliminar();
     }
@@ -640,5 +1065,94 @@
         {
             horario.Disponible = disponible;
         }
+    }
+
+    private void CambiarServicio(string servicio, bool seleccionado)
+    {
+        if (_formCancha.ServiciosAdicionales == null)
+        {
+            _formCancha.ServiciosAdicionales = new List<string>();
+        }
+
+        if (seleccionado)
+        {
+            if (!_formCancha.ServiciosAdicionales.Contains(servicio))
+            {
+                _formCancha.ServiciosAdicionales.Add(servicio);
+            }
+        }
+        else
+        {
+            _formCancha.ServiciosAdicionales.Remove(servicio);
+        }
+    }
+
+    private void CambiarCaracteristica(string caracteristica, bool seleccionado)
+    {
+        if (_formCancha.Caracteristicas == null)
+        {
+            _formCancha.Caracteristicas = new List<string>();
+        }
+
+        if (seleccionado)
+        {
+            if (!_formCancha.Caracteristicas.Contains(caracteristica))
+            {
+                _formCancha.Caracteristicas.Add(caracteristica);
+            }
+        }
+        else
+        {
+            _formCancha.Caracteristicas.Remove(caracteristica);
+        }
+    }
+
+    private async Task CargarImagen(ChangeEventArgs e)
+    {
+        try
+        {
+            var files = (IReadOnlyList<IBrowserFile>)e.Value!;
+            if (files.Count > 0)
+            {
+                var file = files[0];
+                
+                // Validar tamaño (máximo 5MB)
+                if (file.Size > 5 * 1024 * 1024)
+                {
+                    _mensajeError = "La imagen no puede ser mayor a 5MB";
+                    return;
+                }
+
+                // Validar tipo de archivo
+                if (!file.ContentType.StartsWith("image/"))
+                {
+                    _mensajeError = "Por favor selecciona un archivo de imagen válido";
+                    return;
+                }
+
+                // Leer el archivo como base64 para preview
+                using (var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024))
+                {
+                    var buffer = new byte[file.Size];
+                    await stream.ReadAsync(buffer, 0, (int)file.Size);
+                    _imagenPreview = $"data:{file.ContentType};base64,{Convert.ToBase64String(buffer)}";
+                    _formCancha.Imagen = _imagenPreview;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _mensajeError = $"Error al cargar la imagen: {ex.Message}";
+        }
+    }
+
+    private void AbrirModalCrearDeporte()
+    {
+        _mostrarModalDeporte = true;
+    }
+
+    private void CerrarModalDeporte()
+    {
+        _mostrarModalDeporte = false;
     }
 }

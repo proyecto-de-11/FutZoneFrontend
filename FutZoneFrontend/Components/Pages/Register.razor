@@ -1,5 +1,6 @@
 @page "/register"
-@layout Layout.EmptyLayout
+@layout EmptyLayout
+@using FutZoneFrontend.Components.Layout
 @using FutZoneFrontend.Services
 @using FutZoneFrontend.Services.Models
 @inject IAuthService AuthService
@@ -119,7 +120,7 @@
             {
                 SuccessMessage = "¡Registro exitoso! Redirigiendo...";
                 await Task.Delay(2000);
-                NavigationManager.NavigateTo("/home", forceLoad: true);
+                NavigationManager.NavigateTo("/organizaciones", forceLoad: true);
             }
             else
             {
