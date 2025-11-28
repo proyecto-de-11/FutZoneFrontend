@@ -1,51 +1,71 @@
 @page "/select-team"
-@inject NavigationManager Navigation
 
-<div class="teams-header">
-    <h1 class="teams-title"><i class="bi bi-people"></i> Selecciona un Equipo</h1>
-    <button class="btn btn-primary-custom" @onclick="GoToCreateTeam">
-        <i class="bi bi-plus-circle-fill"></i> Nuevo Equipo
-    </button>
-</div>
+<div class="select-team-container">
+    <div class="header-section">
+        <h1 class="title">Elige tu Equipo</h1>
+        <p class="subtitle">Selecciona el equipo con el que jugarás y personaliza tu experiencia.</p>
+    </div>
 
-<div class="teams-grid">
-    <div class="team-card" @onclick="@(async () => await ElegirEquipo("Tigres FC"))">
-        <div class="team-logo">🐯</div>
-        <div class="team-name">Tigres FC</div>
-        <div class="team-meta">Fútbol • 22 miembros</div>
-        <div class="team-description">Equipo de fútbol profesional con enfoque juvenil y competitivo.</div>
-        <button class="btn btn-success select-btn">
-            <i class="bi bi-check2-circle"></i> Seleccionar
-        </button>
+    <div class="team-grid">
+        @foreach (var team in _teams)
+        {
+            <div class="team-card @(team.Abreviatura == _selectedTeamAbbreviation ? "selected" : "")" @onclick="() => HandleSelectTeam(team.Abreviatura)">
+                <div class="team-logo-container">
+                    <img src="@team.LogoUrl" alt="@team.Nombre" class="team-logo">
+                </div>
+                <div class="team-info">
+                    <h4 class="team-name">@team.Nombre</h4>
+                    <p class="team-abbreviation">@team.Abreviatura</p>
+                </div>
+            </div>
+        }
     </div>
-    <div class="team-card" @onclick="@(async () => await ElegirEquipo("Águilas Elite"))">
-        <div class="team-logo">🦅</div>
-        <div class="team-name">Águilas Elite</div>
-        <div class="team-meta">Básquetbol • 15 miembros</div>
-        <div class="team-description">Apasionadas por el baloncesto, juegan en torneos estatales y nacionales.</div>
-        <button class="btn btn-success select-btn">
-            <i class="bi bi-check2-circle"></i> Seleccionar
-        </button>
-    </div>
-    <div class="team-card" @onclick="@(async () => await ElegirEquipo("Dragones Metropolitanos"))">
-        <div class="team-logo">🐉</div>
-        <div class="team-name">Dragones Metropolitanos</div>
-        <div class="team-meta">Voleibol • 18 miembros</div>
-        <div class="team-description">Equipo destacado en ligas metropolitanas de voleibol.</div>
-        <button class="btn btn-success select-btn">
-            <i class="bi bi-check2-circle"></i> Seleccionar
-        </button>
-    </div>
+
+    @if (!string.IsNullOrEmpty(_selectedTeamAbbreviation))
+    {
+        <div class="selected-team-confirmation">
+            <p>Has seleccionado a <strong>@_selectedTeamName</strong>. ¡Prepárate para la victoria!</p>
+            <button class="btn btn-primary btn-lg continue-button">Continuar</button>
+        </div>
+    }
 </div>
 
 @code {
-    private async Task ElegirEquipo(string teamName)
+    private string _selectedTeamAbbreviation = "";
+    private string _selectedTeamName = "";
+
+    private List<Team> _teams = new();
+
+    protected override async Task OnInitializedAsync()
     {
-        Console.WriteLine($"Equipo seleccionado: {teamName}");
+        _teams = new List<Team>
+        {
+            new Team { Nombre = "Barcelona", Abreviatura = "BAR", LogoUrl = "/images/teams/barcelona.png" },
+            new Team { Nombre = "Real Madrid", Abreviatura = "RMD", LogoUrl = "/images/teams/real_madrid.png" },
+            new Team { Nombre = "Manchester United", Abreviatura = "MUN", LogoUrl = "/images/teams/man_united.png" },
+            new Team { Nombre = "Liverpool", Abreviatura = "LIV", LogoUrl = "/images/teams/liverpool.png" },
+            new Team { Nombre = "Bayern Munich", Abreviatura = "BAY", LogoUrl = "/images/teams/bayern_munich.png" },
+            new Team { Nombre = "Paris Saint-Germain", Abreviatura = "PSG", LogoUrl = "/images/teams/psg.png" },
+            new Team { Nombre = "Juventus", Abreviatura = "JUV", LogoUrl = "/images/teams/juventus.png" },
+            new Team { Nombre = "AC Milan", Abreviatura = "ACM", LogoUrl = "/images/teams/ac_milan.png" }
+        };
+        await Task.CompletedTask;
     }
 
-    private void GoToCreateTeam()
+    private void HandleSelectTeam(string abreviatura)
     {
-        Navigation.NavigateTo("/create-team");
+        var team = _teams.FirstOrDefault(t => t.Abreviatura == abreviatura);
+        if (team != null)
+        {
+            _selectedTeamAbbreviation = team.Abreviatura;
+            _selectedTeamName = team.Nombre;
+        }
+    }
+
+    private class Team
+    {
+        public string Nombre { get; set; } = "";
+        public string Abreviatura { get; set; } = "";
+        public string LogoUrl { get; set; } = "";
     }
 }

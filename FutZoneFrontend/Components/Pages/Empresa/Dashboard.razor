@@ -8,7 +8,6 @@
 <PageTitle>Dashboard Propietario - FutZone</PageTitle>
 
 <div class="propietario-dashboard">
-    <!-- Header -->
     <div class="dashboard-header">
         <div class="container-fluid">
             <div class="row align-items-center">
@@ -18,7 +17,7 @@
                 </div>
                 <div class="col-auto">
                     <div class="header-actions">
-                        <button class="btn btn-light me-2" title="Actualizar datos">
+                        <button class="btn btn-light me-2" title="Actualizar datos" @onclick="ActualizarAsync">
                             <i class="bi bi-arrow-clockwise"></i> Actualizar
                         </button>
                         <a class="btn btn-outline-light" href="/empresa/crear">Crear Empresa</a>
@@ -28,7 +27,6 @@
         </div>
     </div>
 
-    <!-- Contenido Principal -->
     <div class="dashboard-content">
         <div class="container-fluid">
 
@@ -62,6 +60,7 @@
                             <small>↑ 15% vs mes anterior</small>
                         </div>
                     </div>
+                    <p class="mt-3">Cargando datos del dashboard...</p>
                 </div>
 
                 <div class="col-md-3 mb-3">
@@ -73,7 +72,6 @@
                             <small>⚠️ Requieren acción</small>
                         </div>
                     </div>
-                </div>
 
                 <div class="col-md-3 mb-3">
                     <div class="kpi-card kpi-ocupacion">
@@ -84,7 +82,6 @@
                             <small>↑ 5% vs mes anterior</small>
                         </div>
                     </div>
-                </div>
 
                 <div class="col-md-3 mb-3">
                     <div class="kpi-card kpi-clientes">
@@ -95,8 +92,6 @@
                             <small>➕ 5 nuevos esta semana</small>
                         </div>
                     </div>
-                </div>
-            </div>
 
             <!-- Mis Canchas -->
             <div class="section-header">
@@ -137,11 +132,10 @@
                 }
             </div>
 
-            <!-- Reservas Recientes -->
-            <div class="section-header">
-                <h3>Reservas Recientes</h3>
-                <small class="text-muted">Las últimas solicitudes de reserva</small>
-            </div>
+<style>
+.propietario-dashboard {
+    background-color: #f4f7f6;
+}
 
             <div class="reservas-list">
                 @if (_reservas == null || _reservas.Count == 0)
@@ -174,42 +168,25 @@
                 }
             </div>
 
-            <!-- Acciones Rápidas -->
-            <div class="section-header">
-                <h3>Acciones Rápidas</h3>
-            </div>
+.kpi-card {
+    background-color: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
 
-            <div class="quick-actions">
-                <NavLink href="empresa/canchas" class="action-btn">
-                    <span class="action-icon">🏟️</span>
-                    <div class="action-title">Gestionar Canchas</div>
-                    <div class="action-desc">Ver y editar tus canchas</div>
-                </NavLink>
+.kpi-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
 
-                <NavLink href="empresa/reservas" class="action-btn">
-                    <span class="action-icon">📋</span>
-                    <div class="action-title">Mis Reservas</div>
-                    <div class="action-desc">Administrar todas las reservas</div>
-                </NavLink>
-
-                <button class="action-btn" onclick="alert('Función disponible pronto')">
-                    <span class="action-icon">📊</span>
-                    <div class="action-title">Reportes</div>
-                    <div class="action-desc">Generar reportes de ingresos</div>
-                </button>
-
-                <button class="action-btn" onclick="alert('Función disponible pronto')">
-                    <span class="action-icon">⚙️</span>
-                    <div class="action-title">Configuración</div>
-                    <div class="action-desc">Ajustar preferencias y tarifas</div>
-                </button>
-            </div>
-
-            <!-- Últimas Transacciones -->
-            <div class="section-header">
-                <h3>Últimas Transacciones</h3>
-                <small class="text-muted">Historial de pagos y movimientos</small>
-            </div>
+.kpi-icon {
+    font-size: 2.5rem;
+}
 
             <div class="transactions-table">
                 <table class="table">
@@ -274,9 +251,66 @@
                 </div>
             </div>
 
-        </div>
-    </div>
-</div>
+.section-header h3 {
+    font-weight: 600;
+}
+
+.canchas-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.cancha-card {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+.cancha-header {
+    padding: 1rem 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.cancha-header h5 {
+    margin: 0;
+    font-weight: 600;
+}
+
+.cancha-body {
+    padding: 1.25rem;
+}
+
+.cancha-stat {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.cancha-stat-label {
+    color: #6c757d;
+}
+
+.reservas-list .reserva-item {
+    background-color: white;
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.reserva-status.pendiente { color: #ffc107; }
+.reserva-status.aceptada { color: #28a745; }
+.reserva-status.rechazada { color: #dc3545; }
+
+</style>
 
 @code {
     private bool _cargando = true;

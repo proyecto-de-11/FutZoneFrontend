@@ -48,7 +48,7 @@ namespace FutZoneFrontend.Services
 
         public AuthService(HttpClient httpClient, Blazored.LocalStorage.ILocalStorageService localStorage)
         {
-            _httpClient = httpClient;
+            _httpClient = httpClientFactory.CreateClient("Auth");
             _localStorage = localStorage;
 
         }
@@ -113,7 +113,8 @@ namespace FutZoneFrontend.Services
 
                 if (response.IsSuccessStatusCode)
                 {
-                    try
+                    var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponse>(new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    if (loginResponse != null && !string.IsNullOrEmpty(loginResponse.Token))
                     {
                         var loginResponse = JsonSerializer.Deserialize<LoginResponse>(responseContent,
                             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -156,6 +157,7 @@ namespace FutZoneFrontend.Services
                             Message = $"Error procesando respuesta: {ex.Message}"
                         };
                     }
+                    return new LoginResponse { Success = false, Message = "No se recibió token" };
                 }
                 else
                 {
