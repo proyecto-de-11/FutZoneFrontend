@@ -654,7 +654,7 @@
         public List<string> DiasDisponibles { get; set; } = new();
         public List<HorarioDisponible> HorariosDisponibles { get; set; } = new();
         public bool Activa { get; set; } = true;
-        public bool EstaTechada { get; set; } = false;
+        public string? EstaTechada { get; set; }
         public string Descripcion { get; set; } = "";
         public decimal? CoordenadasLat { get; set; }
         public decimal? CoordenadasLng { get; set; }

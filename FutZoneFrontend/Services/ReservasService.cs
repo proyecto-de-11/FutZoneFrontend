@@ -10,6 +10,8 @@ namespace FutZoneFrontend.Services
         Task<ReservaDto?> GetReservaByIdAsync(int id);
         Task<ReservaDto?> CreateReservaAsync(CreateReservaDto reserva);
         Task<bool> ProcessReservaAsync(int solicitudId);
+        Task<bool> AprobarReservaAsync(int reservaId, int usuarioProcesadorId);
+        Task<bool> RechazarReservaAsync(int reservaId, int usuarioProcesadorId, string motivoRechazo);
         Task<bool> DeleteSolicitudAsync(int id);
         Task<bool> DeleteReservaAsync(int id);
     }
@@ -44,6 +46,18 @@ namespace FutZoneFrontend.Services
         public string? MensajeSolicitud { get; set; }
     }
 
+    public class ProcessReservaDto
+    {
+        [JsonPropertyName("accion")]
+        public string Accion { get; set; } = string.Empty;
+
+        [JsonPropertyName("usuario_procesador_id")]
+        public int UsuarioProcesadorId { get; set; }
+
+        [JsonPropertyName("motivo_rechazo")]
+        public string? MotivoRechazo { get; set; }
+    }
+
     public class ReservaDto
     {
         [JsonPropertyName("id")]
@@ -60,6 +74,9 @@ namespace FutZoneFrontend.Services
 
         [JsonPropertyName("usuario_id")]
         public int? UsuarioId { get; set; }
+
+        [JsonPropertyName("nombre_usuario")]
+        public string? NombreUsuario { get; set; }
 
         [JsonPropertyName("partido_id")]
         public int? PartidoId { get; set; }
@@ -210,6 +227,74 @@ namespace FutZoneFrontend.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"Error processing reserva: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> AprobarReservaAsync(int reservaId, int usuarioProcesadorId)
+        {
+            try
+            {
+                var url = $"/api/solicitudes/{reservaId}/process";
+                var payload = new ProcessReservaDto
+                {
+                    Accion = "aprobar",
+                    UsuarioProcesadorId = usuarioProcesadorId
+                };
+                
+                Console.WriteLine($"[ReservasService] Aprobando reserva {reservaId} con usuario {usuarioProcesadorId}");
+                var response = await _httpClient.PutAsJsonAsync(url, payload);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"[ReservasService] ❌ Error al aprobar: {response.StatusCode} - {errorContent}");
+                    return false;
+                }
+                
+                Console.WriteLine($"[ReservasService] ✅ Reserva aprobada exitosamente");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ReservasService] ❌ Error aprobando reserva: {ex.Message}");
+                return false;
+            }
+        }
+
+        public async Task<bool> RechazarReservaAsync(int reservaId, int usuarioProcesadorId, string motivoRechazo)
+        {
+            try
+            {
+                var url = $"/api/solicitudes/{reservaId}/process";
+                var payload = new ProcessReservaDto
+                {
+                    Accion = "rechazar",
+                    UsuarioProcesadorId = usuarioProcesadorId,
+                    MotivoRechazo = motivoRechazo
+                };
+                
+                Console.WriteLine($"[ReservasService] Rechazando reserva {reservaId} con usuario {usuarioProcesadorId}");
+                Console.WriteLine($"[ReservasService] Motivo: {motivoRechazo}");
+                
+                var jsonPayload = System.Text.Json.JsonSerializer.Serialize(payload);
+                Console.WriteLine($"[ReservasService] JSON enviado: {jsonPayload}");
+                
+                var response = await _httpClient.PutAsJsonAsync(url, payload);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"[ReservasService] ❌ Error al rechazar: {response.StatusCode} - {errorContent}");
+                    return false;
+                }
+                
+                Console.WriteLine($"[ReservasService] ✅ Reserva rechazada exitosamente");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ReservasService] ❌ Error rechazando reserva: {ex.Message}");
                 return false;
             }
         }

@@ -7,6 +7,8 @@
 @inject IPropietarioService PropietarioService
 @inject ICanchasService CanchasService
 @inject IReservasService ReservasService
+@inject IAuthService AuthService
+@inject IEmpresaService EmpresaService
 
 <div class="misreservas-container">
     <!-- HEADER CON GRADIENTE -->
@@ -107,6 +109,12 @@
                     <option value="precio-asc">Menor precio</option>
                 </select>
             </div>
+
+            <div class="filter-item">
+                <button class="btn btn-info" @onclick="RecargarReservas">
+                    <i class="bi bi-arrow-clockwise"></i> Recargar
+                </button>
+            </div>
         </div>
 
         <!-- LISTA DE RESERVAS -->
@@ -127,7 +135,10 @@
                         <div class="reserva-card">
                             <!-- HEADER CON ESTADO -->
                             <div class="reserva-header">
-                                <h3 class="reserva-title">@reserva.CanchaNombre</h3>
+                                <div>
+                                    <h3 class="reserva-title">@reserva.CanchaNombre</h3>
+                                    <small style="color: #999;">ID Reserva: #@reserva.Id</small>
+                                </div>
                                 <span class="estado-badge estado-@reserva.Estado.ToLower().Replace("á", "a")">
                                     @GetEstadoIcono(reserva.Estado) @reserva.Estado
                                 </span>
@@ -140,15 +151,7 @@
                                     <h4 class="info-title">👤 Información del Cliente</h4>
                                     <div class="info-item">
                                         <span class="info-label">Nombre:</span>
-                                        <span class="info-value">@reserva.NombreCliente</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <span class="info-label">Email:</span>
-                                        <span class="info-value">@reserva.EmailCliente</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <span class="info-label">Teléfono:</span>
-                                        <span class="info-value">@reserva.TelefonoCliente</span>
+                                        <span class="info-value">@reserva.NombreUsuario</span>
                                     </div>
                                 </div>
 
@@ -167,10 +170,6 @@
                                         <span class="info-label">Duración:</span>
                                         <span class="info-value">@reserva.Duracion horas</span>
                                     </div>
-                                    <div class="info-item">
-                                        <span class="info-label">Cantidad Jugadores:</span>
-                                        <span class="info-value">@reserva.CantidadJugadores personas</span>
-                                    </div>
                                 </div>
 
                                 <!-- INFORMACIÓN FINANCIERA -->
@@ -178,28 +177,13 @@
                                     <h4 class="info-title">💵 Información Financiera</h4>
                                     <div class="info-item">
                                         <span class="info-label">Precio/Hora:</span>
-                                        <span class="info-value">${{reserva.PrecioHora}}</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <span class="info-label">Descuento:</span>
-                                        <span class="info-value">-${reserva.Descuento}</span>
+                                        <span class="info-value">$@reserva.PrecioHora</span>
                                     </div>
                                     <div class="info-item important">
                                         <span class="info-label">Total a Pagar:</span>
-                                        <span class="info-value">${reserva.PrecioTotal}</span>
+                                        <span class="info-value">$@reserva.PrecioTotal</span>
                                     </div>
                                 </div>
-
-                                <!-- NOTAS DEL CLIENTE -->
-                                @if (!string.IsNullOrEmpty(reserva.NotasCliente))
-                                {
-                                    <div class="info-section">
-                                        <h4 class="info-title">📝 Notas del Cliente</h4>
-                                        <div class="notes-box">
-                                            @reserva.NotasCliente
-                                        </div>
-                                    </div>
-                                }
 
                                 <!-- HISTORIAL -->
                                 <div class="info-section">
@@ -208,18 +192,11 @@
                                         <span class="info-label">Solicitada el:</span>
                                         <span class="info-value">@reserva.FechaSolicitud.ToString("dd/MM/yyyy HH:mm")</span>
                                     </div>
-                                    @if (!string.IsNullOrEmpty(reserva.FechaRespuesta))
-                                    {
-                                        <div class="info-item">
-                                            <span class="info-label">Respondida el:</span>
-                                            <span class="info-value">@reserva.FechaRespuesta</span>
-                                        </div>
-                                    }
                                 </div>
                             </div>
 
                             <!-- ACCIONES -->
-                            @if (reserva.Estado == "Pendiente")
+                            @if (reserva.Estado?.ToLower() == "pendiente")
                             {
                                 <div class="reserva-actions">
                                     <button class="btn btn-success btn-action" @onclick="() => AprobarReserva(reserva.Id)">
@@ -234,7 +211,7 @@
                             {
                                 <div class="reserva-actions">
                                     <button class="btn btn-secondary btn-action" disabled>
-                                        <i class="bi bi-lock"></i> @(reserva.Estado == "Aprobada" ? "Aprobada" : "Rechazada")
+                                        <i class="bi bi-lock"></i> @(reserva.Estado?.ToLower() == "aprobada" ? "Aprobada" : "Rechazada")
                                     </button>
                                 </div>
                             }
@@ -246,6 +223,53 @@
     </div>
 </div>
 
+<!-- MODAL RECHAZAR RESERVA -->
+<div class="modal @(_mostrarModalRechazo ? "show d-block" : "")" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-exclamation-circle-fill"></i> Rechazar Reserva
+                </h5>
+                <button type="button" class="btn-close btn-close-white" @onclick="CerrarModalRechazo"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">Por favor, proporciona un motivo para rechazar esta reserva:</p>
+                <div class="form-group">
+                    <label for="motivoRechazo" class="form-label">Motivo del Rechazo:</label>
+                    <textarea 
+                        id="motivoRechazo" 
+                        class="form-control" 
+                        rows="4" 
+                        placeholder="Ejemplo: Horario incompatible con el mantenimiento, cancha no disponible en esa fecha, etc."
+                        @bind="_motivoRechazo">
+                    </textarea>
+                </div>
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <div class="alert alert-danger mt-3" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill"></i> @ErrorMessage
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" @onclick="CerrarModalRechazo">
+                    <i class="bi bi-x-circle"></i> Cancelar
+                </button>
+                <button type="button" class="btn btn-danger" @onclick="ConfirmarRechazo">
+                    <i class="bi bi-check-circle"></i> Confirmar Rechazo
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Backdrop Modal -->
+@if (_mostrarModalRechazo)
+{
+    <div class="modal-backdrop fade show"></div>
+}
+
 @code {
     // MODELO DE DATOS
     public class ReservaViewModel
@@ -253,21 +277,15 @@
         public int Id { get; set; }
         public int CanchaId { get; set; }
         public string CanchaNombre { get; set; } = string.Empty;
-        public string NombreCliente { get; set; } = string.Empty;
-        public string EmailCliente { get; set; } = string.Empty;
-        public string TelefonoCliente { get; set; } = string.Empty;
+        public string NombreUsuario { get; set; } = string.Empty;
         public DateTime Fecha { get; set; }
         public string HoraInicio { get; set; } = string.Empty;
         public string HoraFin { get; set; } = string.Empty;
         public int Duracion { get; set; }
-        public int CantidadJugadores { get; set; }
         public decimal PrecioHora { get; set; }
-        public decimal Descuento { get; set; }
         public decimal PrecioTotal { get; set; }
-        public string NotasCliente { get; set; } = string.Empty;
-        public string Estado { get; set; } = "Pendiente"; // Pendiente, Aprobada, Rechazada
+        public string Estado { get; set; } = "Pendiente";
         public DateTime FechaSolicitud { get; set; }
-        public string FechaRespuesta { get; set; } = string.Empty;
     }
 
     public class CanchaViewModel
@@ -286,6 +304,11 @@
     private string _ordenamiento = "fecha-desc";
     private bool IsLoading = true;
     private string ErrorMessage = string.Empty;
+
+    // PROPIEDADES PARA MODAL DE RECHAZO
+    private bool _mostrarModalRechazo = false;
+    private int _reservaIdParaRechazar = 0;
+    private string _motivoRechazo = string.Empty;
 
     // CICLO DE VIDA
     protected override async Task OnInitializedAsync()
@@ -317,6 +340,11 @@
         {
             Console.WriteLine("[MisReservas] Iniciando carga de datos...");
             
+            // Obtener empresas del usuario logueado
+            var empresasDelUsuario = await EmpresaService.GetEmpresasDelUsuarioAsync();
+            var idsEmpresasUsuario = empresasDelUsuario.Select(e => e.ID).ToList();
+            Console.WriteLine($"[MisReservas] IDs de empresas del usuario: {string.Join(", ", idsEmpresasUsuario)}");
+            
             // Cargar membresías del usuario
             var membresiasResponse = await PropietarioService.GetMisMembresiasAsync();
             if (membresiasResponse.Success)
@@ -325,47 +353,70 @@
                 Console.WriteLine($"[MisReservas] Membresías cargadas: {_membresias.Count}");
             }
 
-            // Cargar canchas
+            // Cargar TODAS las canchas
             var canchasResult = await CanchasService.GetAllCanchasAsync();
+            Console.WriteLine($"[MisReservas] Total de canchas en el sistema: {canchasResult?.Count ?? 0}");
+            
+            // Identificar las canchas que pertenecen a mis empresas
+            var idsCanchasMisEmpresas = new List<int>();
+            
             if (canchasResult != null && canchasResult.Count > 0)
             {
+                // Guardar TODAS las canchas para el dropdown
                 _canchas = canchasResult
                     .Select(c => new CanchaViewModel { Id = c.Id, Nombre = c.Nombre })
                     .ToList();
-                Console.WriteLine($"[MisReservas] Canchas cargadas: {_canchas.Count}");
+                
+                Console.WriteLine($"[MisReservas] Canchas cargadas para dropdown: {_canchas.Count}");
+                
+                // Filtrar canchas que pertenecen a mis empresas
+                foreach (var cancha in canchasResult)
+                {
+                    Console.WriteLine($"  - Cancha ID: {cancha.Id}, Nombre: {cancha.Nombre}, EmpresaId: {cancha.EmpresaId}");
+                    
+                    // Si la cancha tiene EmpresaId y pertenece a una de mis empresas, agregarla
+                    if (cancha.EmpresaId.HasValue && idsEmpresasUsuario.Contains(cancha.EmpresaId.Value))
+                    {
+                        idsCanchasMisEmpresas.Add(cancha.Id);
+                        Console.WriteLine($"    ✓ Esta cancha pertenece a mi empresa");
+                    }
+                }
+                
+                Console.WriteLine($"[MisReservas] IDs de canchas que son MÍAs: {string.Join(", ", idsCanchasMisEmpresas)}");
             }
 
-            // Cargar TODAS las reservas (sin filtrar)
+            // Cargar TODAS las reservas
             var todasLasReservas = await ReservasService.GetAllReservasAsync();
-            Console.WriteLine($"[MisReservas] Total de reservas cargadas: {todasLasReservas?.Count ?? 0}");
+            Console.WriteLine($"[MisReservas] Total de reservas en el sistema: {todasLasReservas?.Count ?? 0}");
 
             if (todasLasReservas != null && todasLasReservas.Count > 0)
             {
+                // Mostrar TODAS las reservas (sin filtrar) para debug
+                Console.WriteLine("[MisReservas] ⚠️ MOSTRANDO TODAS LAS RESERVAS SIN FILTRAR POR AHORA");
+                
                 _reservas = todasLasReservas
                     .Select(r => new ReservaViewModel
                     {
                         Id = r.Id,
                         CanchaId = r.CanchaId,
                         CanchaNombre = _canchas.FirstOrDefault(c => c.Id == r.CanchaId)?.Nombre ?? $"Cancha {r.CanchaId}",
-                        NombreCliente = $"Cliente {r.UsuarioSolicitanteId ?? r.UsuarioId ?? 0}",
-                        EmailCliente = "email@ejemplo.com",
-                        TelefonoCliente = "+34 000 000 000",
+                        NombreUsuario = r.NombreUsuario ?? string.Empty,
                         Fecha = r.FechaReserva?.Date ?? DateTime.Now,
                         HoraInicio = r.HoraInicio ?? "00:00",
                         HoraFin = r.HoraFin ?? "00:00",
-                        Duracion = int.TryParse(r.DuracionHoras, out var d) ? d : 0,
-                        CantidadJugadores = 0,
-                        PrecioHora = decimal.TryParse(r.MontoTotal, out var m) ? m : 0,
-                        Descuento = 0,
-                        PrecioTotal = decimal.TryParse(r.MontoTotal, out var mt) ? mt : (r.PrecioTotal ?? 0),
-                        NotasCliente = r.Observaciones ?? r.MensajeSolicitud ?? string.Empty,
+                        Duracion = string.IsNullOrEmpty(r.DuracionHoras) ? 0 : (int)Math.Round(decimal.Parse(r.DuracionHoras)),
+                        PrecioHora = (r.PrecioTotal ?? 0) / (string.IsNullOrEmpty(r.DuracionHoras) ? 1 : decimal.Parse(r.DuracionHoras)),
+                        PrecioTotal = r.PrecioTotal ?? (string.IsNullOrEmpty(r.MontoTotal) ? 0 : decimal.Parse(r.MontoTotal)),
                         Estado = r.Estado ?? "Pendiente",
-                        FechaSolicitud = r.FechaCreacion ?? DateTime.Now,
-                        FechaRespuesta = string.Empty
+                        FechaSolicitud = r.FechaReserva ?? DateTime.Now
                     })
                     .ToList();
                 
-                Console.WriteLine($"[MisReservas] Reservas mapeadas: {_reservas.Count}");
+                Console.WriteLine($"[MisReservas] TODAS las reservas mostradas: {_reservas.Count}");
+                foreach (var reserva in _reservas)
+                {
+                    Console.WriteLine($"  - Reserva ID: {reserva.Id}, CanchaId: {reserva.CanchaId}, CanchaNombre: {reserva.CanchaNombre}, Usuario: {reserva.NombreUsuario}, Estado: {reserva.Estado}");
+                }
             }
             else
             {
@@ -424,6 +475,28 @@
         };
     }
 
+    private async Task RecargarReservas()
+    {
+        try
+        {
+            IsLoading = true;
+            Console.WriteLine("[MisReservas] Recargando reservas manualmente...");
+            await CargarDatos();
+            AplicarFiltros();
+            StateHasChanged();
+            Console.WriteLine("[MisReservas] Reservas recargadas exitosamente");
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error al recargar: {ex.Message}";
+            Console.WriteLine($"[MisReservas] Error recargando: {ex.Message}");
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
     // MÉTODOS DE ACCIÓN
     private async Task AprobarReserva(int id)
     {
@@ -432,11 +505,20 @@
             var reserva = _reservas.FirstOrDefault(r => r.Id == id);
             if (reserva != null)
             {
-                var resultado = await ReservasService.ProcessReservaAsync(id);
+                // Obtener ID del usuario logueado
+                await AuthService.EnsureAuthDataLoadedAsync();
+                var usuarioId = await AuthService.GetUserIdAsync();
+                
+                if (!usuarioId.HasValue || usuarioId <= 0)
+                {
+                    ErrorMessage = "No se pudo obtener el ID del usuario logueado";
+                    return;
+                }
+                
+                var resultado = await ReservasService.AprobarReservaAsync(id, usuarioId.Value);
                 if (resultado)
                 {
                     reserva.Estado = "Aprobada";
-                    reserva.FechaRespuesta = "Aprobada el " + DateTime.Now.ToString("dd/MM/yyyy HH:mm");
                     AplicarFiltros();
                     StateHasChanged();
                 }
@@ -456,15 +538,47 @@
     {
         try
         {
-            var reserva = _reservas.FirstOrDefault(r => r.Id == id);
+            // Abrir modal para ingresar motivo
+            _reservaIdParaRechazar = id;
+            _motivoRechazo = string.Empty;
+            _mostrarModalRechazo = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task ConfirmarRechazo()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(_motivoRechazo))
+            {
+                ErrorMessage = "Por favor ingresa un motivo para el rechazo";
+                return;
+            }
+
+            var reserva = _reservas.FirstOrDefault(r => r.Id == _reservaIdParaRechazar);
             if (reserva != null)
             {
-                var resultado = await ReservasService.ProcessReservaAsync(id);
+                // Obtener ID del usuario logueado
+                await AuthService.EnsureAuthDataLoadedAsync();
+                var usuarioId = await AuthService.GetUserIdAsync();
+                
+                if (!usuarioId.HasValue || usuarioId <= 0)
+                {
+                    ErrorMessage = "No se pudo obtener el ID del usuario logueado";
+                    return;
+                }
+
+                var resultado = await ReservasService.RechazarReservaAsync(_reservaIdParaRechazar, usuarioId.Value, _motivoRechazo);
                 if (resultado)
                 {
                     reserva.Estado = "Rechazada";
-                    reserva.FechaRespuesta = "Rechazada el " + DateTime.Now.ToString("dd/MM/yyyy HH:mm");
                     AplicarFiltros();
+                    CerrarModalRechazo();
                     StateHasChanged();
                 }
                 else
@@ -477,6 +591,13 @@
         {
             ErrorMessage = $"Error: {ex.Message}";
         }
+    }
+
+    private void CerrarModalRechazo()
+    {
+        _mostrarModalRechazo = false;
+        _reservaIdParaRechazar = 0;
+        _motivoRechazo = string.Empty;
     }
 
     // MÉTODOS DE UTILIDAD
