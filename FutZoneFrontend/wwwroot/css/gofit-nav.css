@@ -1,8 +1,8 @@
 /* Navigation styles for gofit */
 :root{
-  --nav-bg-start: #0b6b9b;
-  --nav-bg-end: #195b9f;
-  --nav-accent: #36d06f;
+  --nav-bg-start: #7C3AED;
+  --nav-bg-end: #6D28D9;
+  --nav-accent: #06B6D4;
   --nav-text: #ffffff;
   --nav-muted: rgba(255,255,255,0.85);
 }

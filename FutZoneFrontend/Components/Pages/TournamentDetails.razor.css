@@ -7,7 +7,7 @@ body { background: #ecf2fc; }
     overflow: hidden;
 }
 .torneo-header {
-    background: linear-gradient(90deg, #43cea2 0%, #185a9d 100%);
+    background: linear-gradient(90deg, #06B6D4 0%, #7C3AED 100%);
     color: white;
     padding: 34px 38px 24px 38px;
 }
@@ -16,10 +16,10 @@ body { background: #ecf2fc; }
 .torneo-body { padding: 28px 38px; }
 .meta-label { font-weight: bold; }
 .equipos-lista { list-style: none; padding-left: 0; margin-bottom: 10px; }
-.equipos-lista li { margin-bottom: 7px; font-size: 1rem;color:#4285f4;}
+.equipos-lista li { margin-bottom: 7px; font-size: 1rem;color:#7C3AED;}
 .next-match {
-    background: #f8fff5;
-    border-left: 8px solid #43cea2;
+    background: #f5f3ff;
+    border-left: 8px solid #7C3AED;
     padding: 12px 22px;
     margin-top: 28px;
     border-radius: 11px;
@@ -32,8 +32,8 @@ body { background: #ecf2fc; }
     margin-top: 16px;
 }
 .badge-torneo {
-    background: #e1f6ea;
-    color: #43cea2;
+    background: #f5f3ff;
+    color: #7C3AED;
     font-weight: bold;
     padding: 7px 14px;
     border-radius: 13px;

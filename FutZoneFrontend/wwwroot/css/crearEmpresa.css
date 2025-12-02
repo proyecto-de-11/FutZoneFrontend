@@ -1,7 +1,7 @@
-/* Colores clave de FutZone */
+/* Colores clave de FutbolTime */
 :root {
-    --color-principal-oscuro: #319B86; /* Verde Teal Oscuro */
-    --color-principal-claro: #40c9ae;  /* Verde Teal Medio/Botón */
+    --color-principal-oscuro: #7C3AED; /* Morado Oscuro */
+    --color-principal-claro: #06B6D4;  /* Celeste/Botón */
     --color-fondo-tarjeta: #FFFFFF;
     --color-texto-oscuro: #333333;
     --color-texto-claro: #FFFFFF;
@@ -18,13 +18,13 @@
 }
 
 /* Estilo del Header (Barra Verde Superior) */
-.header-futzone {
+.header-futboltime {
     background-color: var(--color-principal-oscuro);
     color: var(--color-texto-claro);
     padding: 20px;
 }
 
-.header-futzone h2 {
+.header-futboltime h2 {
     margin: 0;
     font-weight: 600;
 }
@@ -78,7 +78,7 @@ textarea {
 }
 
 /* Estilo del Botón Principal */
-.btn-primary-futzone {
+.btn-primary-futboltime {
     background-color: var(--color-principal-claro);
     color: var(--color-texto-claro);
     border: none;
@@ -91,6 +91,6 @@ textarea {
     width: 100%;
 }
 
-.btn-primary-futzone:hover {
+.btn-primary-futboltime:hover {
     background-color: #37b79c; /* Un poco más oscuro en hover */
 }

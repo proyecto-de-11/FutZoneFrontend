@@ -11,7 +11,7 @@ body { background: #f8fafc; }
 }
 .card-registro .title {
     font-weight: 800; 
-    color: #185a9d;
+    color: #7C3AED;
     font-size: 2rem; 
     margin-bottom: 12px;
 }
@@ -20,10 +20,10 @@ body { background: #f8fafc; }
     font-size: 1.1rem;
     margin-bottom: 34px;
 }
-.form-label { font-weight: 600; color: #166fe5; }
+.form-label { font-weight: 600; color: #7C3AED; }
 .form-control, .form-select { border-radius: 8px; }
 .btn-crear {
-    background: linear-gradient(90deg, #185a9d 0%, #43cea2 100%); 
+    background: linear-gradient(90deg, #7C3AED 0%, #06B6D4 100%); 
     color: white; 
     font-weight: bold; 
     font-size: 1.1rem; 

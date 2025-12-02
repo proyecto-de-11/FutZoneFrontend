@@ -1,10 +1,10 @@
 /* Palette & shared auth styles for gofit (based on provided design) */
 :root{
-  --gofit-grad-top: #2dd4b1; /* light teal */
-  --gofit-grad-mid: #27a7b0; /* teal */
-  --gofit-grad-bottom: #195b9f; /* deep blue */
-  --gofit-accent: #0b6b9b; /* darker cyan */
-  --gofit-accent-2: #36d06f; /* green accent */
+  --gofit-grad-top: #22D3EE; /* light cyan */
+  --gofit-grad-mid: #06B6D4; /* cyan */
+  --gofit-grad-bottom: #7C3AED; /* deep purple */
+  --gofit-accent: #7C3AED; /* purple */
+  --gofit-accent-2: #06B6D4; /* cyan accent */
   --gofit-card-bg: rgba(255,255,255,0.95);
   --gofit-text-muted: #6b7785;
 }
